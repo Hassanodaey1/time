@@ -113,11 +113,10 @@
   <button id="logoutBtn" onclick="doLogout()">تسجيل الخروج</button>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script>
 // ضع بيانات مشروعك هنا بدقة (نفس القيم في display.html)
 const firebaseConfig = {
   apiKey: "AIzaSyDoZPCTfHBg-gCupUOd6FPqMMiJm4jT1vA",
@@ -129,9 +128,9 @@ const firebaseConfig = {
   appId: "1:511397609426:web:06ce68a87617922c68120b"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
 
 let currentMode = "down";
 
@@ -148,7 +147,7 @@ window.doLogin = function(){
   const loginStatus = document.getElementById("loginStatus");
   loginStatus.style.color = "#7d8698";
   loginStatus.innerText = "جارٍ تسجيل الدخول...";
-  signInWithEmailAndPassword(auth, email, pass)
+  auth.signInWithEmailAndPassword(email, pass)
     .catch((error) => {
       loginStatus.style.color = "#ff3b30";
       loginStatus.innerText = "فشل تسجيل الدخول: " + error.message;
@@ -156,10 +155,10 @@ window.doLogin = function(){
 };
 
 window.doLogout = function(){
-  signOut(auth);
+  auth.signOut();
 };
 
-onAuthStateChanged(auth, (user) => {
+auth.onAuthStateChanged((user) => {
   const loginView = document.getElementById("loginView");
   const panelView = document.getElementById("panelView");
   const tally = document.getElementById("tally");
@@ -187,7 +186,7 @@ window.updateTargetTime = function(){
 
   const targetTimestamp = new Date(val).getTime();
 
-  set(ref(db, 'countdown'), {
+  db.ref('countdown').set({
     mode: currentMode,
     targetTime: targetTimestamp,
     title: title,
