@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>العداد</title>
+<title>المؤقت</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -59,7 +59,7 @@
   <div class="tally"><span class="dot"></span><span id="modeLabel">ON AIR</span></div>
   <p id="eventTitle"></p>
 
-  <p id="loadingMsg">جارٍ الاتصال بالعداد...</p>
+  <p id="loadingMsg">جارٍ الاتصال بالمؤقت...</p>
 
   <div class="digits hidden" id="digitsWrap" style="display:none;">
     <div class="unit"><div class="flip" id="dDays">00</div><label>يوم</label></div>
@@ -97,15 +97,32 @@ const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
 function tick(){
   if (targetTime === null) return;
   const now = Date.now();
-  let diff = mode === "down" ? (targetTime - now) : (now - targetTime);
 
-  if (mode === "down" && diff <= 0){
-    clearInterval(timerHandle);
-    document.getElementById("digitsWrap").style.display = "none";
-    document.getElementById("finishedMsg").style.display = "block";
+  if (mode === "down"){
+    let diff = targetTime - now;
+    if (diff <= 0){
+      clearInterval(timerHandle);
+      document.getElementById("digitsWrap").style.display = "none";
+      document.getElementById("finishedMsg").style.display = "block";
+      return;
+    }
+    renderDigits(diff);
     return;
   }
 
+  // mode === "up"
+  if (now < targetTime){
+    // لم يبدأ الحدث بعد: نعرض الوقت المتبقي على البداية
+    document.getElementById("modeLabel").innerText = "يبدأ خلال";
+    renderDigits(targetTime - now);
+  } else {
+    // الحدث بدأ: نعرض الوقت المنقضي منذ البداية
+    document.getElementById("modeLabel").innerText = "منذ البدء";
+    renderDigits(now - targetTime);
+  }
+}
+
+function renderDigits(diff){
   diff = Math.max(0, diff);
   const totalSeconds = Math.floor(diff / 1000);
   const days = Math.floor(totalSeconds / 86400);
@@ -125,7 +142,7 @@ db.ref('countdown').on('value', (snapshot) => {
 
   if (!data || !data.targetTime){
     document.getElementById("loadingMsg").style.display = "block";
-    document.getElementById("loadingMsg").innerText = "لم يتم ضبط العداد بعد.";
+    document.getElementById("loadingMsg").innerText = "لم يتم ضبط المؤقت بعد.";
     return;
   }
 
