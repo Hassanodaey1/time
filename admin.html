@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم بالعداد</title>
+<title>لوحة التحكم بالمؤقت</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -86,18 +86,18 @@
   <button class="primary" onclick="doLogin()">دخول</button>
   <div id="loginStatus"></div>
   <div class="divider"></div>
-  <p class="hint">هذه الصفحة محمية بحساب Firebase Authentication. فقط الحساب الذي تنشئه أنت في مشروعك يمكنه تسجيل الدخول والتحكم بالعداد.</p>
+  <p class="hint">هذه الصفحة محمية بحساب Firebase Authentication. فقط الحساب الذي تنشئه أنت في مشروعك يمكنه تسجيل الدخول والتحكم بالمؤقت.</p>
 </div>
 
 <!-- لوحة التحكم -->
 <div class="card hidden" id="panelView">
-  <p class="eyebrow">لوحة التحكم بالعداد</p>
-  <h1>تحديث بيانات العداد</h1>
+  <p class="eyebrow">لوحة التحكم بالمؤقت</p>
+  <h1>تحديث بيانات المؤقت</h1>
 
   <label>عنوان الحدث (يظهر في صفحة العرض، اختياري)</label>
   <input type="text" id="titleInput" placeholder="مثال: انطلاق البث المباشر">
 
-  <label>نوع العداد</label>
+  <label>نوع المؤقت</label>
   <div class="modes">
     <button type="button" class="mode-btn active" id="btnDown" onclick="setMode('down')">⏳ تنازلي (حتى وقت)</button>
     <button type="button" class="mode-btn" id="btnUp" onclick="setMode('up')">⏱️ تصاعدي (منذ وقت)</button>
@@ -106,7 +106,7 @@
   <label id="dtLabel">وقت انتهاء الحدث</label>
   <input type="datetime-local" id="datetimePicker">
 
-  <button class="primary" onclick="updateTargetTime()">تحديث العداد الآن</button>
+  <button class="primary" onclick="updateTargetTime()">تحديث المؤقت الآن</button>
   <div id="status"></div>
 
   <div class="divider"></div>
@@ -194,7 +194,7 @@ window.updateTargetTime = function(){
   })
     .then(() => {
       statusDiv.style.color = "#2ecc71";
-      statusDiv.innerText = "تم تحديث العداد بنجاح، وسيظهر التغيير مباشرة في صفحة العرض.";
+      statusDiv.innerText = "تم تحديث المؤقت بنجاح، وسيظهر التغيير مباشرة في صفحة العرض.";
     })
     .catch((error) => {
       statusDiv.style.color = "#ff3b30";
