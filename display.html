@@ -10,6 +10,10 @@
   :root{
     --bg:#0b0e14; --panel:#12161f; --amber:#ffb400; --red:#ff3b30; --muted:#7d8698; --border:#232838;
   }
+  body[data-theme="aurora"]{ --bg:#0a1128; --panel:#101a3a; --amber:#00d4aa; --red:#7c5cff; --muted:#7c8bb0; --border:#1c2b56; }
+  body[data-theme="ember"]{ --bg:#1a0e0a; --panel:#24140e; --amber:#ff6b35; --red:#f7c548; --muted:#a67c6d; --border:#3a2018; }
+  body[data-theme="arctic"]{ --bg:#0d1b2a; --panel:#122438; --amber:#48cae4; --red:#e0fbfc; --muted:#5f8aa6; --border:#1c344a; }
+  body[data-theme="royal"]{ --bg:#1a0b2e; --panel:#24123f; --amber:#ffd60a; --red:#e63dc4; --muted:#9a7fc0; --border:#3a1f5c; }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
@@ -18,7 +22,10 @@
     background-image:
       radial-gradient(circle at 15% 15%, rgba(255,180,0,0.05), transparent 42%),
       radial-gradient(circle at 85% 85%, rgba(255,59,48,0.05), transparent 42%);
+    transition: background-color .6s ease;
   }
+  .monitor{ transition: background-color .6s ease, border-color .6s ease; }
+  .flip{ transition: color .6s ease, background-color .6s ease; }
   .monitor{
     width:100%; max-width:640px; background:var(--panel); border:1px solid var(--border);
     border-radius:20px; padding:36px 28px; text-align:center; position:relative; overflow:hidden;
@@ -53,7 +60,7 @@
   }
 </style>
 </head>
-<body>
+<body data-theme="broadcast">
 
 <div class="monitor">
   <div class="tally"><span class="dot"></span><span id="modeLabel">ON AIR</span></div>
@@ -148,6 +155,7 @@ db.ref('countdown').on('value', (snapshot) => {
 
   mode = data.mode === "up" ? "up" : "down";
   targetTime = data.targetTime;
+  document.body.setAttribute("data-theme", data.theme || "broadcast");
   document.getElementById("eventTitle").innerText = data.title || "";
   document.getElementById("modeLabel").innerText = mode === "down" ? "عد تنازلي" : "عد تصاعدي";
   document.getElementById("finishedMsg").style.display = "none";
