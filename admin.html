@@ -51,6 +51,15 @@
   }
   .mode-btn.active{border-color:var(--amber); color:var(--amber); background:rgba(255,180,0,.08);}
 
+  .themes{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:16px;}
+  .theme-btn{
+    display:flex; align-items:center; gap:9px; padding:11px 12px; border-radius:10px;
+    border:1px solid var(--border); background:var(--panel-2); color:var(--muted);
+    font-family:'Tajawal',sans-serif; font-weight:700; cursor:pointer; font-size:13px;
+  }
+  .theme-btn.active{border-color:#fff; color:#fff;}
+  .swatch{width:16px; height:16px; border-radius:50%; flex-shrink:0; box-shadow:0 0 8px rgba(0,0,0,.4);}
+
   button.primary{
     width:100%; margin-top:24px; padding:14px; border:none; border-radius:10px;
     background:var(--amber); color:#12100a; font-weight:900; font-size:15px; cursor:pointer;
@@ -106,10 +115,30 @@
   <label id="dtLabel">وقت انتهاء الحدث</label>
   <input type="datetime-local" id="datetimePicker">
 
+  <label>ثيم صفحة العرض</label>
+  <div class="themes" id="themesGrid">
+    <button type="button" class="theme-btn active" id="theme-broadcast" onclick="setTheme('broadcast')">
+      <span class="swatch" style="background:linear-gradient(135deg,#ffb400,#ff3b30)"></span>استوديو
+    </button>
+    <button type="button" class="theme-btn" id="theme-aurora" onclick="setTheme('aurora')">
+      <span class="swatch" style="background:linear-gradient(135deg,#00d4aa,#7c5cff)"></span>الشفق
+    </button>
+    <button type="button" class="theme-btn" id="theme-ember" onclick="setTheme('ember')">
+      <span class="swatch" style="background:linear-gradient(135deg,#ff6b35,#f7c548)"></span>الجمرة
+    </button>
+    <button type="button" class="theme-btn" id="theme-arctic" onclick="setTheme('arctic')">
+      <span class="swatch" style="background:linear-gradient(135deg,#48cae4,#e0fbfc)"></span>القطب
+    </button>
+    <button type="button" class="theme-btn" id="theme-royal" onclick="setTheme('royal')">
+      <span class="swatch" style="background:linear-gradient(135deg,#ffd60a,#e63dc4)"></span>الملكي
+    </button>
+  </div>
+
   <button class="primary" onclick="updateTargetTime()">تحديث المؤقت الآن</button>
   <div id="status"></div>
 
   <div class="divider"></div>
+  <p class="hint" id="currentStateHint">جارٍ تحميل الحالة الحالية...</p>
   <button id="logoutBtn" onclick="doLogout()">تسجيل الخروج</button>
 </div>
 
@@ -133,12 +162,21 @@ const db = firebase.database();
 const auth = firebase.auth();
 
 let currentMode = "down";
+let currentTheme = "broadcast";
+const THEME_IDS = ["broadcast", "aurora", "ember", "arctic", "royal"];
 
 window.setMode = function(mode){
   currentMode = mode;
   document.getElementById("btnDown").classList.toggle("active", mode === "down");
   document.getElementById("btnUp").classList.toggle("active", mode === "up");
   document.getElementById("dtLabel").innerText = mode === "down" ? "وقت انتهاء الحدث" : "وقت بداية الحدث";
+};
+
+window.setTheme = function(theme){
+  currentTheme = theme;
+  THEME_IDS.forEach(id => {
+    document.getElementById("theme-" + id).classList.toggle("active", id === theme);
+  });
 };
 
 window.doLogin = function(){
@@ -166,12 +204,43 @@ auth.onAuthStateChanged((user) => {
     loginView.classList.add("hidden");
     panelView.classList.remove("hidden");
     tally.classList.add("live");
+    loadCurrentState();
   } else {
     loginView.classList.remove("hidden");
     panelView.classList.add("hidden");
     tally.classList.remove("live");
   }
 });
+
+function toLocalDatetimeInputValue(timestamp){
+  const d = new Date(timestamp);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function loadCurrentState(){
+  const hint = document.getElementById("currentStateHint");
+  db.ref('countdown').once('value')
+    .then((snapshot) => {
+      const data = snapshot.val();
+      if (!data){
+        hint.innerText = "لا توجد بيانات محفوظة بعد — هذا أول ضبط للمؤقت.";
+        return;
+      }
+      setMode(data.mode === "up" ? "up" : "down");
+      setTheme(THEME_IDS.includes(data.theme) ? data.theme : "broadcast");
+      document.getElementById("titleInput").value = data.title || "";
+      if (data.targetTime){
+        document.getElementById("datetimePicker").value = toLocalDatetimeInputValue(data.targetTime);
+      }
+      const modeText = data.mode === "up" ? "تصاعدي" : "تنازلي";
+      const timeText = data.targetTime ? new Date(data.targetTime).toLocaleString("ar") : "—";
+      hint.innerText = `الحالة المحفوظة حاليًا: ${modeText} — ${timeText}`;
+    })
+    .catch(() => {
+      hint.innerText = "تعذّر تحميل الحالة الحالية.";
+    });
+}
 
 window.updateTargetTime = function(){
   const val = document.getElementById("datetimePicker").value;
@@ -188,6 +257,7 @@ window.updateTargetTime = function(){
 
   db.ref('countdown').set({
     mode: currentMode,
+    theme: currentTheme,
     targetTime: targetTimestamp,
     title: title,
     updatedAt: Date.now()
@@ -195,6 +265,7 @@ window.updateTargetTime = function(){
     .then(() => {
       statusDiv.style.color = "#2ecc71";
       statusDiv.innerText = "تم تحديث المؤقت بنجاح، وسيظهر التغيير مباشرة في صفحة العرض.";
+      loadCurrentState();
     })
     .catch((error) => {
       statusDiv.style.color = "#ff3b30";
