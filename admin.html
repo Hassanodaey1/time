@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم بالعداد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#131722; --panel-2:#171c29;
+    --amber:#ffb400; --red:#ff3b30; --muted:#7d8698; --border:#232838; --green:#2ecc71;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:#f2f4f8;
+    font-family:'Tajawal',sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255,180,0,0.06), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(255,59,48,0.06), transparent 40%);
+  }
+  .tally{
+    position:fixed; top:20px; inset-inline-end:20px; display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); letter-spacing:1px;
+  }
+  .tally .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);}
+  .tally.live .dot{background:var(--red); box-shadow:0 0 8px var(--red); animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  .card{
+    width:100%; max-width:420px; background:var(--panel); border:1px solid var(--border);
+    border-radius:16px; padding:32px 28px; box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--amber);
+    text-transform:uppercase; margin:0 0 6px;
+  }
+  h1{margin:0 0 24px; font-size:22px; font-weight:900;}
+  label{display:block; font-size:13px; color:var(--muted); margin:16px 0 6px;}
+  input, select{
+    width:100%; padding:13px 14px; border-radius:10px; border:1px solid var(--border);
+    background:var(--panel-2); color:#fff; font-family:'Tajawal',sans-serif; font-size:15px;
+  }
+  input:focus, select:focus{outline:2px solid var(--amber); border-color:transparent;}
+
+  .modes{display:flex; gap:8px; margin-top:16px;}
+  .mode-btn{
+    flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--panel-2);
+    color:var(--muted); font-family:'Tajawal',sans-serif; font-weight:700; cursor:pointer; font-size:14px;
+  }
+  .mode-btn.active{border-color:var(--amber); color:var(--amber); background:rgba(255,180,0,.08);}
+
+  button.primary{
+    width:100%; margin-top:24px; padding:14px; border:none; border-radius:10px;
+    background:var(--amber); color:#12100a; font-weight:900; font-size:15px; cursor:pointer;
+    font-family:'Tajawal',sans-serif;
+  }
+  button.primary:hover{background:#ffc633;}
+  button.primary:disabled{opacity:.5; cursor:not-allowed;}
+
+  #status{margin-top:14px; font-size:13.5px; min-height:18px;}
+  .divider{border-top:1px dashed var(--border); margin:22px 0;}
+  .hint{font-size:12px; color:var(--muted); line-height:1.7;}
+
+  #loginView input{margin-bottom:0;}
+  #logoutBtn{
+    margin-top:18px; width:100%; padding:10px; background:transparent; border:1px solid var(--border);
+    color:var(--muted); border-radius:10px; cursor:pointer; font-family:'Tajawal',sans-serif;
+  }
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div class="tally" id="tally"><span class="dot"></span><span>ADMIN</span></div>
+
+<!-- شاشة تسجيل الدخول -->
+<div class="card" id="loginView">
+  <p class="eyebrow">تسجيل الدخول</p>
+  <h1>الدخول للوحة التحكم</h1>
+  <label>البريد الإلكتروني</label>
+  <input type="email" id="loginEmail" placeholder="you@example.com">
+  <label>كلمة المرور</label>
+  <input type="password" id="loginPass" placeholder="••••••••">
+  <button class="primary" onclick="doLogin()">دخول</button>
+  <div id="loginStatus"></div>
+  <div class="divider"></div>
+  <p class="hint">هذه الصفحة محمية بحساب Firebase Authentication. فقط الحساب الذي تنشئه أنت في مشروعك يمكنه تسجيل الدخول والتحكم بالعداد.</p>
+</div>
+
+<!-- لوحة التحكم -->
+<div class="card hidden" id="panelView">
+  <p class="eyebrow">لوحة التحكم بالعداد</p>
+  <h1>تحديث بيانات العداد</h1>
+
+  <label>عنوان الحدث (يظهر في صفحة العرض، اختياري)</label>
+  <input type="text" id="titleInput" placeholder="مثال: انطلاق البث المباشر">
+
+  <label>نوع العداد</label>
+  <div class="modes">
+    <button type="button" class="mode-btn active" id="btnDown" onclick="setMode('down')">⏳ تنازلي (حتى وقت)</button>
+    <button type="button" class="mode-btn" id="btnUp" onclick="setMode('up')">⏱️ تصاعدي (منذ وقت)</button>
+  </div>
+
+  <label id="dtLabel">وقت انتهاء الحدث</label>
+  <input type="datetime-local" id="datetimePicker">
+
+  <button class="primary" onclick="updateTargetTime()">تحديث العداد الآن</button>
+  <div id="status"></div>
+
+  <div class="divider"></div>
+  <button id="logoutBtn" onclick="doLogout()">تسجيل الخروج</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+// ضع بيانات مشروعك هنا بدقة (نفس القيم في display.html)
+const firebaseConfig = {
+  apiKey: "AIzaSyDoZPCTfHBg-gCupUOd6FPqMMiJm4jT1vA",
+  authDomain: "time-7971c.firebaseapp.com",
+  databaseURL: "https://time-7971c-default-rtdb.firebaseio.com",
+  projectId: "time-7971c",
+  storageBucket: "time-7971c.firebasestorage.app",
+  messagingSenderId: "511397609426",
+  appId: "1:511397609426:web:06ce68a87617922c68120b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+let currentMode = "down";
+
+window.setMode = function(mode){
+  currentMode = mode;
+  document.getElementById("btnDown").classList.toggle("active", mode === "down");
+  document.getElementById("btnUp").classList.toggle("active", mode === "up");
+  document.getElementById("dtLabel").innerText = mode === "down" ? "وقت انتهاء الحدث" : "وقت بداية الحدث";
+};
+
+window.doLogin = function(){
+  const email = document.getElementById("loginEmail").value;
+  const pass = document.getElementById("loginPass").value;
+  const loginStatus = document.getElementById("loginStatus");
+  loginStatus.style.color = "#7d8698";
+  loginStatus.innerText = "جارٍ تسجيل الدخول...";
+  signInWithEmailAndPassword(auth, email, pass)
+    .catch((error) => {
+      loginStatus.style.color = "#ff3b30";
+      loginStatus.innerText = "فشل تسجيل الدخول: " + error.message;
+    });
+};
+
+window.doLogout = function(){
+  signOut(auth);
+};
+
+onAuthStateChanged(auth, (user) => {
+  const loginView = document.getElementById("loginView");
+  const panelView = document.getElementById("panelView");
+  const tally = document.getElementById("tally");
+  if (user){
+    loginView.classList.add("hidden");
+    panelView.classList.remove("hidden");
+    tally.classList.add("live");
+  } else {
+    loginView.classList.remove("hidden");
+    panelView.classList.add("hidden");
+    tally.classList.remove("live");
+  }
+});
+
+window.updateTargetTime = function(){
+  const val = document.getElementById("datetimePicker").value;
+  const title = document.getElementById("titleInput").value || "";
+  const statusDiv = document.getElementById("status");
+
+  if (!val){
+    statusDiv.style.color = "#ff3b30";
+    statusDiv.innerText = "يرجى اختيار الوقت أولاً!";
+    return;
+  }
+
+  const targetTimestamp = new Date(val).getTime();
+
+  set(ref(db, 'countdown'), {
+    mode: currentMode,
+    targetTime: targetTimestamp,
+    title: title,
+    updatedAt: Date.now()
+  })
+    .then(() => {
+      statusDiv.style.color = "#2ecc71";
+      statusDiv.innerText = "تم تحديث العداد بنجاح، وسيظهر التغيير مباشرة في صفحة العرض.";
+    })
+    .catch((error) => {
+      statusDiv.style.color = "#ff3b30";
+      statusDiv.innerText = "فشل التحديث: " + error.message;
+    });
+};
+</script>
+</body>
+</html>
