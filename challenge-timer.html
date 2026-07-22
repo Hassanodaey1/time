@@ -95,6 +95,34 @@
   }
   body[data-style="dotmatrix"] .unit label{ color:#e0a666; }
 
+  /* نمط فليب كلوك: شاشة داكنة بالكامل وأرقام تنقلب مثل الساعات القديمة */
+  body[data-style="flipclock"] .digits{ gap:8px; }
+  body[data-style="flipclock"] .unit{ perspective:300px; }
+  body[data-style="flipclock"] .unit label{ color:#4a5a6a; }
+  body[data-style="flipclock"] .flip{
+    position:relative; background:#14191f; border:none; border-radius:10px;
+    color:#4aa8ff; font-size:52px; min-width:76px; padding:16px 8px;
+    text-shadow:0 0 14px rgba(74,168,255,.55); backdrop-filter:none;
+    box-shadow:0 8px 18px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
+    overflow:hidden; transform-style:preserve-3d;
+  }
+  body[data-style="flipclock"] .flip::before{
+    content:""; position:absolute; left:0; right:0; top:50%; height:2px;
+    background:#000; transform:translateY(-1px); z-index:2;
+  }
+  body[data-style="flipclock"] .flip::after{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(to bottom, rgba(255,255,255,.03) 0%, transparent 48%, rgba(0,0,0,.18) 52%, rgba(0,0,0,.3) 100%);
+    pointer-events:none;
+  }
+  body[data-style="flipclock"] .flip.flip-anim{ animation:flipDigit .5s ease; }
+  @keyframes flipDigit{
+    0%{ transform:rotateX(0deg); }
+    48%{ transform:rotateX(-90deg); opacity:.5; }
+    52%{ transform:rotateX(90deg); opacity:.5; }
+    100%{ transform:rotateX(0deg); opacity:1; }
+  }
+
   @media (max-width:480px){
     .flip{min-width:58px; font-size:24px; padding:10px 4px;}
   }
@@ -203,12 +231,24 @@ function motivationFor(t){
   return "🏁 اللحظات الأخيرة! أعطِ أقصى ما عندك";
 }
 
+function setDigit(el, val){
+  if (el.innerText !== val){
+    el.innerText = val;
+    if (document.body.getAttribute("data-style") === "flipclock"){
+      el.classList.remove("flip-anim");
+      void el.offsetWidth; /* إعادة تشغيل الأنيميشن */
+      el.classList.add("flip-anim");
+    }
+  }
+}
+
 function setRingProgress(pct){
   pct = Math.max(0, Math.min(100, pct));
   document.body.style.setProperty('--ring-pct', pct + '%');
 }
 
 function tick(){
+  const isFlip = document.body.getAttribute("data-style") === "flipclock";
   const now = serverNow();
   const elapsed = now - startTime;
   const remaining = durationMs - elapsed;
@@ -216,7 +256,7 @@ function tick(){
   if (remaining <= 0){
     if (!finishedAlerted){ finishedAlerted = true; window.playTimerAlert("finish"); }
     clearInterval(timerHandle);
-    document.body.style.backgroundColor = colorEnd;
+    document.body.style.backgroundColor = isFlip ? "#000000" : colorEnd;
     document.getElementById("runningView").style.display = "none";
     document.getElementById("finishedMsg").style.display = "block";
     document.title = "🏁 انتهى التحدي";
@@ -224,7 +264,7 @@ function tick(){
   }
 
   const t = Math.max(0, Math.min(1, elapsed / durationMs));
-  document.body.style.backgroundColor = mixColor(colorStart, colorEnd, t);
+  document.body.style.backgroundColor = isFlip ? "#000000" : mixColor(colorStart, colorEnd, t);
   setRingProgress((challengeMode === "up" ? t : (1 - t)) * 100);
 
   if (t >= 0.5 && !midAlerted){ midAlerted = true; window.playTimerAlert("mid"); }
@@ -234,9 +274,9 @@ function tick(){
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  document.getElementById("dHours").innerText = pad(hours);
-  document.getElementById("dMinutes").innerText = pad(minutes);
-  document.getElementById("dSeconds").innerText = pad(seconds);
+  setDigit(document.getElementById("dHours"), pad(hours));
+  setDigit(document.getElementById("dMinutes"), pad(minutes));
+  setDigit(document.getElementById("dSeconds"), pad(seconds));
   document.getElementById("motivation").innerText = motivationFor(t);
   document.title = "🔥 " + formatDuration(challengeMode === "up" ? elapsed : remaining);
 }
