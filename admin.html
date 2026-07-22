@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0e14">
 <title>لوحة التحكم بالمؤقت</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -507,6 +510,7 @@ auth.onAuthStateChanged((user) => {
     loadChallengeState();
     loadStudentStyleState();
     loadSharedThemeState();
+    setMinDatetime();
     showHub();
   } else {
     hideAllPanels();
@@ -519,6 +523,10 @@ function toLocalDatetimeInputValue(timestamp){
   const d = new Date(timestamp);
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function setMinDatetime(){
+  document.getElementById("datetimePicker").min = toLocalDatetimeInputValue(Date.now());
 }
 
 function loadCurrentState(){
@@ -635,6 +643,7 @@ window.startChallenge = function(){
 };
 
 window.stopChallenge = function(){
+  if (!confirm("متأكد إنك تبي توقف التحدي الحالي؟")) return;
   const msg = document.getElementById("challengeStatusMsg");
   db.ref('challenge/active').set(false)
     .then(() => {
@@ -660,6 +669,12 @@ window.updateTargetTime = function(){
   }
 
   const targetTimestamp = new Date(val).getTime();
+
+  if (targetTimestamp <= Date.now()){
+    statusDiv.style.color = "#ff3b30";
+    statusDiv.innerText = "لا يمكن اختيار وقت في الماضي، يرجى اختيار وقت قادم.";
+    return;
+  }
 
   db.ref('countdown').update({
     mode: currentMode,
