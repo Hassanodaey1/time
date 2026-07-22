@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤقت الطالب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#0d1b2a; --panel:#122438; --accent:#48cae4; --muted:#5f8aa6; --border:#1c344a; --green:#2ecc71; }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:#f2f4f8; font-family:'Tajawal',sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .back-link{
+    position:fixed; top:18px; inset-inline-start:18px; font-size:13px; color:var(--muted);
+    text-decoration:none;
+  }
+  .card{
+    width:100%; max-width:420px; background:var(--panel); border:1px solid var(--border);
+    border-radius:20px; padding:30px 26px; text-align:center;
+  }
+  .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--accent);
+    text-transform:uppercase; margin:0 0 8px; }
+  h1{margin:0 0 22px; font-size:20px; font-weight:900;}
+
+  .presets{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;}
+  .preset-btn{
+    padding:12px 4px; border-radius:10px; border:1px solid var(--border); background:#0f2032;
+    color:#fff; font-family:'JetBrains Mono',monospace; font-weight:700; cursor:pointer; font-size:14px;
+  }
+  .preset-btn.active{border-color:var(--accent); color:var(--accent); background:rgba(72,202,228,.1);}
+
+  .custom-row{display:flex; gap:8px; margin-bottom:20px;}
+  .custom-row input{
+    flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:#0f2032;
+    color:#fff; font-family:'Tajawal',sans-serif; font-size:14.5px;
+  }
+
+  .digits{display:flex; justify-content:center; gap:10px; margin-bottom:22px; display:none;}
+  .unit{display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .flip{
+    background:#0a1826; border:1px solid var(--border); border-radius:10px;
+    padding:14px 8px; min-width:82px; font-family:'JetBrains Mono',monospace;
+    font-size:38px; font-weight:700; color:var(--accent);
+  }
+  .unit label{font-size:11px; color:var(--muted); letter-spacing:2px;}
+
+  .controls{display:flex; gap:8px;}
+  button.primary{
+    flex:1; padding:14px; border:none; border-radius:10px; background:var(--accent);
+    color:#06222d; font-weight:900; font-size:15px; cursor:pointer; font-family:'Tajawal',sans-serif;
+  }
+  button.secondary{
+    flex:1; padding:14px; border:1px solid var(--border); border-radius:10px; background:transparent;
+    color:var(--muted); font-weight:700; font-size:14px; cursor:pointer; font-family:'Tajawal',sans-serif;
+  }
+  #doneMsg{display:none; font-size:20px; font-weight:900; color:var(--green); margin-bottom:14px;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-link">‹ الرئيسية</a>
+
+<div class="card">
+  <p class="eyebrow">📚 مؤقت الطالب</p>
+  <h1>اضبط وقت دراستك</h1>
+
+  <div id="setupView">
+    <div class="presets">
+      <button class="preset-btn" onclick="pickPreset(5, this)">٥ د</button>
+      <button class="preset-btn active" onclick="pickPreset(15, this)">١٥ د</button>
+      <button class="preset-btn" onclick="pickPreset(25, this)">٢٥ د</button>
+      <button class="preset-btn" onclick="pickPreset(45, this)">٤٥ د</button>
+    </div>
+    <div class="custom-row">
+      <input type="number" id="customMinutes" placeholder="أو أدخل عدد الدقائق يدويًا" min="1">
+    </div>
+    <button class="primary" onclick="startTimer()">▶️ ابدأ الدراسة</button>
+  </div>
+
+  <div id="runningView" class="hidden">
+    <p id="doneMsg">🎉 أحسنت! انتهت جلسة الدراسة</p>
+    <div class="digits" id="digitsWrap" style="display:flex;">
+      <div class="unit"><div class="flip" id="dMinutes">00</div><label>دقيقة</label></div>
+      <div class="unit"><div class="flip" id="dSeconds">00</div><label>ثانية</label></div>
+    </div>
+    <div class="controls">
+      <button class="secondary" id="pauseBtn" onclick="togglePause()">⏸️ إيقاف مؤقت</button>
+      <button class="secondary" onclick="resetTimer()">🔄 إعادة ضبط</button>
+    </div>
+  </div>
+</div>
+
+<script src="timer-sounds.js"></script>
+<script>
+let selectedMinutes = 15;
+let remainingMs = 0;
+let totalMs = 0;
+let paused = false;
+let timerHandle = null;
+let midAlerted = false, lastMinuteAlerted = false;
+
+const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
+
+window.pickPreset = function(minutes, el){
+  selectedMinutes = minutes;
+  document.getElementById("customMinutes").value = "";
+  document.querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
+  el.classList.add("active");
+};
+
+window.startTimer = function(){
+  const customVal = parseInt(document.getElementById("customMinutes").value, 10);
+  const minutes = (customVal && customVal > 0) ? customVal : selectedMinutes;
+
+  totalMs = minutes * 60 * 1000;
+  remainingMs = totalMs;
+  paused = false;
+  midAlerted = false;
+  lastMinuteAlerted = false;
+
+  document.getElementById("setupView").classList.add("hidden");
+  document.getElementById("runningView").classList.remove("hidden");
+  document.getElementById("doneMsg").style.display = "none";
+  document.getElementById("digitsWrap").style.display = "flex";
+  document.getElementById("pauseBtn").innerText = "⏸️ إيقاف مؤقت";
+
+  window.playTimerAlert("start");
+  renderTime();
+  if (timerHandle) clearInterval(timerHandle);
+  timerHandle = setInterval(step, 1000);
+};
+
+function step(){
+  if (paused) return;
+  remainingMs -= 1000;
+
+  if (remainingMs <= 0){
+    clearInterval(timerHandle);
+    remainingMs = 0;
+    renderTime();
+    window.playTimerAlert("finish");
+    document.getElementById("digitsWrap").style.display = "none";
+    document.getElementById("doneMsg").style.display = "block";
+    return;
+  }
+
+  const progress = 1 - (remainingMs / totalMs);
+  if (progress >= 0.5 && !midAlerted){ midAlerted = true; window.playTimerAlert("mid"); }
+  if (remainingMs <= 60000 && !lastMinuteAlerted){ lastMinuteAlerted = true; window.playTimerAlert("lastMinute"); }
+
+  renderTime();
+}
+
+function renderTime(){
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  document.getElementById("dMinutes").innerText = pad(minutes);
+  document.getElementById("dSeconds").innerText = pad(seconds);
+}
+
+window.togglePause = function(){
+  paused = !paused;
+  document.getElementById("pauseBtn").innerText = paused ? "▶️ استئناف" : "⏸️ إيقاف مؤقت";
+};
+
+window.resetTimer = function(){
+  if (timerHandle) clearInterval(timerHandle);
+  document.getElementById("setupView").classList.remove("hidden");
+  document.getElementById("runningView").classList.add("hidden");
+};
+</script>
+</body>
+</html>

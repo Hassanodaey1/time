@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تحدي الأستاذ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{height:100%; margin:0;}
+  body{
+    background:#000000; color:#fff; font-family:'Tajawal',sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    transition: background-color 1s linear;
+  }
+  .back-link{
+    position:fixed; top:18px; inset-inline-start:18px; font-size:13px; color:rgba(255,255,255,.7);
+    text-decoration:none;
+  }
+  .stage{ width:100%; max-width:560px; text-align:center; }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:4px; text-transform:uppercase;
+    color:rgba(255,255,255,.75); margin:0 0 10px;
+  }
+  h1{font-size:24px; font-weight:900; margin:0 0 30px;}
+  .digits{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:24px;}
+  .unit{display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .flip{
+    background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.25); border-radius:10px;
+    padding:14px 6px; min-width:78px; font-family:'JetBrains Mono',monospace;
+    font-size:38px; font-weight:700; color:#fff; backdrop-filter: blur(2px);
+  }
+  .unit label{font-size:11px; color:rgba(255,255,255,.7); letter-spacing:2px;}
+  #motivation{font-size:16px; font-weight:700; min-height:24px; margin-top:6px;}
+  #inactiveMsg, #finishedMsg{display:none; font-size:20px; font-weight:900;}
+  #loadingMsg{color:rgba(255,255,255,.6); font-size:14px; font-family:'JetBrains Mono',monospace;}
+
+  @media (max-width:480px){
+    .flip{min-width:58px; font-size:24px; padding:10px 4px;}
+  }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-link">‹ الرئيسية</a>
+
+<div class="stage">
+  <p class="eyebrow">🔥 تحدي الأستاذ</p>
+  <h1 id="titleText">تحدي الساعة</h1>
+
+  <p id="loadingMsg">جارٍ التحقق من التحدي...</p>
+
+  <div id="runningView" style="display:none;">
+    <div class="digits">
+      <div class="unit"><div class="flip" id="dHours">00</div><label>ساعة</label></div>
+      <div class="unit"><div class="flip" id="dMinutes">00</div><label>دقيقة</label></div>
+      <div class="unit"><div class="flip" id="dSeconds">00</div><label>ثانية</label></div>
+    </div>
+    <p id="motivation"></p>
+  </div>
+
+  <p id="inactiveMsg">لا يوجد تحدي مفعّل من الأستاذ حاليًا 🙂</p>
+  <p id="finishedMsg">🏁 انتهى التحدي! أحسنت 👏</p>
+</div>
+
+<script src="timer-sounds.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDoZPCTfHBg-gCupUOd6FPqMMiJm4jT1vA",
+  authDomain: "time-7971c.firebaseapp.com",
+  databaseURL: "https://time-7971c-default-rtdb.firebaseio.com",
+  projectId: "time-7971c",
+  storageBucket: "time-7971c.firebasestorage.app",
+  messagingSenderId: "511397609426",
+  appId: "1:511397609426:web:06ce68a87617922c68120b"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let startTime = null, durationMs = null, colorStart = "#000000", colorEnd = "#ff0000", challengeMode = "down";
+let timerHandle = null;
+let lastLoadedStartTime = null;
+let midAlerted = false, lastMinuteAlerted = false, finishedAlerted = false;
+
+const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
+
+function hexToRgb(hex){
+  hex = hex.replace("#", "");
+  if (hex.length === 3) hex = hex.split("").map(c => c + c).join("");
+  const num = parseInt(hex, 16);
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+function lerp(a, b, t){ return Math.round(a + (b - a) * t); }
+function mixColor(hexA, hexB, t){
+  const a = hexToRgb(hexA), b = hexToRgb(hexB);
+  return `rgb(${lerp(a.r,b.r,t)}, ${lerp(a.g,b.g,t)}, ${lerp(a.b,b.b,t)})`;
+}
+
+function motivationFor(t){
+  if (t < 0.2) return "🚀 بداية قوية! هذه ساعتك للتركيز";
+  if (t < 0.45) return "💪 استمر، أنت في المسار الصحيح";
+  if (t < 0.7) return "🔥 تجاوزت النصف، لا تتوقف الآن";
+  if (t < 0.9) return "⏰ اقتربنا، شد حيلك للنهاية";
+  return "🏁 اللحظات الأخيرة! أعطِ أقصى ما عندك";
+}
+
+function tick(){
+  const now = Date.now();
+  const elapsed = now - startTime;
+  const remaining = durationMs - elapsed;
+
+  if (remaining <= 0){
+    if (!finishedAlerted){ finishedAlerted = true; window.playTimerAlert("finish"); }
+    clearInterval(timerHandle);
+    document.body.style.backgroundColor = colorEnd;
+    document.getElementById("runningView").style.display = "none";
+    document.getElementById("finishedMsg").style.display = "block";
+    return;
+  }
+
+  const t = Math.max(0, Math.min(1, elapsed / durationMs));
+  document.body.style.backgroundColor = mixColor(colorStart, colorEnd, t);
+
+  if (t >= 0.5 && !midAlerted){ midAlerted = true; window.playTimerAlert("mid"); }
+  if (remaining <= 60000 && !lastMinuteAlerted){ lastMinuteAlerted = true; window.playTimerAlert("lastMinute"); }
+
+  const totalSeconds = Math.floor((challengeMode === "up" ? elapsed : remaining) / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  document.getElementById("dHours").innerText = pad(hours);
+  document.getElementById("dMinutes").innerText = pad(minutes);
+  document.getElementById("dSeconds").innerText = pad(seconds);
+  document.getElementById("motivation").innerText = motivationFor(t);
+}
+
+db.ref('challenge').on('value', (snapshot) => {
+  const data = snapshot.val();
+  document.getElementById("loadingMsg").style.display = "none";
+
+  const now = Date.now();
+  const isValid = data && data.active && data.startTime && data.durationMs;
+  const isRunning = isValid && (now < data.startTime + data.durationMs);
+
+  if (!isValid || !isRunning){
+    if (timerHandle) clearInterval(timerHandle);
+    document.getElementById("runningView").style.display = "none";
+    document.getElementById("finishedMsg").style.display = "none";
+    document.getElementById("inactiveMsg").style.display = "block";
+    document.body.style.backgroundColor = "#000000";
+    return;
+  }
+
+  startTime = data.startTime;
+  durationMs = data.durationMs;
+  colorStart = data.colorStart || "#000000";
+  colorEnd = data.colorEnd || "#ff0000";
+  challengeMode = data.mode === "up" ? "up" : "down";
+  document.getElementById("titleText").innerText = data.title || "تحدي الساعة";
+
+  if (startTime !== lastLoadedStartTime){
+    lastLoadedStartTime = startTime;
+    midAlerted = false;
+    lastMinuteAlerted = false;
+    finishedAlerted = false;
+  }
+
+  document.getElementById("inactiveMsg").style.display = "none";
+  document.getElementById("finishedMsg").style.display = "none";
+  document.getElementById("runningView").style.display = "block";
+
+  if (timerHandle) clearInterval(timerHandle);
+  tick();
+  timerHandle = setInterval(tick, 1000);
+});
+</script>
+</body>
+</html>

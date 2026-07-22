@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المؤقتات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#0b0e14; --panel:#12161f; --amber:#ffb400; --red:#ff3b30; --green:#2ecc71; --muted:#7d8698; --border:#232838; }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:#f2f4f8; font-family:'Tajawal',sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(255,180,0,0.05), transparent 42%),
+      radial-gradient(circle at 85% 85%, rgba(255,59,48,0.05), transparent 42%);
+  }
+  .wrap{width:100%; max-width:460px;}
+  .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--amber);
+    text-transform:uppercase; text-align:center; margin:0 0 6px; }
+  h1{text-align:center; margin:0 0 28px; font-size:22px; font-weight:900;}
+
+  .item{
+    display:flex; align-items:center; gap:14px; background:var(--panel); border:1px solid var(--border);
+    border-radius:16px; padding:18px 18px; margin-bottom:14px; text-decoration:none; color:#fff;
+    transition:border-color .2s ease, transform .15s ease;
+  }
+  .item:active{transform:scale(0.98);}
+  .item .icon{
+    width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:22px; flex-shrink:0;
+  }
+  .item .txt{flex:1;}
+  .item .title{font-weight:900; font-size:16px; margin:0 0 3px;}
+  .item .desc{font-size:12.5px; color:var(--muted); margin:0;}
+  .item .status{font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1px; padding:4px 9px; border-radius:20px; flex-shrink:0;}
+
+  .item.annual .icon{background:rgba(255,180,0,.12); color:var(--amber);}
+  .item.annual:hover{border-color:var(--amber);}
+
+  .item.challenge .icon{background:rgba(255,59,48,.12); color:var(--red);}
+  .item.challenge.active{border-color:var(--green);}
+  .item.challenge.active .status{background:rgba(46,204,113,.15); color:var(--green);}
+  .item.challenge.inactive{opacity:.55; pointer-events:none;}
+  .item.challenge.inactive .status{background:rgba(125,134,152,.15); color:var(--muted);}
+
+  .item.student .icon{background:rgba(72,202,228,.12); color:#48cae4;}
+  .item.student:hover{border-color:#48cae4;}
+
+  .loading{text-align:center; color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace; margin-bottom:14px;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <p class="eyebrow">مركز المؤقتات</p>
+  <h1>اختر المؤقت</h1>
+
+  <a href="annual-timer.html" class="item annual">
+    <span class="icon">📅</span>
+    <span class="txt">
+      <p class="title">المؤقت الرئيسي</p>
+      <p class="desc">العد السنوي للقناة</p>
+    </span>
+  </a>
+
+  <p class="loading" id="challengeLoading">جارٍ التحقق من حالة التحدي...</p>
+  <a href="challenge-timer.html" class="item challenge hidden" id="challengeItem" style="display:none;">
+    <span class="icon">🔥</span>
+    <span class="txt">
+      <p class="title">تحدي الأستاذ</p>
+      <p class="desc" id="challengeDesc">تحدٍ خاص من الأستاذ</p>
+    </span>
+    <span class="status" id="challengeStatus">—</span>
+  </a>
+
+  <a href="student-timer.html" class="item student">
+    <span class="icon">📚</span>
+    <span class="txt">
+      <p class="title">مؤقت الطالب</p>
+      <p class="desc">اضبط وقتك الخاص وابدأ الدراسة</p>
+    </span>
+  </a>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDoZPCTfHBg-gCupUOd6FPqMMiJm4jT1vA",
+  authDomain: "time-7971c.firebaseapp.com",
+  databaseURL: "https://time-7971c-default-rtdb.firebaseio.com",
+  projectId: "time-7971c",
+  storageBucket: "time-7971c.firebasestorage.app",
+  messagingSenderId: "511397609426",
+  appId: "1:511397609426:web:06ce68a87617922c68120b"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+db.ref('challenge').on('value', (snapshot) => {
+  const data = snapshot.val();
+  const item = document.getElementById("challengeItem");
+  const loading = document.getElementById("challengeLoading");
+  const statusEl = document.getElementById("challengeStatus");
+  const descEl = document.getElementById("challengeDesc");
+  loading.style.display = "none";
+  item.style.display = "flex";
+
+  const now = Date.now();
+  const isRunning = data && data.active && data.startTime && data.durationMs &&
+                     (now < data.startTime + data.durationMs);
+
+  if (isRunning){
+    item.classList.add("active");
+    item.classList.remove("inactive");
+    statusEl.innerText = "مفعّل";
+    descEl.innerText = "التحدي شغّال الآن — اضغط للدخول";
+  } else {
+    item.classList.add("inactive");
+    item.classList.remove("active");
+    statusEl.innerText = "غير مفعّل";
+    descEl.innerText = "لا يوجد تحدي حاليًا";
+  }
+});
+</script>
+</body>
+</html>
