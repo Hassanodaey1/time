@@ -559,7 +559,9 @@ window.saveProfile = function(){
     return;
   }
 
-  let p = getProfile();
+  const existing = getProfile();
+  const isNewProfile = !existing;
+  let p = existing;
   if (!p) p = { id: uid() };
   p.name = name;
   p.age = age;
@@ -567,11 +569,12 @@ window.saveProfile = function(){
   p.governorate = governorate;
   localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
 
-  db.ref('studyLeaderboard/' + p.id).update({
+  const profileUpdate = {
     name: p.name, age: p.age, country: p.country, governorate: p.governorate,
     updatedAt: firebase.database.ServerValue.TIMESTAMP
-  });
-  db.ref('studyLeaderboard/' + p.id + '/totalSeconds').transaction(cur => cur === null ? 0 : cur);
+  };
+  if (isNewProfile) profileUpdate.totalSeconds = 0; // مسموح فقط عند إنشاء السجل لأول مرة (تفرضه قاعدة الأمان)
+  db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
 
   document.getElementById("profileOverlay").style.display = "none";
   updateGreeting();
@@ -585,10 +588,14 @@ function updateGreeting(){
 function bankStudyTime(seconds){
   const p = getProfile();
   if (!p || seconds <= 0) return;
-  db.ref('studyLeaderboard/' + p.id + '/totalSeconds').transaction(cur => (cur || 0) + seconds);
-  db.ref('studyLeaderboard/' + p.id).update({
-    name: p.name, age: p.age, country: p.country, governorate: p.governorate,
-    updatedAt: firebase.database.ServerValue.TIMESTAMP
+  const ref = db.ref('studyLeaderboard/' + p.id);
+  ref.child('totalSeconds').once('value').then(snap => {
+    const newTotal = (snap.val() || 0) + seconds;
+    ref.update({
+      name: p.name, age: p.age, country: p.country, governorate: p.governorate,
+      totalSeconds: newTotal,
+      updatedAt: firebase.database.ServerValue.TIMESTAMP
+    });
   });
 }
 
