@@ -7,7 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#0d1b2a; --panel:#122438; --accent:#48cae4; --muted:#5f8aa6; --border:#1c344a; --green:#2ecc71; }
+  :root{ --bg:#0d1b2a; --panel:#122438; --accent:#ffb400; --muted:#5f8aa6; --border:#1c344a; --green:#2ecc71; }
+  body[data-theme="aurora"]{ --accent:#00d4aa; }
+  body[data-theme="ember"]{ --accent:#ff6b35; }
+  body[data-theme="arctic"]{ --accent:#48cae4; }
+  body[data-theme="royal"]{ --accent:#ffd60a; }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
@@ -175,6 +179,10 @@ const db = firebase.database();
 
 db.ref('studentSettings/style').on('value', (snapshot) => {
   document.body.setAttribute("data-style", snapshot.val() || "default");
+});
+
+db.ref('themeSettings/theme').on('value', (snapshot) => {
+  document.body.setAttribute("data-theme", snapshot.val() || "broadcast");
 });
 
 function setRingProgress(pct){
