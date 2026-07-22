@@ -89,6 +89,54 @@
   }
   body[data-style="neon"] .unit label{text-shadow:0 0 6px var(--amber);}
 
+  /* نمط حلقي: حلقة تقدّم دائرية حقيقية تتحرك حسب الوقت */
+  :root{--ring-pct:0%;}
+  body[data-style="ring"] .monitor{
+    border-radius:50%; aspect-ratio:1/1; width:340px; max-width:92vw;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:28px; border:none; position:relative;
+    background:
+      conic-gradient(var(--amber) var(--ring-pct), #1a1e29 0),
+      radial-gradient(circle, var(--panel) 62%, transparent 63%);
+  }
+  body[data-style="ring"] .monitor::before{display:none;}
+  body[data-style="ring"] .tally{position:absolute; top:20px; inset-inline-end:26px; margin:0;}
+  body[data-style="ring"] #eventTitle{font-size:13px; margin:0 0 6px; max-width:70%;}
+  body[data-style="ring"] .digits{gap:2px; flex-wrap:wrap; max-width:64%;}
+  body[data-style="ring"] .flip{
+    background:transparent; border:none; box-shadow:none; text-shadow:none;
+    font-size:26px; min-width:auto; padding:0 2px; color:#fff;
+  }
+  body[data-style="ring"] .unit label{font-size:9px;}
+
+  /* نمط رقمي بسيط: أرقام بيضاء ضخمة على أسود صافٍ */
+  body[data-style="digital"] .monitor{background:#000; border:none; box-shadow:none; border-radius:14px; position:relative;}
+  body[data-style="digital"] .monitor::before{display:none;}
+  body[data-style="digital"] .monitor::after{
+    content:"🔔"; position:absolute; top:16px; inset-inline-start:20px; font-size:17px; opacity:.85;
+  }
+  body[data-style="digital"] .tally{display:none;}
+  body[data-style="digital"] #eventTitle{display:none;}
+  body[data-style="digital"] .digits{gap:4px;}
+  body[data-style="digital"] .flip{
+    background:transparent; border:none; box-shadow:none; text-shadow:none;
+    font-size:58px; color:#fff; min-width:auto; padding:6px 8px;
+  }
+  body[data-style="digital"] .unit label{display:none;}
+
+  /* نمط نقطي: طابع لوحة LED نقطية كهرمانية */
+  body[data-style="dotmatrix"] .monitor{background:#000; border:6px solid #141414; border-radius:6px; box-shadow:0 20px 50px rgba(0,0,0,.6);}
+  body[data-style="dotmatrix"] .monitor::before{
+    background:repeating-radial-gradient(circle, rgba(255,140,26,.05) 0px, rgba(255,140,26,.05) 1px, transparent 1px, transparent 4px);
+  }
+  body[data-style="dotmatrix"] #eventTitle{color:#ff8c1a;}
+  body[data-style="dotmatrix"] .flip{
+    background:radial-gradient(circle, rgba(255,140,26,.10) 1px, transparent 1.5px) 0 0/6px 6px, #050505;
+    border:2px solid #1a1a1a; border-radius:4px; color:#ff8c1a;
+    text-shadow:0 0 6px #ff8c1a, 0 0 16px rgba(255,140,26,.55);
+  }
+  body[data-style="dotmatrix"] .unit label{color:#a3651f;}
+
   #finishedMsg{display:none; font-size:22px; font-weight:900; color:var(--red); margin-top:10px;}
   #loadingMsg{color:var(--muted); font-size:14px; font-family:'JetBrains Mono',monospace;}
   .back-link{
@@ -149,9 +197,15 @@ let finishedAlerted = false;
 
 const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
 
+function setRingProgress(pct){
+  pct = Math.max(0, Math.min(100, pct));
+  document.body.style.setProperty('--ring-pct', pct + '%');
+}
+
 function tick(){
   if (targetTime === null) return;
   const now = Date.now();
+  const total = targetTime - startTime;
 
   if (mode === "down"){
     let diff = targetTime - now;
@@ -160,6 +214,7 @@ function tick(){
       clearInterval(timerHandle);
       document.getElementById("digitsWrap").style.display = "none";
       document.getElementById("finishedMsg").style.display = "block";
+      setRingProgress(0);
       return;
     }
     if (diff <= 60000 && !lastMinuteAlerted){
@@ -167,6 +222,7 @@ function tick(){
       window.playTimerAlert("lastMinute");
     }
     renderDigits(diff);
+    if (total > 0) setRingProgress((diff / total) * 100);
     return;
   }
 
@@ -179,6 +235,7 @@ function tick(){
     clearInterval(timerHandle);
     document.getElementById("digitsWrap").style.display = "none";
     document.getElementById("finishedMsg").style.display = "block";
+    setRingProgress(100);
     return;
   }
   if (remaining <= 60000 && !lastMinuteAlerted){
@@ -186,6 +243,7 @@ function tick(){
     window.playTimerAlert("lastMinute");
   }
   renderDigits(Math.max(0, elapsed));
+  if (total > 0) setRingProgress((elapsed / total) * 100);
 }
 
 function renderDigits(diff){
