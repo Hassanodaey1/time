@@ -334,6 +334,8 @@
 <script>
 /* ================= المؤقت ================= */
 let selectedMinutes = 15;
+let bankedSeconds = 0;
+let secondsSinceBank = 0;
 let remainingMs = 0;
 let totalMs = 0;
 let paused = false;
@@ -413,6 +415,8 @@ window.startTimer = function(){
   paused = false;
   midAlerted = false;
   lastMinuteAlerted = false;
+  bankedSeconds = 0;
+  secondsSinceBank = 0;
 
   document.getElementById("setupView").classList.add("hidden");
   document.getElementById("runningView").classList.remove("hidden");
@@ -431,6 +435,14 @@ window.startTimer = function(){
 function step(){
   if (paused) return;
   remainingMs -= 1000;
+  secondsSinceBank++;
+
+  /* تحديث حي لرصيد الطالب في الترتيب كل ٦٠ ثانية أثناء الجلسة نفسها، بدون انتظار انتهاء المؤقت */
+  if (secondsSinceBank >= 60){
+    bankStudyTime(secondsSinceBank);
+    bankedSeconds += secondsSinceBank;
+    secondsSinceBank = 0;
+  }
 
   if (remainingMs <= 0){
     clearInterval(timerHandle);
@@ -442,7 +454,10 @@ function step(){
     document.getElementById("doneMsg").style.display = "block";
     document.title = "🎉 انتهت الجلسة";
     if (wakeLock){ wakeLock.release().catch(()=>{}); wakeLock = null; }
-    bankStudyTime(Math.round(totalMs / 1000));
+    const totalSeconds = Math.round(totalMs / 1000);
+    const remainder = totalSeconds - bankedSeconds;
+    if (remainder > 0) bankStudyTime(remainder);
+    bankedSeconds = totalSeconds;
     return;
   }
 
@@ -483,8 +498,11 @@ window.togglePause = function(){
 
 window.resetTimer = function(){
   if (timerHandle) clearInterval(timerHandle);
-  const studiedMs = totalMs - remainingMs;
-  if (studiedMs > 1000) bankStudyTime(Math.round(studiedMs / 1000));
+  const elapsedSeconds = Math.round((totalMs - remainingMs) / 1000);
+  const remainder = elapsedSeconds - bankedSeconds;
+  if (remainder > 0) bankStudyTime(remainder);
+  bankedSeconds = 0;
+  secondsSinceBank = 0;
   document.getElementById("setupView").classList.remove("hidden");
   document.getElementById("runningView").classList.add("hidden");
   document.title = baseTitle;
