@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0e14">
 <title>مؤقت الطالب</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -162,8 +165,32 @@ let totalMs = 0;
 let paused = false;
 let timerHandle = null;
 let midAlerted = false, lastMinuteAlerted = false;
+const baseTitle = document.title;
 
 const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
+
+function formatDuration(ms){
+  ms = Math.max(0, ms);
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  return `${pad(minutes)}:${pad(seconds)}`;
+}
+
+/* إبقاء الشاشة مضيئة أثناء جلسة الدراسة */
+let wakeLock = null;
+async function requestWakeLock(){
+  try{
+    if ("wakeLock" in navigator){
+      wakeLock = await navigator.wakeLock.request("screen");
+    }
+  }catch(e){ /* غير مدعوم، تجاهل بصمت */ }
+}
+document.addEventListener("visibilitychange", () => {
+  if (wakeLock !== null && document.visibilityState === "visible") requestWakeLock();
+});
 
 const firebaseConfig = {
   apiKey: "AIzaSyDoZPCTfHBg-gCupUOd6FPqMMiJm4jT1vA",
@@ -221,6 +248,7 @@ window.startTimer = function(){
   window.playTimerAlert("start");
   setRingProgress(100);
   renderTime();
+  requestWakeLock();
   if (timerHandle) clearInterval(timerHandle);
   timerHandle = setInterval(step, 1000);
 };
@@ -237,6 +265,8 @@ function step(){
     window.playTimerAlert("finish");
     document.getElementById("digitsWrap").style.display = "none";
     document.getElementById("doneMsg").style.display = "block";
+    document.title = "🎉 انتهت الجلسة";
+    if (wakeLock){ wakeLock.release().catch(()=>{}); wakeLock = null; }
     return;
   }
 
@@ -246,6 +276,7 @@ function step(){
 
   setRingProgress((remainingMs / totalMs) * 100);
   renderTime();
+  document.title = "📚 " + formatDuration(remainingMs);
 }
 
 function renderTime(){
@@ -267,6 +298,8 @@ window.resetTimer = function(){
   if (timerHandle) clearInterval(timerHandle);
   document.getElementById("setupView").classList.remove("hidden");
   document.getElementById("runningView").classList.add("hidden");
+  document.title = baseTitle;
+  if (wakeLock){ wakeLock.release().catch(()=>{}); wakeLock = null; }
 };
 </script>
 </body>
