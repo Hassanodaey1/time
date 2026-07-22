@@ -141,6 +141,7 @@ const db = firebase.database();
 
 let mode = "down";
 let targetTime = null;
+let startTime = null;
 let timerHandle = null;
 let lastLoadedTargetTime = null;
 let lastMinuteAlerted = false;
@@ -169,16 +170,22 @@ function tick(){
     return;
   }
 
-  // mode === "up"
-  if (now < targetTime){
-    // لم يبدأ الحدث بعد: نعرض الوقت المتبقي على البداية
-    document.getElementById("modeLabel").innerText = "يبدأ خلال";
-    renderDigits(targetTime - now);
-  } else {
-    // الحدث بدأ: نعرض الوقت المنقضي منذ البداية
-    document.getElementById("modeLabel").innerText = "منذ البدء";
-    renderDigits(now - targetTime);
+  // mode === "up": يبدأ من صفر عند لحظة آخر حفظ للمؤقت، ويزداد حتى يصل الوقت المحدد
+  const remaining = targetTime - now;
+  const elapsed = now - startTime;
+
+  if (remaining <= 0){
+    if (!finishedAlerted){ finishedAlerted = true; window.playTimerAlert("finish"); }
+    clearInterval(timerHandle);
+    document.getElementById("digitsWrap").style.display = "none";
+    document.getElementById("finishedMsg").style.display = "block";
+    return;
   }
+  if (remaining <= 60000 && !lastMinuteAlerted){
+    lastMinuteAlerted = true;
+    window.playTimerAlert("lastMinute");
+  }
+  renderDigits(Math.max(0, elapsed));
 }
 
 function renderDigits(diff){
@@ -207,6 +214,7 @@ db.ref('countdown').on('value', (snapshot) => {
 
   mode = data.mode === "up" ? "up" : "down";
   targetTime = data.targetTime;
+  startTime = data.updatedAt || (targetTime - 3600000);
   if (targetTime !== lastLoadedTargetTime){
     lastLoadedTargetTime = targetTime;
     lastMinuteAlerted = false;
