@@ -278,7 +278,6 @@ db.ref('countdown').on('value', (snapshot) => {
     lastMinuteAlerted = false;
     finishedAlerted = false;
   }
-  document.body.setAttribute("data-theme", data.theme || "broadcast");
   document.body.setAttribute("data-style", data.style || "default");
   document.getElementById("eventTitle").innerText = data.title || "";
   document.getElementById("modeLabel").innerText = mode === "down" ? "عد تنازلي" : "عد تصاعدي";
@@ -288,6 +287,10 @@ db.ref('countdown').on('value', (snapshot) => {
   if (timerHandle) clearInterval(timerHandle);
   tick();
   timerHandle = setInterval(tick, 1000);
+});
+
+db.ref('themeSettings/theme').on('value', (snapshot) => {
+  document.body.setAttribute("data-theme", snapshot.val() || "broadcast");
 });
 </script>
 </body>
