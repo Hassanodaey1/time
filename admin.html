@@ -64,6 +64,11 @@
   .swatch{width:16px; height:16px; border-radius:50%; flex-shrink:0; box-shadow:0 0 8px rgba(0,0,0,.4);}
 
   .card + .card{margin-top:16px;}
+  .pattern-box{
+    border:1px solid var(--border); border-radius:12px; padding:14px 14px 4px;
+    margin-top:14px; background:var(--panel-2);
+  }
+  .pattern-box-title{font-size:13.5px; font-weight:900; color:#fff; margin:0 0 10px;}
   .color-row{display:flex; gap:10px;}
   .color-row > div{flex:1;}
   input[type="color"]{padding:4px; height:44px; cursor:pointer;}
@@ -156,14 +161,9 @@
     <span class="txt"><b>تحدي الأستاذ</b><small>بدء أو إيقاف مؤقت التحدي</small></span>
   </button>
 
-  <button type="button" class="hub-btn" onclick="showPanel('themes')">
+  <button type="button" class="hub-btn" onclick="showPanel('themesPatterns')">
     <span class="icon">🎨</span>
-    <span class="txt"><b>ثيمات المؤقت الرئيسي</b><small>لون وشكل أرقام المؤقت الرئيسي في صفحة العرض</small></span>
-  </button>
-
-  <button type="button" class="hub-btn" onclick="showPanel('studentStyle')">
-    <span class="icon">📚</span>
-    <span class="txt"><b>نمط مؤقت الطالب</b><small>شكل أرقام مؤقت الطالب (مستقل عن باقي المؤقتات)</small></span>
+    <span class="txt"><b>الثيمات والأنماط</b><small>لون الأرقام لكل المؤقتات + شكل كل مؤقت على حدة</small></span>
   </button>
 
   <button id="logoutBtnHub" onclick="doLogout()">تسجيل الخروج</button>
@@ -229,83 +229,82 @@
     <button class="toggle-btn" onclick="stopChallenge()">⏹️ إيقاف التحدي</button>
   </div>
   <div id="challengeStatusMsg" class="hint"></div>
-
-  <div class="divider"></div>
-  <label>نمط عرض أرقام تحدي الأستاذ (مستقل عن باقي المؤقتات)</label>
-  <div class="themes" id="challengeStylesGrid">
-    <button type="button" class="theme-btn active" id="chstyle-default" onclick="setChallengeStyle('default')">🔲 افتراضي</button>
-    <button type="button" class="theme-btn" id="chstyle-circular" onclick="setChallengeStyle('circular')">⭕ دائري</button>
-    <button type="button" class="theme-btn" id="chstyle-pixel" onclick="setChallengeStyle('pixel')">👾 بكسل</button>
-    <button type="button" class="theme-btn" id="chstyle-neon" onclick="setChallengeStyle('neon')">✨ نيون</button>
-    <button type="button" class="theme-btn" id="chstyle-ring" onclick="setChallengeStyle('ring')">🟠 حلقي</button>
-    <button type="button" class="theme-btn" id="chstyle-digital" onclick="setChallengeStyle('digital')">⬛ رقمي بسيط</button>
-    <button type="button" class="theme-btn" id="chstyle-dotmatrix" onclick="setChallengeStyle('dotmatrix')">🔶 نقطي LED</button>
-  </div>
-  <div id="challengeStyleSaveStatus" class="hint"></div>
 </div>
 
-<!-- لوحة الثيمات والأنماط -->
-<div class="card hidden" id="themesPanel">
+<!-- لوحة الثيمات والأنماط الموحدة -->
+<div class="card hidden" id="themesPatternsPanel">
   <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
   <p class="eyebrow">🎨 الثيمات والأنماط</p>
-  <h1>لون وشكل أرقام المؤقتات</h1>
+  <h1>ألوان وأشكال المؤقتات</h1>
 
-  <label>ثيم لون الأرقام</label>
-  <div class="themes" id="themesGrid">
-    <button type="button" class="theme-btn active" id="theme-broadcast" onclick="setTheme('broadcast')">
+  <label>ثيم لون الأرقام — مشترك ويُطبَّق فورًا على المؤقت الرئيسي وتحدي الأستاذ ومؤقت الطالب معًا</label>
+  <div class="themes" id="sharedThemesGrid">
+    <button type="button" class="theme-btn active" id="theme-broadcast" onclick="setSharedTheme('broadcast')">
       <span class="swatch" style="background:linear-gradient(135deg,#ffb400,#ff3b30)"></span>استوديو
     </button>
-    <button type="button" class="theme-btn" id="theme-aurora" onclick="setTheme('aurora')">
+    <button type="button" class="theme-btn" id="theme-aurora" onclick="setSharedTheme('aurora')">
       <span class="swatch" style="background:linear-gradient(135deg,#00d4aa,#7c5cff)"></span>الشفق
     </button>
-    <button type="button" class="theme-btn" id="theme-ember" onclick="setTheme('ember')">
+    <button type="button" class="theme-btn" id="theme-ember" onclick="setSharedTheme('ember')">
       <span class="swatch" style="background:linear-gradient(135deg,#ff6b35,#f7c548)"></span>الجمرة
     </button>
-    <button type="button" class="theme-btn" id="theme-arctic" onclick="setTheme('arctic')">
+    <button type="button" class="theme-btn" id="theme-arctic" onclick="setSharedTheme('arctic')">
       <span class="swatch" style="background:linear-gradient(135deg,#48cae4,#e0fbfc)"></span>القطب
     </button>
-    <button type="button" class="theme-btn" id="theme-royal" onclick="setTheme('royal')">
+    <button type="button" class="theme-btn" id="theme-royal" onclick="setSharedTheme('royal')">
       <span class="swatch" style="background:linear-gradient(135deg,#ffd60a,#e63dc4)"></span>الملكي
     </button>
   </div>
+  <div id="sharedThemeSaveStatus" class="hint"></div>
 
   <div class="divider"></div>
 
-  <label>نمط عرض الأرقام (شكل المؤقت بالكامل)</label>
-  <div class="themes" id="stylesGrid">
-    <button type="button" class="theme-btn active" id="style-default" onclick="setStyle('default')">🔲 افتراضي</button>
-    <button type="button" class="theme-btn" id="style-circular" onclick="setStyle('circular')">⭕ دائري</button>
-    <button type="button" class="theme-btn" id="style-pixel" onclick="setStyle('pixel')">👾 بكسل</button>
-    <button type="button" class="theme-btn" id="style-neon" onclick="setStyle('neon')">✨ نيون</button>
-    <button type="button" class="theme-btn" id="style-ring" onclick="setStyle('ring')">🟠 حلقي</button>
-    <button type="button" class="theme-btn" id="style-digital" onclick="setStyle('digital')">⬛ رقمي بسيط</button>
-    <button type="button" class="theme-btn" id="style-dotmatrix" onclick="setStyle('dotmatrix')">🔶 نقطي LED</button>
+  <label>الأنماط — شكل صندوق الأرقام، كل مؤقت له نمط مستقل عن غيره</label>
+
+  <div class="pattern-box">
+    <p class="pattern-box-title">⏱️ المؤقت الرئيسي</p>
+    <div class="themes" id="stylesGrid">
+      <button type="button" class="theme-btn active" id="style-default" onclick="setStyle('default')">🔲 افتراضي</button>
+      <button type="button" class="theme-btn" id="style-circular" onclick="setStyle('circular')">⭕ دائري</button>
+      <button type="button" class="theme-btn" id="style-pixel" onclick="setStyle('pixel')">👾 بكسل</button>
+      <button type="button" class="theme-btn" id="style-neon" onclick="setStyle('neon')">✨ نيون</button>
+      <button type="button" class="theme-btn" id="style-ring" onclick="setStyle('ring')">🟠 حلقي</button>
+      <button type="button" class="theme-btn" id="style-digital" onclick="setStyle('digital')">⬛ رقمي بسيط</button>
+      <button type="button" class="theme-btn" id="style-dotmatrix" onclick="setStyle('dotmatrix')">🔶 نقطي LED</button>
+    </div>
+    <div id="themeSaveStatus" class="hint"></div>
   </div>
 
-  <div id="themeSaveStatus"></div>
-  <div class="divider"></div>
-  <p class="hint">أي اختيار هنا يُحفظ ويُطبّق فورًا على صفحة العرض — لا حاجة للضغط على أي زر إضافي، وكل نمط يغيّر شكل صندوق الأرقام بالكامل (الشكل، الخط، الحدود، والتوهج).</p>
-</div>
-
-<!-- لوحة نمط مؤقت الطالب -->
-<div class="card hidden" id="studentStylePanel">
-  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
-  <p class="eyebrow">📚 نمط مؤقت الطالب</p>
-  <h1>شكل أرقام مؤقت الطالب</h1>
-
-  <label>نمط عرض الأرقام (مستقل عن المؤقت الرئيسي وتحدي الأستاذ)</label>
-  <div class="themes" id="studentStylesGrid">
-    <button type="button" class="theme-btn active" id="stustyle-default" onclick="setStudentStyle('default')">🔲 افتراضي</button>
-    <button type="button" class="theme-btn" id="stustyle-circular" onclick="setStudentStyle('circular')">⭕ دائري</button>
-    <button type="button" class="theme-btn" id="stustyle-pixel" onclick="setStudentStyle('pixel')">👾 بكسل</button>
-    <button type="button" class="theme-btn" id="stustyle-neon" onclick="setStudentStyle('neon')">✨ نيون</button>
-    <button type="button" class="theme-btn" id="stustyle-ring" onclick="setStudentStyle('ring')">🟠 حلقي</button>
-    <button type="button" class="theme-btn" id="stustyle-digital" onclick="setStudentStyle('digital')">⬛ رقمي بسيط</button>
-    <button type="button" class="theme-btn" id="stustyle-dotmatrix" onclick="setStudentStyle('dotmatrix')">🔶 نقطي LED</button>
+  <div class="pattern-box">
+    <p class="pattern-box-title">🔥 تحدي الأستاذ</p>
+    <div class="themes" id="challengeStylesGrid">
+      <button type="button" class="theme-btn active" id="chstyle-default" onclick="setChallengeStyle('default')">🔲 افتراضي</button>
+      <button type="button" class="theme-btn" id="chstyle-circular" onclick="setChallengeStyle('circular')">⭕ دائري</button>
+      <button type="button" class="theme-btn" id="chstyle-pixel" onclick="setChallengeStyle('pixel')">👾 بكسل</button>
+      <button type="button" class="theme-btn" id="chstyle-neon" onclick="setChallengeStyle('neon')">✨ نيون</button>
+      <button type="button" class="theme-btn" id="chstyle-ring" onclick="setChallengeStyle('ring')">🟠 حلقي</button>
+      <button type="button" class="theme-btn" id="chstyle-digital" onclick="setChallengeStyle('digital')">⬛ رقمي بسيط</button>
+      <button type="button" class="theme-btn" id="chstyle-dotmatrix" onclick="setChallengeStyle('dotmatrix')">🔶 نقطي LED</button>
+    </div>
+    <div id="challengeStyleSaveStatus" class="hint"></div>
   </div>
-  <div id="studentStyleSaveStatus" class="hint"></div>
+
+  <div class="pattern-box">
+    <p class="pattern-box-title">📚 مؤقت الطالب</p>
+    <div class="themes" id="studentStylesGrid">
+      <button type="button" class="theme-btn active" id="stustyle-default" onclick="setStudentStyle('default')">🔲 افتراضي</button>
+      <button type="button" class="theme-btn" id="stustyle-circular" onclick="setStudentStyle('circular')">⭕ دائري</button>
+      <button type="button" class="theme-btn" id="stustyle-pixel" onclick="setStudentStyle('pixel')">👾 بكسل</button>
+      <button type="button" class="theme-btn" id="stustyle-neon" onclick="setStudentStyle('neon')">✨ نيون</button>
+      <button type="button" class="theme-btn" id="stustyle-ring" onclick="setStudentStyle('ring')">🟠 حلقي</button>
+      <button type="button" class="theme-btn" id="stustyle-digital" onclick="setStudentStyle('digital')">⬛ رقمي بسيط</button>
+      <button type="button" class="theme-btn" id="stustyle-dotmatrix" onclick="setStudentStyle('dotmatrix')">🔶 نقطي LED</button>
+    </div>
+    <div id="studentStyleSaveStatus" class="hint"></div>
+  </div>
+
   <div class="divider"></div>
-  <p class="hint">هذا النمط يُطبَّق على صفحة مؤقت الطالب لجميع الطلاب فور الحفظ.</p>
+  <p class="hint">أي اختيار هنا يُحفظ ويُطبّق فورًا — لا حاجة لأي زر إضافي.</p>
 </div>
 
 </div><!-- /.page -->
@@ -343,8 +342,7 @@ function hideAllPanels(){
   document.getElementById("hubView").classList.add("hidden");
   document.getElementById("mainTimerPanel").classList.add("hidden");
   document.getElementById("challengePanel").classList.add("hidden");
-  document.getElementById("themesPanel").classList.add("hidden");
-  document.getElementById("studentStylePanel").classList.add("hidden");
+  document.getElementById("themesPatternsPanel").classList.add("hidden");
 }
 
 window.showHub = function(){
@@ -356,37 +354,54 @@ window.showPanel = function(name){
   hideAllPanels();
   if (name === "main") document.getElementById("mainTimerPanel").classList.remove("hidden");
   else if (name === "challenge") document.getElementById("challengePanel").classList.remove("hidden");
-  else if (name === "themes") document.getElementById("themesPanel").classList.remove("hidden");
-  else if (name === "studentStyle") document.getElementById("studentStylePanel").classList.remove("hidden");
+  else if (name === "themesPatterns") document.getElementById("themesPatternsPanel").classList.remove("hidden");
 };
 
 /* ============ الثيمات والأنماط (تُحفظ فورًا) ============ */
+
+/* الثيم المشترك: يطبَّق على المؤقت الرئيسي + تحدي الأستاذ + مؤقت الطالب معًا */
+window.setSharedTheme = function(theme, save){
+  if (save === undefined) save = true;
+  currentTheme = theme;
+  THEME_IDS.forEach(id => {
+    document.getElementById("theme-" + id).classList.toggle("active", id === theme);
+  });
+  if (save) saveSharedTheme();
+};
+
+function saveSharedTheme(){
+  const msg = document.getElementById("sharedThemeSaveStatus");
+  msg.style.color = "#7d8698";
+  msg.innerText = "جارٍ الحفظ...";
+  db.ref('themeSettings').update({ theme: currentTheme })
+    .then(() => {
+      msg.style.color = "#2ecc71";
+      msg.innerText = "تم الحفظ ✓ — اللون الجديد ظاهر الآن في كل المؤقتات.";
+    })
+    .catch((error) => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "فشل الحفظ: " + error.message;
+    });
+}
+
+/* نمط المؤقت الرئيسي فقط */
 window.setStyle = function(style, save){
   if (save === undefined) save = true;
   currentStyle = style;
   STYLE_IDS.forEach(id => {
     document.getElementById("style-" + id).classList.toggle("active", id === style);
   });
-  if (save) saveThemeStyle();
+  if (save) saveMainStyle();
 };
 
-window.setTheme = function(theme, save){
-  if (save === undefined) save = true;
-  currentTheme = theme;
-  THEME_IDS.forEach(id => {
-    document.getElementById("theme-" + id).classList.toggle("active", id === theme);
-  });
-  if (save) saveThemeStyle();
-};
-
-function saveThemeStyle(){
+function saveMainStyle(){
   const msg = document.getElementById("themeSaveStatus");
   msg.style.color = "#7d8698";
   msg.innerText = "جارٍ الحفظ...";
-  db.ref('countdown').update({ theme: currentTheme, style: currentStyle })
+  db.ref('countdown').update({ style: currentStyle })
     .then(() => {
       msg.style.color = "#2ecc71";
-      msg.innerText = "تم الحفظ ✓ — التغيير ظاهر الآن في صفحة العرض.";
+      msg.innerText = "تم الحفظ ✓ — النمط ظاهر الآن في صفحة العرض.";
     })
     .catch((error) => {
       msg.style.color = "#ff3b30";
@@ -491,6 +506,7 @@ auth.onAuthStateChanged((user) => {
     loadCurrentState();
     loadChallengeState();
     loadStudentStyleState();
+    loadSharedThemeState();
     showHub();
   } else {
     hideAllPanels();
@@ -515,7 +531,6 @@ function loadCurrentState(){
         return;
       }
       setMode(data.mode === "up" ? "up" : "down");
-      setTheme(THEME_IDS.includes(data.theme) ? data.theme : "broadcast", false);
       setStyle(STYLE_IDS.includes(data.style) ? data.style : "default", false);
       document.getElementById("titleInput").value = data.title || "";
       if (data.targetTime){
@@ -528,6 +543,15 @@ function loadCurrentState(){
     .catch(() => {
       hint.innerText = "تعذّر تحميل الحالة الحالية.";
     });
+}
+
+function loadSharedThemeState(){
+  db.ref('themeSettings/theme').once('value')
+    .then((snapshot) => {
+      const val = snapshot.val();
+      setSharedTheme(THEME_IDS.includes(val) ? val : "broadcast", false);
+    })
+    .catch(() => {});
 }
 
 function loadChallengeState(){
@@ -637,10 +661,8 @@ window.updateTargetTime = function(){
 
   const targetTimestamp = new Date(val).getTime();
 
-  db.ref('countdown').set({
+  db.ref('countdown').update({
     mode: currentMode,
-    theme: currentTheme,
-    style: currentStyle,
     targetTime: targetTimestamp,
     title: title,
     updatedAt: Date.now()
