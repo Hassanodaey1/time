@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0e14">
 <title>المؤقت</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -144,6 +147,16 @@
     font-size:13px; color:var(--muted); text-decoration:none; opacity:.7;
   }
   .back-link:hover{opacity:1;}
+  .fs-btn{
+    position:fixed; top:18px; inset-inline-end:18px; width:36px; height:36px; border-radius:9px;
+    background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--muted);
+    font-size:16px; cursor:pointer; z-index:5;
+  }
+  .fs-btn:hover{color:#fff; border-color:var(--amber);}
+  .offline-msg{
+    display:none; font-size:11.5px; color:var(--red); background:rgba(255,59,48,.1);
+    border:1px solid rgba(255,59,48,.3); border-radius:8px; padding:6px 10px; margin:0 0 12px;
+  }
 
   @media (max-width:480px){
     .flip{min-width:60px; font-size:26px; padding:10px 4px;}
@@ -152,9 +165,11 @@
 </head>
 <body data-theme="broadcast" data-style="default">
 <a href="index.html" class="back-link">‹ الرئيسية</a>
+<button type="button" id="fullscreenBtn" class="fs-btn" onclick="toggleFullscreen()" title="ملء الشاشة">⛶</button>
 
 <div class="monitor">
   <div class="tally"><span class="dot"></span><span id="modeLabel">ON AIR</span></div>
+  <p id="offlineMsg" class="offline-msg">⚠️ الاتصال منقطع حاليًا — الوقت المعروض قد لا يكون محدثًا</p>
   <p id="eventTitle"></p>
 
   <p id="loadingMsg">جارٍ الاتصال بالمؤقت...</p>
@@ -194,8 +209,60 @@ let timerHandle = null;
 let lastLoadedTargetTime = null;
 let lastMinuteAlerted = false;
 let finishedAlerted = false;
+let serverTimeOffset = 0;
+const baseTitle = document.title;
 
 const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
+
+function serverNow(){ return Date.now() + serverTimeOffset; }
+
+function formatDuration(ms){
+  ms = Math.max(0, ms);
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (days > 0) return `${days}ي ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  if (hours > 0) return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  return `${pad(minutes)}:${pad(seconds)}`;
+}
+
+db.ref(".info/serverTimeOffset").on("value", (snap) => {
+  serverTimeOffset = snap.val() || 0;
+});
+
+db.ref(".info/connected").on("value", (snap) => {
+  document.getElementById("offlineMsg").style.display = (snap.val() === true) ? "none" : "block";
+});
+
+/* إبقاء الشاشة مضيئة أثناء العرض */
+let wakeLock = null;
+async function requestWakeLock(){
+  try{
+    if ("wakeLock" in navigator){
+      wakeLock = await navigator.wakeLock.request("screen");
+    }
+  }catch(e){ /* غير مدعوم على هذا المتصفح، تجاهل بصمت */ }
+}
+requestWakeLock();
+document.addEventListener("visibilitychange", () => {
+  if (wakeLock !== null && document.visibilityState === "visible") requestWakeLock();
+});
+
+/* ملء الشاشة */
+window.toggleFullscreen = function(){
+  try{
+    if (!document.fullscreenElement){
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }catch(e){ /* غير مدعوم، تجاهل */ }
+};
+if (!document.documentElement.requestFullscreen){
+  document.getElementById("fullscreenBtn").style.display = "none";
+}
 
 function setRingProgress(pct){
   pct = Math.max(0, Math.min(100, pct));
@@ -204,7 +271,7 @@ function setRingProgress(pct){
 
 function tick(){
   if (targetTime === null) return;
-  const now = Date.now();
+  const now = serverNow();
   const total = targetTime - startTime;
 
   if (mode === "down"){
@@ -215,6 +282,7 @@ function tick(){
       document.getElementById("digitsWrap").style.display = "none";
       document.getElementById("finishedMsg").style.display = "block";
       setRingProgress(0);
+      document.title = "🏁 انتهى الوقت";
       return;
     }
     if (diff <= 60000 && !lastMinuteAlerted){
@@ -222,6 +290,7 @@ function tick(){
       window.playTimerAlert("lastMinute");
     }
     renderDigits(diff);
+    document.title = "⏳ " + formatDuration(diff);
     if (total > 0) setRingProgress((diff / total) * 100);
     return;
   }
@@ -236,6 +305,7 @@ function tick(){
     document.getElementById("digitsWrap").style.display = "none";
     document.getElementById("finishedMsg").style.display = "block";
     setRingProgress(100);
+    document.title = "🏁 انتهى الوقت";
     return;
   }
   if (remaining <= 60000 && !lastMinuteAlerted){
@@ -243,6 +313,7 @@ function tick(){
     window.playTimerAlert("lastMinute");
   }
   renderDigits(Math.max(0, elapsed));
+  document.title = "⏱️ " + formatDuration(elapsed);
   if (total > 0) setRingProgress((elapsed / total) * 100);
 }
 
@@ -267,6 +338,7 @@ db.ref('countdown').on('value', (snapshot) => {
   if (!data || !data.targetTime){
     document.getElementById("loadingMsg").style.display = "block";
     document.getElementById("loadingMsg").innerText = "لم يتم ضبط المؤقت بعد.";
+    document.title = baseTitle;
     return;
   }
 
