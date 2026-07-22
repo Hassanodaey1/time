@@ -164,6 +164,11 @@
     <span class="txt"><b>تحدي الأستاذ</b><small>بدء أو إيقاف مؤقت التحدي</small></span>
   </button>
 
+  <button type="button" class="hub-btn" onclick="showPanel('studyChallenge')">
+    <span class="icon">📚</span>
+    <span class="txt"><b>تحدي الدراسة</b><small>تفعيل أو تعطيل زر تحدي الدراسة في الصفحة الرئيسية</small></span>
+  </button>
+
   <button type="button" class="hub-btn" onclick="showPanel('themesPatterns')">
     <span class="icon">🎨</span>
     <span class="txt"><b>الثيمات والأنماط</b><small>لون الأرقام لكل المؤقتات + شكل كل مؤقت على حدة</small></span>
@@ -232,6 +237,20 @@
     <button class="toggle-btn" onclick="stopChallenge()">⏹️ إيقاف التحدي</button>
   </div>
   <div id="challengeStatusMsg" class="hint"></div>
+</div>
+
+<!-- لوحة تحدي الدراسة -->
+<div class="card hidden" id="studyChallengePanel">
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
+  <p class="eyebrow">📚 تحدي الدراسة</p>
+  <h1>التحكم بزر تحدي الدراسة</h1>
+  <p class="hint" style="margin-bottom:16px;">عند التفعيل، يظهر زر "تحدي الدراسة" في الصفحة الرئيسية ويقدر الطلاب يسجّلون بياناتهم ويتنافسون على أطول مدة دراسة. عند التعطيل، يختفي الزر تمامًا من الصفحة الرئيسية.</p>
+
+  <div class="toggle-row">
+    <button class="toggle-btn" onclick="startStudyChallenge()">🚀 تفعيل تحدي الدراسة</button>
+    <button class="toggle-btn" onclick="stopStudyChallenge()">⏹️ تعطيل تحدي الدراسة</button>
+  </div>
+  <div id="studyChallengeStatusMsg" class="hint"></div>
 </div>
 
 <!-- لوحة الثيمات والأنماط الموحدة -->
@@ -348,6 +367,7 @@ function hideAllPanels(){
   document.getElementById("hubView").classList.add("hidden");
   document.getElementById("mainTimerPanel").classList.add("hidden");
   document.getElementById("challengePanel").classList.add("hidden");
+  document.getElementById("studyChallengePanel").classList.add("hidden");
   document.getElementById("themesPatternsPanel").classList.add("hidden");
 }
 
@@ -360,6 +380,7 @@ window.showPanel = function(name){
   hideAllPanels();
   if (name === "main") document.getElementById("mainTimerPanel").classList.remove("hidden");
   else if (name === "challenge") document.getElementById("challengePanel").classList.remove("hidden");
+  else if (name === "studyChallenge") document.getElementById("studyChallengePanel").classList.remove("hidden");
   else if (name === "themesPatterns") document.getElementById("themesPatternsPanel").classList.remove("hidden");
 };
 
@@ -511,6 +532,7 @@ auth.onAuthStateChanged((user) => {
     tally.classList.add("live");
     loadCurrentState();
     loadChallengeState();
+    loadStudyChallengeState();
     loadStudentStyleState();
     loadSharedThemeState();
     setMinDatetime();
@@ -657,6 +679,50 @@ window.stopChallenge = function(){
     .catch((error) => {
       msg.style.color = "#ff3b30";
       msg.innerText = "فشل الإيقاف: " + error.message;
+    });
+};
+
+function loadStudyChallengeState(){
+  const msg = document.getElementById("studyChallengeStatusMsg");
+  db.ref('studyChallengeSettings/active').once('value')
+    .then((snapshot) => {
+      const active = !!snapshot.val();
+      msg.style.color = active ? "#2ecc71" : "#7d8698";
+      msg.innerText = active
+        ? "تحدي الدراسة مفعّل الآن — الزر ظاهر في الصفحة الرئيسية."
+        : "تحدي الدراسة معطّل حاليًا — الزر مخفي عن الصفحة الرئيسية.";
+    })
+    .catch(() => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "تعذّر تحميل حالة تحدي الدراسة.";
+    });
+}
+
+window.startStudyChallenge = function(){
+  const msg = document.getElementById("studyChallengeStatusMsg");
+  db.ref('studyChallengeSettings/active').set(true)
+    .then(() => {
+      msg.style.color = "#2ecc71";
+      msg.innerText = "تم تفعيل تحدي الدراسة.";
+      loadStudyChallengeState();
+    })
+    .catch((error) => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "فشل التفعيل: " + error.message;
+    });
+};
+
+window.stopStudyChallenge = function(){
+  const msg = document.getElementById("studyChallengeStatusMsg");
+  db.ref('studyChallengeSettings/active').set(false)
+    .then(() => {
+      msg.style.color = "#7d8698";
+      msg.innerText = "تم تعطيل تحدي الدراسة.";
+      loadStudyChallengeState();
+    })
+    .catch((error) => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "فشل التعطيل: " + error.message;
     });
 };
 
