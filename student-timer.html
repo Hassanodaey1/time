@@ -77,14 +77,16 @@
       <button class="preset-btn" onclick="pickPreset(45, this)">٤٥ د</button>
     </div>
     <div class="custom-row">
-      <input type="number" id="customMinutes" placeholder="أو أدخل عدد الدقائق يدويًا" min="1">
+      <input type="time" id="customTime" step="60">
     </div>
+    <p style="font-size:11.5px; color:var(--muted); margin:-14px 0 20px;">أو حدد وقتًا مخصصًا (ساعة : دقيقة) — بحد أقصى 23:59</p>
     <button class="primary" onclick="startTimer()">▶️ ابدأ الدراسة</button>
   </div>
 
   <div id="runningView" class="hidden">
     <p id="doneMsg">🎉 أحسنت! انتهت جلسة الدراسة</p>
     <div class="digits" id="digitsWrap" style="display:flex;">
+      <div class="unit"><div class="flip" id="dHours">00</div><label>ساعة</label></div>
       <div class="unit"><div class="flip" id="dMinutes">00</div><label>دقيقة</label></div>
       <div class="unit"><div class="flip" id="dSeconds">00</div><label>ثانية</label></div>
     </div>
@@ -108,14 +110,19 @@ const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
 
 window.pickPreset = function(minutes, el){
   selectedMinutes = minutes;
-  document.getElementById("customMinutes").value = "";
+  document.getElementById("customTime").value = "";
   document.querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
   el.classList.add("active");
 };
 
 window.startTimer = function(){
-  const customVal = parseInt(document.getElementById("customMinutes").value, 10);
-  const minutes = (customVal && customVal > 0) ? customVal : selectedMinutes;
+  const customVal = document.getElementById("customTime").value; // "HH:MM"
+  let minutes = selectedMinutes;
+  if (customVal){
+    const [hh, mm] = customVal.split(":").map(Number);
+    const customMinutes = (hh * 60) + mm;
+    if (customMinutes > 0) minutes = customMinutes;
+  }
 
   totalMs = minutes * 60 * 1000;
   remainingMs = totalMs;
@@ -158,8 +165,10 @@ function step(){
 
 function renderTime(){
   const totalSeconds = Math.floor(remainingMs / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
+  document.getElementById("dHours").innerText = pad(hours);
   document.getElementById("dMinutes").innerText = pad(minutes);
   document.getElementById("dSeconds").innerText = pad(seconds);
 }
