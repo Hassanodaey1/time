@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>المؤقت</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0b0e14; --panel:#12161f; --amber:#ffb400; --red:#ff3b30; --muted:#7d8698; --border:#232838;
   }
-  body[data-theme="aurora"]{ --bg:#0a1128; --panel:#101a3a; --amber:#00d4aa; --red:#7c5cff; --muted:#7c8bb0; --border:#1c2b56; }
-  body[data-theme="ember"]{ --bg:#1a0e0a; --panel:#24140e; --amber:#ff6b35; --red:#f7c548; --muted:#a67c6d; --border:#3a2018; }
-  body[data-theme="arctic"]{ --bg:#0d1b2a; --panel:#122438; --amber:#48cae4; --red:#e0fbfc; --muted:#5f8aa6; --border:#1c344a; }
-  body[data-theme="royal"]{ --bg:#1a0b2e; --panel:#24123f; --amber:#ffd60a; --red:#e63dc4; --muted:#9a7fc0; --border:#3a1f5c; }
+  body[data-theme="aurora"]{ --amber:#00d4aa; }
+  body[data-theme="ember"]{ --amber:#ff6b35; }
+  body[data-theme="arctic"]{ --amber:#48cae4; }
+  body[data-theme="royal"]{ --amber:#ffd60a; }
   *{box-sizing:border-box;}
   html,body{height:100%;}
   body{
@@ -52,6 +52,43 @@
   }
   .unit label{font-size:11px; color:var(--muted); letter-spacing:2px;}
 
+  /* نمط دائري: كل رقم داخل دائرة كاملة، بلا زوايا وبلا صندوق مستطيل */
+  body[data-style="circular"] .monitor{border-radius:50%; aspect-ratio:1/1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;}
+  body[data-style="circular"] .digits{gap:14px;}
+  body[data-style="circular"] .flip{
+    border-radius:50%; width:88px; height:88px; min-width:88px;
+    display:flex; align-items:center; justify-content:center; padding:0;
+    border:2px solid var(--amber); background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.06), #0e1119 70%);
+    font-size:26px;
+  }
+  body[data-style="circular"] .unit label{margin-top:2px;}
+
+  /* نمط بكسل: طابع رجعي/شاشة أرشيف قديمة بالكامل */
+  body[data-style="pixel"] .monitor{background:#000; border:2px solid #003300; border-radius:4px; box-shadow:none;}
+  body[data-style="pixel"] .monitor::before{
+    background:repeating-linear-gradient(0deg, rgba(0,255,0,.05) 0px, rgba(0,255,0,.05) 1px, transparent 1px, transparent 3px);
+    opacity:1;
+  }
+  body[data-style="pixel"] #eventTitle{color:var(--amber); font-family:'Press Start 2P', monospace; font-size:13px; line-height:1.8;}
+  body[data-style="pixel"] .tally span{font-family:'Press Start 2P', monospace; font-size:9px;}
+  body[data-style="pixel"] .flip{
+    font-family:'Press Start 2P', monospace; font-size:20px; border-radius:0;
+    border:3px solid var(--amber); text-shadow:none; image-rendering:pixelated;
+    background:#000;
+  }
+  body[data-style="pixel"] .unit label{font-family:'Press Start 2P', monospace; font-size:8px;}
+
+  /* نمط نيون: بدون أي صندوق، توهج قوي على خلفية داكنة بالكامل */
+  body[data-style="neon"] .monitor{background:#050507; border:1px solid rgba(255,255,255,.08); box-shadow:0 0 60px rgba(0,0,0,.8);}
+  body[data-style="neon"] .monitor::before{display:none;}
+  body[data-style="neon"] #eventTitle{text-shadow:0 0 10px var(--amber);}
+  body[data-style="neon"] .digits{gap:22px;}
+  body[data-style="neon"] .flip{
+    background:transparent; border:none; font-size:48px; letter-spacing:2px;
+    text-shadow:0 0 8px var(--amber), 0 0 22px var(--amber), 0 0 40px var(--amber);
+  }
+  body[data-style="neon"] .unit label{text-shadow:0 0 6px var(--amber);}
+
   #finishedMsg{display:none; font-size:22px; font-weight:900; color:var(--red); margin-top:10px;}
   #loadingMsg{color:var(--muted); font-size:14px; font-family:'JetBrains Mono',monospace;}
   .back-link{
@@ -65,7 +102,7 @@
   }
 </style>
 </head>
-<body data-theme="broadcast">
+<body data-theme="broadcast" data-style="default">
 <a href="index.html" class="back-link">‹ الرئيسية</a>
 
 <div class="monitor">
@@ -176,6 +213,7 @@ db.ref('countdown').on('value', (snapshot) => {
     finishedAlerted = false;
   }
   document.body.setAttribute("data-theme", data.theme || "broadcast");
+  document.body.setAttribute("data-style", data.style || "default");
   document.getElementById("eventTitle").innerText = data.title || "";
   document.getElementById("modeLabel").innerText = mode === "down" ? "عد تنازلي" : "عد تصاعدي";
   document.getElementById("finishedMsg").style.display = "none";
