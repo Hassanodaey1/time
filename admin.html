@@ -162,8 +162,8 @@
   <label>عنوان التحدي</label>
   <input type="text" id="challengeTitle" placeholder="مثال: تحدي الساعة">
 
-  <label>مدة التحدي (بالدقائق)</label>
-  <input type="number" id="challengeMinutes" placeholder="مثال: 60" min="1" value="60">
+  <label>مدة التحدي (ساعة : دقيقة، بحد أقصى 23:59)</label>
+  <input type="time" id="challengeDuration" value="01:00" step="60">
 
   <label>نوع العد</label>
   <div class="modes">
@@ -313,7 +313,10 @@ function loadChallengeState(){
       }
       document.getElementById("challengeTitle").value = data.title || "";
       if (data.durationMs){
-        document.getElementById("challengeMinutes").value = Math.round(data.durationMs / 60000);
+        const totalMin = Math.round(data.durationMs / 60000);
+        const hh = String(Math.floor(totalMin / 60)).padStart(2, "0");
+        const mm = String(totalMin % 60).padStart(2, "0");
+        document.getElementById("challengeDuration").value = `${hh}:${mm}`;
       }
       setChallengeMode(data.mode === "up" ? "up" : "down");
       document.getElementById("colorStart").value = data.colorStart || "#000000";
@@ -338,14 +341,21 @@ function loadChallengeState(){
 
 window.startChallenge = function(){
   const title = document.getElementById("challengeTitle").value || "تحدي الساعة";
-  const minutes = parseInt(document.getElementById("challengeMinutes").value, 10);
+  const durationVal = document.getElementById("challengeDuration").value; // "HH:MM"
   const colorStart = document.getElementById("colorStart").value;
   const colorEnd = document.getElementById("colorEnd").value;
   const msg = document.getElementById("challengeStatusMsg");
 
+  if (!durationVal){
+    msg.style.color = "#ff3b30";
+    msg.innerText = "يرجى تحديد مدة صحيحة.";
+    return;
+  }
+  const [hh, mm] = durationVal.split(":").map(Number);
+  const minutes = (hh * 60) + mm;
   if (!minutes || minutes <= 0){
     msg.style.color = "#ff3b30";
-    msg.innerText = "يرجى إدخال مدة صحيحة بالدقائق.";
+    msg.innerText = "يرجى تحديد مدة أكبر من صفر.";
     return;
   }
 
