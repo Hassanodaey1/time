@@ -328,6 +328,21 @@
     <div id="studentStyleSaveStatus" class="hint"></div>
   </div>
 
+  <div class="pattern-box">
+    <p class="pattern-box-title">🏆 تحدي الدراسة</p>
+    <div class="themes" id="studyChallengeStylesGrid">
+      <button type="button" class="theme-btn active" id="sdystyle-default" onclick="setStudyChallengeStyle('default')">🔲 افتراضي</button>
+      <button type="button" class="theme-btn" id="sdystyle-circular" onclick="setStudyChallengeStyle('circular')">⭕ دائري</button>
+      <button type="button" class="theme-btn" id="sdystyle-pixel" onclick="setStudyChallengeStyle('pixel')">👾 بكسل</button>
+      <button type="button" class="theme-btn" id="sdystyle-neon" onclick="setStudyChallengeStyle('neon')">✨ نيون</button>
+      <button type="button" class="theme-btn" id="sdystyle-ring" onclick="setStudyChallengeStyle('ring')">🟠 حلقي</button>
+      <button type="button" class="theme-btn" id="sdystyle-digital" onclick="setStudyChallengeStyle('digital')">⬛ رقمي بسيط</button>
+      <button type="button" class="theme-btn" id="sdystyle-dotmatrix" onclick="setStudyChallengeStyle('dotmatrix')">🔶 نقطي LED</button>
+      <button type="button" class="theme-btn" id="sdystyle-flipclock" onclick="setStudyChallengeStyle('flipclock')">🕐 فليب كلوك</button>
+    </div>
+    <div id="studyChallengeStyleSaveStatus" class="hint"></div>
+  </div>
+
   <div class="divider"></div>
   <p class="hint">أي اختيار هنا يُحفظ ويُطبّق فورًا — لا حاجة لأي زر إضافي.</p>
 </div>
@@ -359,6 +374,7 @@ let currentStyle = "default";
 let currentChallengeMode = "down";
 let currentChallengeStyle = "default";
 let currentStudentStyle = "default";
+let currentStudyChallengeStyle = "default";
 const THEME_IDS = ["broadcast", "aurora", "ember", "arctic", "royal"];
 const STYLE_IDS = ["default", "circular", "pixel", "neon", "ring", "digital", "dotmatrix", "flipclock"];
 
@@ -500,6 +516,40 @@ function loadStudentStyleState(){
     .catch(() => {});
 }
 
+window.setStudyChallengeStyle = function(style, save){
+  if (save === undefined) save = true;
+  currentStudyChallengeStyle = style;
+  STYLE_IDS.forEach(id => {
+    document.getElementById("sdystyle-" + id).classList.toggle("active", id === style);
+  });
+  if (save) saveStudyChallengeStyle();
+};
+
+function saveStudyChallengeStyle(){
+  const msg = document.getElementById("studyChallengeStyleSaveStatus");
+  msg.style.color = "#7d8698";
+  msg.innerText = "جارٍ الحفظ...";
+  db.ref('studyChallengeSettings').update({ style: currentStudyChallengeStyle })
+    .then(() => {
+      msg.style.color = "#2ecc71";
+      msg.innerText = "تم الحفظ ✓ — النمط ظاهر الآن في صفحة تحدي الدراسة.";
+    })
+    .catch((error) => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "فشل الحفظ: " + error.message;
+    });
+}
+
+function loadStudyChallengeStyleState(){
+  db.ref('studyChallengeSettings').once('value')
+    .then((snapshot) => {
+      const data = snapshot.val();
+      const style = (data && STYLE_IDS.includes(data.style)) ? data.style : "default";
+      setStudyChallengeStyle(style, false);
+    })
+    .catch(() => {});
+}
+
 window.setMode = function(mode){
   currentMode = mode;
   document.getElementById("btnDown").classList.toggle("active", mode === "down");
@@ -534,6 +584,7 @@ auth.onAuthStateChanged((user) => {
     loadChallengeState();
     loadStudyChallengeState();
     loadStudentStyleState();
+    loadStudyChallengeStyleState();
     loadSharedThemeState();
     setMinDatetime();
     showHub();
