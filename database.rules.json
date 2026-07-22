@@ -1,0 +1,56 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": false,
+
+    "studyLeaderboard": {
+      ".read": true,
+      "$uid": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['name','age','country','governorate','totalSeconds','updatedAt'])",
+
+        "name":        { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
+        "age":         { ".validate": "newData.isNumber() && newData.val() >= 5 && newData.val() <= 100" },
+        "country":     { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
+        "governorate": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
+
+        "updatedAt": {
+          ".validate": "newData.val() == now"
+        },
+
+        "totalSeconds": {
+          ".validate": "auth != null || (newData.isNumber() && newData.val() >= 0 && ( (!data.exists() && newData.val() == 0) || ( data.exists() && newData.val() >= data.val() && (newData.val() - data.val()) <= ((newData.parent().child('updatedAt').val() - data.parent().child('updatedAt').val()) / 1000) + 10 ) ))"
+        },
+
+        "dayIndex": {
+          ".validate": "auth != null || (newData.isNumber() && (newData.val() * 86400000) <= now && (newData.val() * 86400000 + 86400000) > now)"
+        },
+        "daySeconds": {
+          ".validate": "auth != null || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 21600 && ( !data.exists() || newData.parent().child('dayIndex').val() != data.parent().child('dayIndex').val() || newData.val() >= data.val() ))"
+        },
+
+        "weekIndex": {
+          ".validate": "auth != null || (newData.isNumber() && (newData.val() * 604800000) <= now && (newData.val() * 604800000 + 604800000) > now)"
+        },
+        "weeklySeconds": {
+          ".validate": "auth != null || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 151200 && ( !data.exists() || newData.parent().child('weekIndex').val() != data.parent().child('weekIndex').val() || newData.val() >= data.val() ))"
+        },
+
+        "streak": {
+          ".validate": "auth != null || (newData.isNumber() && newData.val() >= 0 && ( newData.val() <= 1 || ( newData.val() <= data.val() + 1 && (newData.parent().child('updatedAt').val() - data.parent().child('updatedAt').val()) >= 3600000 ) ))"
+        },
+        "lastStudyDayIndex": {
+          ".validate": "auth != null || (newData.isNumber() && (newData.val() * 86400000) <= now && (newData.val() * 86400000 + 86400000) > now)"
+        },
+
+        "$other": { ".validate": false }
+      }
+    },
+
+    "studyChallengeSettings": { ".read": true, ".write": "auth != null" },
+    "studentSettings":        { ".read": true, ".write": "auth != null" },
+    "themeSettings":          { ".read": true, ".write": "auth != null" },
+    "challenge":               { ".read": true, ".write": "auth != null" },
+    "countdown":               { ".read": true, ".write": "auth != null" }
+  }
+}
