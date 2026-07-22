@@ -83,16 +83,42 @@
   button.primary:hover{background:#ffc633;}
   button.primary:disabled{opacity:.5; cursor:not-allowed;}
 
-  #status{margin-top:14px; font-size:13.5px; min-height:18px;}
+  #status, #challengeStatusMsg, #themeSaveStatus{margin-top:14px; font-size:13.5px; min-height:18px;}
   .divider{border-top:1px dashed var(--border); margin:22px 0;}
   .hint{font-size:12px; color:var(--muted); line-height:1.7;}
 
   #loginView input{margin-bottom:0;}
-  #logoutBtn{
-    margin-top:18px; width:100%; padding:10px; background:transparent; border:1px solid var(--border);
-    color:var(--muted); border-radius:10px; cursor:pointer; font-family:'Tajawal',sans-serif;
-  }
   .hidden{display:none !important;}
+
+  /* ===== لوحة رئيسية (Hub) ===== */
+  .hub-btn{
+    display:flex; align-items:center; gap:14px; width:100%; padding:18px 16px; margin-top:12px;
+    border-radius:14px; border:1px solid var(--border); background:var(--panel-2); color:#fff;
+    font-family:'Tajawal',sans-serif; cursor:pointer; text-align:start;
+    transition:border-color .2s, transform .1s;
+  }
+  .hub-btn:first-of-type{margin-top:6px;}
+  .hub-btn:hover{border-color:var(--amber);}
+  .hub-btn:active{transform:scale(.98);}
+  .hub-btn .icon{font-size:26px; flex-shrink:0; line-height:1;}
+  .hub-btn .txt{flex:1;}
+  .hub-btn .txt b{display:block; font-size:15.5px; font-weight:900;}
+  .hub-btn .txt small{display:block; font-size:12px; color:var(--muted); margin-top:3px; font-weight:400;}
+
+  #logoutBtnHub{
+    display:block; width:100%; margin-top:28px; padding:14px; border-radius:10px;
+    border:1px solid var(--red); background:rgba(255,59,48,.12); color:var(--red);
+    font-family:'Tajawal',sans-serif; font-weight:900; font-size:14.5px; cursor:pointer;
+  }
+  #logoutBtnHub:hover{background:rgba(255,59,48,.22);}
+
+  /* ===== زر الرجوع داخل كل لوحة فرعية ===== */
+  .back-btn{
+    display:inline-flex; align-items:center; gap:6px; background:transparent; border:none;
+    color:var(--muted); font-family:'Tajawal',sans-serif; font-size:13px; cursor:pointer;
+    padding:0; margin-bottom:18px;
+  }
+  .back-btn:hover{color:#fff;}
 </style>
 </head>
 <body>
@@ -115,9 +141,33 @@
   <p class="hint">هذه الصفحة محمية بحساب Firebase Authentication. فقط الحساب الذي تنشئه أنت في مشروعك يمكنه تسجيل الدخول والتحكم بالمؤقت.</p>
 </div>
 
-<!-- لوحة التحكم -->
-<div class="card hidden" id="panelView">
-  <p class="eyebrow">لوحة التحكم بالمؤقت</p>
+<!-- اللوحة الرئيسية بعد تسجيل الدخول -->
+<div class="card hidden" id="hubView">
+  <p class="eyebrow">لوحة التحكم</p>
+  <h1>اختر ما تريد التحكم به</h1>
+
+  <button type="button" class="hub-btn" onclick="showPanel('main')">
+    <span class="icon">⏱️</span>
+    <span class="txt"><b>المؤقت الرئيسي</b><small>ضبط وقت العد التنازلي/التصاعدي وعنوان الحدث</small></span>
+  </button>
+
+  <button type="button" class="hub-btn" onclick="showPanel('challenge')">
+    <span class="icon">🔥</span>
+    <span class="txt"><b>تحدي انستا</b><small>بدء أو إيقاف مؤقت التحدي</small></span>
+  </button>
+
+  <button type="button" class="hub-btn" onclick="showPanel('themes')">
+    <span class="icon">🎨</span>
+    <span class="txt"><b>الثيمات والأنماط</b><small>لون وشكل أرقام المؤقتات في صفحة العرض</small></span>
+  </button>
+
+  <button id="logoutBtnHub" onclick="doLogout()">تسجيل الخروج</button>
+</div>
+
+<!-- لوحة المؤقت الرئيسي -->
+<div class="card hidden" id="mainTimerPanel">
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
+  <p class="eyebrow">المؤقت الرئيسي</p>
   <h1>تحديث بيانات المؤقت</h1>
 
   <label>عنوان الحدث (يظهر في صفحة العرض، اختياري)</label>
@@ -132,44 +182,17 @@
   <label id="dtLabel">وقت انتهاء الحدث</label>
   <input type="datetime-local" id="datetimePicker">
 
-  <label>ثيم لون الأرقام</label>
-  <div class="themes" id="themesGrid">
-    <button type="button" class="theme-btn active" id="theme-broadcast" onclick="setTheme('broadcast')">
-      <span class="swatch" style="background:linear-gradient(135deg,#ffb400,#ff3b30)"></span>استوديو
-    </button>
-    <button type="button" class="theme-btn" id="theme-aurora" onclick="setTheme('aurora')">
-      <span class="swatch" style="background:linear-gradient(135deg,#00d4aa,#7c5cff)"></span>الشفق
-    </button>
-    <button type="button" class="theme-btn" id="theme-ember" onclick="setTheme('ember')">
-      <span class="swatch" style="background:linear-gradient(135deg,#ff6b35,#f7c548)"></span>الجمرة
-    </button>
-    <button type="button" class="theme-btn" id="theme-arctic" onclick="setTheme('arctic')">
-      <span class="swatch" style="background:linear-gradient(135deg,#48cae4,#e0fbfc)"></span>القطب
-    </button>
-    <button type="button" class="theme-btn" id="theme-royal" onclick="setTheme('royal')">
-      <span class="swatch" style="background:linear-gradient(135deg,#ffd60a,#e63dc4)"></span>الملكي
-    </button>
-  </div>
-
-  <label>نمط عرض الأرقام</label>
-  <div class="themes" id="stylesGrid">
-    <button type="button" class="theme-btn active" id="style-default" onclick="setStyle('default')">🔲 افتراضي</button>
-    <button type="button" class="theme-btn" id="style-circular" onclick="setStyle('circular')">⭕ دائري</button>
-    <button type="button" class="theme-btn" id="style-pixel" onclick="setStyle('pixel')">👾 بكسل</button>
-    <button type="button" class="theme-btn" id="style-neon" onclick="setStyle('neon')">✨ نيون</button>
-  </div>
-
   <button class="primary" onclick="updateTargetTime()">تحديث المؤقت الآن</button>
   <div id="status"></div>
 
   <div class="divider"></div>
   <p class="hint" id="currentStateHint">جارٍ تحميل الحالة الحالية...</p>
-  <button id="logoutBtn" onclick="doLogout()">تسجيل الخروج</button>
 </div>
 
-<!-- لوحة تحدي الأستاذ -->
+<!-- لوحة تحدي انستا -->
 <div class="card hidden" id="challengePanel">
-  <p class="eyebrow">🔥 تحدي الأستاذ</p>
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
+  <p class="eyebrow">🔥 تحدي انستا</p>
   <h1>ضبط التحدي</h1>
 
   <label>عنوان التحدي</label>
@@ -200,7 +223,47 @@
     <button class="toggle-btn" onclick="startChallenge()">🚀 بدء التحدي الآن</button>
     <button class="toggle-btn" onclick="stopChallenge()">⏹️ إيقاف التحدي</button>
   </div>
-  <div id="challengeStatusMsg" class="hint" style="margin-top:14px;"></div>
+  <div id="challengeStatusMsg" class="hint"></div>
+</div>
+
+<!-- لوحة الثيمات والأنماط -->
+<div class="card hidden" id="themesPanel">
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
+  <p class="eyebrow">🎨 الثيمات والأنماط</p>
+  <h1>لون وشكل أرقام المؤقتات</h1>
+
+  <label>ثيم لون الأرقام</label>
+  <div class="themes" id="themesGrid">
+    <button type="button" class="theme-btn active" id="theme-broadcast" onclick="setTheme('broadcast')">
+      <span class="swatch" style="background:linear-gradient(135deg,#ffb400,#ff3b30)"></span>استوديو
+    </button>
+    <button type="button" class="theme-btn" id="theme-aurora" onclick="setTheme('aurora')">
+      <span class="swatch" style="background:linear-gradient(135deg,#00d4aa,#7c5cff)"></span>الشفق
+    </button>
+    <button type="button" class="theme-btn" id="theme-ember" onclick="setTheme('ember')">
+      <span class="swatch" style="background:linear-gradient(135deg,#ff6b35,#f7c548)"></span>الجمرة
+    </button>
+    <button type="button" class="theme-btn" id="theme-arctic" onclick="setTheme('arctic')">
+      <span class="swatch" style="background:linear-gradient(135deg,#48cae4,#e0fbfc)"></span>القطب
+    </button>
+    <button type="button" class="theme-btn" id="theme-royal" onclick="setTheme('royal')">
+      <span class="swatch" style="background:linear-gradient(135deg,#ffd60a,#e63dc4)"></span>الملكي
+    </button>
+  </div>
+
+  <div class="divider"></div>
+
+  <label>نمط عرض الأرقام (شكل المؤقت بالكامل)</label>
+  <div class="themes" id="stylesGrid">
+    <button type="button" class="theme-btn active" id="style-default" onclick="setStyle('default')">🔲 افتراضي</button>
+    <button type="button" class="theme-btn" id="style-circular" onclick="setStyle('circular')">⭕ دائري</button>
+    <button type="button" class="theme-btn" id="style-pixel" onclick="setStyle('pixel')">👾 بكسل</button>
+    <button type="button" class="theme-btn" id="style-neon" onclick="setStyle('neon')">✨ نيون</button>
+  </div>
+
+  <div id="themeSaveStatus"></div>
+  <div class="divider"></div>
+  <p class="hint">أي اختيار هنا يُحفظ ويُطبّق فورًا على صفحة العرض — لا حاجة للضغط على أي زر إضافي، وكل نمط يغيّر شكل صندوق الأرقام بالكامل (الشكل، الخط، الحدود، والتوهج).</p>
 </div>
 
 </div><!-- /.page -->
@@ -231,12 +294,59 @@ let currentChallengeMode = "down";
 const THEME_IDS = ["broadcast", "aurora", "ember", "arctic", "royal"];
 const STYLE_IDS = ["default", "circular", "pixel", "neon"];
 
-window.setStyle = function(style){
+/* ============ التنقل بين اللوحات ============ */
+function hideAllPanels(){
+  document.getElementById("hubView").classList.add("hidden");
+  document.getElementById("mainTimerPanel").classList.add("hidden");
+  document.getElementById("challengePanel").classList.add("hidden");
+  document.getElementById("themesPanel").classList.add("hidden");
+}
+
+window.showHub = function(){
+  hideAllPanels();
+  document.getElementById("hubView").classList.remove("hidden");
+};
+
+window.showPanel = function(name){
+  hideAllPanels();
+  if (name === "main") document.getElementById("mainTimerPanel").classList.remove("hidden");
+  else if (name === "challenge") document.getElementById("challengePanel").classList.remove("hidden");
+  else if (name === "themes") document.getElementById("themesPanel").classList.remove("hidden");
+};
+
+/* ============ الثيمات والأنماط (تُحفظ فورًا) ============ */
+window.setStyle = function(style, save){
+  if (save === undefined) save = true;
   currentStyle = style;
   STYLE_IDS.forEach(id => {
     document.getElementById("style-" + id).classList.toggle("active", id === style);
   });
+  if (save) saveThemeStyle();
 };
+
+window.setTheme = function(theme, save){
+  if (save === undefined) save = true;
+  currentTheme = theme;
+  THEME_IDS.forEach(id => {
+    document.getElementById("theme-" + id).classList.toggle("active", id === theme);
+  });
+  if (save) saveThemeStyle();
+};
+
+function saveThemeStyle(){
+  const msg = document.getElementById("themeSaveStatus");
+  msg.style.color = "#7d8698";
+  msg.innerText = "جارٍ الحفظ...";
+  db.ref('countdown').update({ theme: currentTheme, style: currentStyle })
+    .then(() => {
+      msg.style.color = "#2ecc71";
+      msg.innerText = "تم الحفظ ✓ — التغيير ظاهر الآن في صفحة العرض.";
+    })
+    .catch((error) => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "فشل الحفظ: " + error.message;
+    });
+}
 
 window.setChallengeMode = function(mode){
   currentChallengeMode = mode;
@@ -249,13 +359,6 @@ window.setMode = function(mode){
   document.getElementById("btnDown").classList.toggle("active", mode === "down");
   document.getElementById("btnUp").classList.toggle("active", mode === "up");
   document.getElementById("dtLabel").innerText = mode === "down" ? "وقت انتهاء الحدث" : "وقت بداية الحدث";
-};
-
-window.setTheme = function(theme){
-  currentTheme = theme;
-  THEME_IDS.forEach(id => {
-    document.getElementById("theme-" + id).classList.toggle("active", id === theme);
-  });
 };
 
 window.doLogin = function(){
@@ -277,20 +380,16 @@ window.doLogout = function(){
 
 auth.onAuthStateChanged((user) => {
   const loginView = document.getElementById("loginView");
-  const panelView = document.getElementById("panelView");
-  const challengePanel = document.getElementById("challengePanel");
   const tally = document.getElementById("tally");
   if (user){
     loginView.classList.add("hidden");
-    panelView.classList.remove("hidden");
-    challengePanel.classList.remove("hidden");
     tally.classList.add("live");
     loadCurrentState();
     loadChallengeState();
+    showHub();
   } else {
+    hideAllPanels();
     loginView.classList.remove("hidden");
-    panelView.classList.add("hidden");
-    challengePanel.classList.add("hidden");
     tally.classList.remove("live");
   }
 });
@@ -311,8 +410,8 @@ function loadCurrentState(){
         return;
       }
       setMode(data.mode === "up" ? "up" : "down");
-      setTheme(THEME_IDS.includes(data.theme) ? data.theme : "broadcast");
-      setStyle(STYLE_IDS.includes(data.style) ? data.style : "default");
+      setTheme(THEME_IDS.includes(data.theme) ? data.theme : "broadcast", false);
+      setStyle(STYLE_IDS.includes(data.style) ? data.style : "default", false);
       document.getElementById("titleInput").value = data.title || "";
       if (data.targetTime){
         document.getElementById("datetimePicker").value = toLocalDatetimeInputValue(data.targetTime);
