@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مؤقت الطالب</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   :root{ --bg:#0d1b2a; --panel:#122438; --accent:#48cae4; --muted:#5f8aa6; --border:#1c344a; --green:#2ecc71; }
   *{box-sizing:border-box;}
@@ -59,6 +59,57 @@
   }
   #doneMsg{display:none; font-size:20px; font-weight:900; color:var(--green); margin-bottom:14px;}
   .hidden{display:none !important;}
+
+  /* الأنماط: مستقلة عن باقي المؤقتات */
+  :root{--ring-pct:0%;}
+  body[data-style="circular"] .digits{gap:14px;}
+  body[data-style="circular"] .flip{
+    border-radius:50%; width:78px; height:78px; min-width:78px;
+    display:flex; align-items:center; justify-content:center; padding:0;
+    border:2px solid var(--accent); background:#0a1826; font-size:22px;
+  }
+
+  body[data-style="pixel"] .eyebrow, body[data-style="pixel"] h1, body[data-style="pixel"] .unit label{font-family:'Press Start 2P', monospace;}
+  body[data-style="pixel"] h1{font-size:14px; line-height:1.8;}
+  body[data-style="pixel"] .eyebrow{font-size:9px;}
+  body[data-style="pixel"] .unit label{font-size:7px;}
+  body[data-style="pixel"] .card{background:#000; border-color:#003300;}
+  body[data-style="pixel"] .flip{
+    font-family:'Press Start 2P', monospace; font-size:18px; border-radius:0;
+    border:3px solid var(--accent); background:#000;
+  }
+
+  body[data-style="neon"] .card{background:#050507;}
+  body[data-style="neon"] .digits{gap:22px;}
+  body[data-style="neon"] .flip{
+    background:transparent; border:none; font-size:44px; letter-spacing:2px;
+    text-shadow:0 0 8px var(--accent), 0 0 22px var(--accent), 0 0 40px var(--accent);
+  }
+
+  body[data-style="ring"] .digits{
+    position:relative; width:220px; height:220px; border-radius:50%; margin:0 auto 22px;
+    align-items:center; padding:24px; gap:2px; display:flex;
+    background: conic-gradient(var(--accent) var(--ring-pct), #0a1826 0);
+  }
+  body[data-style="ring"] .digits::before{
+    content:""; position:absolute; inset:10px; border-radius:50%; background:var(--panel);
+  }
+  body[data-style="ring"] .flip{ position:relative; z-index:1; background:transparent; border:none; font-size:22px; min-width:auto; padding:0 2px;}
+  body[data-style="ring"] .unit{ position:relative; z-index:1; }
+  body[data-style="ring"] .unit label{ font-size:9px;}
+
+  body[data-style="digital"] .card{background:#000; border:none;}
+  body[data-style="digital"] .digits{gap:4px;}
+  body[data-style="digital"] .flip{ background:transparent; border:none; font-size:52px; min-width:auto; padding:4px 6px; color:#fff;}
+  body[data-style="digital"] .unit label{ display:none; }
+
+  body[data-style="dotmatrix"] .card{background:#000; border-color:#141414;}
+  body[data-style="dotmatrix"] .flip{
+    background:radial-gradient(circle, rgba(255,140,26,.12) 1px, transparent 1.5px) 0 0/6px 6px, #050505;
+    border:2px solid #1a1a1a; border-radius:4px; color:#ff8c1a;
+    text-shadow:0 0 6px #ff8c1a, 0 0 14px rgba(255,140,26,.5);
+  }
+  body[data-style="dotmatrix"] .unit label{ color:#a3651f; }
 </style>
 </head>
 <body>
@@ -98,6 +149,8 @@
 </div>
 
 <script src="timer-sounds.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <script>
 let selectedMinutes = 15;
 let remainingMs = 0;
@@ -107,6 +160,27 @@ let timerHandle = null;
 let midAlerted = false, lastMinuteAlerted = false;
 
 const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDoZPCTfHBg-gCupUOd6FPqMMiJm4jT1vA",
+  authDomain: "time-7971c.firebaseapp.com",
+  databaseURL: "https://time-7971c-default-rtdb.firebaseio.com",
+  projectId: "time-7971c",
+  storageBucket: "time-7971c.firebasestorage.app",
+  messagingSenderId: "511397609426",
+  appId: "1:511397609426:web:06ce68a87617922c68120b"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+db.ref('studentSettings/style').on('value', (snapshot) => {
+  document.body.setAttribute("data-style", snapshot.val() || "default");
+});
+
+function setRingProgress(pct){
+  pct = Math.max(0, Math.min(100, pct));
+  document.body.style.setProperty('--ring-pct', pct + '%');
+}
 
 window.pickPreset = function(minutes, el){
   selectedMinutes = minutes;
@@ -137,6 +211,7 @@ window.startTimer = function(){
   document.getElementById("pauseBtn").innerText = "⏸️ إيقاف مؤقت";
 
   window.playTimerAlert("start");
+  setRingProgress(100);
   renderTime();
   if (timerHandle) clearInterval(timerHandle);
   timerHandle = setInterval(step, 1000);
@@ -150,6 +225,7 @@ function step(){
     clearInterval(timerHandle);
     remainingMs = 0;
     renderTime();
+    setRingProgress(0);
     window.playTimerAlert("finish");
     document.getElementById("digitsWrap").style.display = "none";
     document.getElementById("doneMsg").style.display = "block";
@@ -160,6 +236,7 @@ function step(){
   if (progress >= 0.5 && !midAlerted){ midAlerted = true; window.playTimerAlert("mid"); }
   if (remainingMs <= 60000 && !lastMinuteAlerted){ lastMinuteAlerted = true; window.playTimerAlert("lastMinute"); }
 
+  setRingProgress((remainingMs / totalMs) * 100);
   renderTime();
 }
 
