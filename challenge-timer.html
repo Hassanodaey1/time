@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0e14">
 <title>تحدي الأستاذ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -22,6 +25,10 @@
   .back-link{
     position:fixed; top:18px; inset-inline-start:18px; font-size:13px; color:rgba(255,255,255,.7);
     text-decoration:none;
+  }
+  .offline-msg{
+    display:none; font-size:11.5px; color:#ffb4ae; background:rgba(255,59,48,.15);
+    border:1px solid rgba(255,59,48,.35); border-radius:8px; padding:6px 10px; margin:0 0 14px;
   }
   .stage{ width:100%; max-width:560px; text-align:center; }
   .eyebrow{
@@ -100,6 +107,7 @@
 <div class="stage">
   <p class="eyebrow">🔥 تحدي الأستاذ</p>
   <h1 id="titleText">تحدي الساعة</h1>
+  <p id="offlineMsg" class="offline-msg">⚠️ الاتصال منقطع حاليًا — الوقت المعروض قد لا يكون محدثًا</p>
 
   <p id="loadingMsg">جارٍ التحقق من التحدي...</p>
 
@@ -136,8 +144,44 @@ let startTime = null, durationMs = null, colorStart = "#000000", colorEnd = "#ff
 let timerHandle = null;
 let lastLoadedStartTime = null;
 let midAlerted = false, lastMinuteAlerted = false, finishedAlerted = false;
+let serverTimeOffset = 0;
+const baseTitle = document.title;
 
 const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
+
+function serverNow(){ return Date.now() + serverTimeOffset; }
+
+function formatDuration(ms){
+  ms = Math.max(0, ms);
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  return `${pad(minutes)}:${pad(seconds)}`;
+}
+
+db.ref(".info/serverTimeOffset").on("value", (snap) => {
+  serverTimeOffset = snap.val() || 0;
+});
+
+db.ref(".info/connected").on("value", (snap) => {
+  document.getElementById("offlineMsg").style.display = (snap.val() === true) ? "none" : "block";
+});
+
+/* إبقاء الشاشة مضيئة أثناء التحدي */
+let wakeLock = null;
+async function requestWakeLock(){
+  try{
+    if ("wakeLock" in navigator){
+      wakeLock = await navigator.wakeLock.request("screen");
+    }
+  }catch(e){ /* غير مدعوم، تجاهل بصمت */ }
+}
+requestWakeLock();
+document.addEventListener("visibilitychange", () => {
+  if (wakeLock !== null && document.visibilityState === "visible") requestWakeLock();
+});
 
 function hexToRgb(hex){
   hex = hex.replace("#", "");
@@ -165,7 +209,7 @@ function setRingProgress(pct){
 }
 
 function tick(){
-  const now = Date.now();
+  const now = serverNow();
   const elapsed = now - startTime;
   const remaining = durationMs - elapsed;
 
@@ -175,6 +219,7 @@ function tick(){
     document.body.style.backgroundColor = colorEnd;
     document.getElementById("runningView").style.display = "none";
     document.getElementById("finishedMsg").style.display = "block";
+    document.title = "🏁 انتهى التحدي";
     return;
   }
 
@@ -193,6 +238,7 @@ function tick(){
   document.getElementById("dMinutes").innerText = pad(minutes);
   document.getElementById("dSeconds").innerText = pad(seconds);
   document.getElementById("motivation").innerText = motivationFor(t);
+  document.title = "🔥 " + formatDuration(challengeMode === "up" ? elapsed : remaining);
 }
 
 db.ref('challenge').on('value', (snapshot) => {
@@ -209,6 +255,7 @@ db.ref('challenge').on('value', (snapshot) => {
     document.getElementById("finishedMsg").style.display = "none";
     document.getElementById("inactiveMsg").style.display = "block";
     document.body.style.backgroundColor = "#000000";
+    document.title = baseTitle;
     return;
   }
 
