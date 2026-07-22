@@ -251,6 +251,13 @@
     <button class="toggle-btn" onclick="stopStudyChallenge()">⏹️ تعطيل تحدي الدراسة</button>
   </div>
   <div id="studyChallengeStatusMsg" class="hint"></div>
+
+  <hr style="border-color:var(--border, #2a3a4a); margin:20px 0;">
+  <p class="hint" style="margin-bottom:10px;">تصفير رصيد "هذا الأسبوع" لجميع الطلاب (لا يمس رصيدهم الكلي/الإجمالي إطلاقًا).</p>
+  <div class="toggle-row">
+    <button class="toggle-btn" onclick="resetWeeklyLeaderboard()">🔄 تصفير الترتيب الأسبوعي</button>
+  </div>
+  <div id="weeklyResetStatusMsg" class="hint"></div>
 </div>
 
 <!-- لوحة الثيمات والأنماط الموحدة -->
@@ -775,6 +782,31 @@ window.stopStudyChallenge = function(){
       msg.style.color = "#ff3b30";
       msg.innerText = "فشل التعطيل: " + error.message;
     });
+};
+
+window.resetWeeklyLeaderboard = function(){
+  const msg = document.getElementById("weeklyResetStatusMsg");
+  if (!confirm("تصفير رصيد \"هذا الأسبوع\" لجميع الطلاب؟ رصيدهم الكلي (الإجمالي) ما راح يتأثر إطلاقًا.")) return;
+
+  msg.style.color = "#7d8698";
+  msg.innerText = "جارٍ التصفير...";
+
+  const currentWeekIndex = Math.floor(Date.now() / 604800000);
+
+  db.ref('studyLeaderboard').once('value').then(snapshot => {
+    const updates = {};
+    snapshot.forEach(child => {
+      updates[child.key + '/weekIndex'] = currentWeekIndex;
+      updates[child.key + '/weeklySeconds'] = 0;
+    });
+    return db.ref('studyLeaderboard').update(updates);
+  }).then(() => {
+    msg.style.color = "#2ecc71";
+    msg.innerText = "تم تصفير الترتيب الأسبوعي لجميع الطلاب بنجاح.";
+  }).catch((error) => {
+    msg.style.color = "#ff3b30";
+    msg.innerText = "فشل التصفير: " + error.message;
+  });
 };
 
 window.updateTargetTime = function(){
