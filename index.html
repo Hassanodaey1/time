@@ -52,7 +52,16 @@
   .item.student .icon{background:rgba(72,202,228,.12); color:#48cae4;}
   .item.student:hover{border-color:#48cae4;}
 
+  .item.study .icon{background:rgba(255,180,0,.12); color:var(--amber);}
+  .item.study:hover{border-color:var(--amber);}
+
   .loading{text-align:center; color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace; margin-bottom:14px;}
+
+  .footer-credit{
+    text-align:center; margin-top:26px; font-size:11.5px; letter-spacing:.5px;
+    color:var(--muted); font-family:'JetBrains Mono',monospace;
+  }
+  .footer-credit span{ color:var(--amber); font-weight:700; }
 </style>
 </head>
 <body>
@@ -86,6 +95,16 @@
       <p class="desc">اضبط وقتك الخاص وابدأ الدراسة</p>
     </span>
   </a>
+
+  <a href="study-challenge.html" class="item study" id="studyItem" style="display:none;">
+    <span class="icon">🏆</span>
+    <span class="txt">
+      <p class="title">تحدي الدراسة</p>
+      <p class="desc">سجّل بياناتك وتنافس على أطول مدة دراسة</p>
+    </span>
+  </a>
+
+  <p class="footer-credit">© <span>Hassan Odaey</span> — جميع الحقوق محفوظة</p>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -127,6 +146,10 @@ db.ref('challenge').on('value', (snapshot) => {
     statusEl.innerText = "غير مفعّل";
     descEl.innerText = "لا يوجد تحدي حاليًا";
   }
+});
+
+db.ref('studyChallengeSettings/active').on('value', (snapshot) => {
+  document.getElementById("studyItem").style.display = snapshot.val() ? "flex" : "none";
 });
 </script>
 </body>
