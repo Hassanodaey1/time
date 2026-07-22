@@ -140,6 +140,39 @@
   }
   body[data-style="dotmatrix"] .unit label{color:#a3651f;}
 
+  /* نمط فليب كلوك: شاشة داكنة بالكامل وأرقام تنقلب مثل الساعات القديمة */
+  body[data-style="flipclock"]{ background:#000; }
+  body[data-style="flipclock"] .monitor{ background:#000; border:none; box-shadow:none; }
+  body[data-style="flipclock"] .monitor::before{ display:none; }
+  body[data-style="flipclock"] .tally span{ color:#4a5a6a; }
+  body[data-style="flipclock"] #eventTitle{ color:#8aa0b8; }
+  body[data-style="flipclock"] .digits{ gap:8px; }
+  body[data-style="flipclock"] .unit{ perspective:300px; }
+  body[data-style="flipclock"] .unit label{ color:#4a5a6a; }
+  body[data-style="flipclock"] .flip{
+    position:relative; background:#14191f; border:none; border-radius:10px;
+    color:#4aa8ff; font-size:56px; min-width:76px; padding:18px 8px;
+    text-shadow:0 0 14px rgba(74,168,255,.55);
+    box-shadow:0 8px 18px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
+    overflow:hidden; transform-style:preserve-3d;
+  }
+  body[data-style="flipclock"] .flip::before{
+    content:""; position:absolute; left:0; right:0; top:50%; height:2px;
+    background:#000; transform:translateY(-1px); z-index:2;
+  }
+  body[data-style="flipclock"] .flip::after{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(to bottom, rgba(255,255,255,.03) 0%, transparent 48%, rgba(0,0,0,.18) 52%, rgba(0,0,0,.3) 100%);
+    pointer-events:none;
+  }
+  body[data-style="flipclock"] .flip.flip-anim{ animation:flipDigit .5s ease; }
+  @keyframes flipDigit{
+    0%{ transform:rotateX(0deg); }
+    48%{ transform:rotateX(-90deg); opacity:.5; }
+    52%{ transform:rotateX(90deg); opacity:.5; }
+    100%{ transform:rotateX(0deg); opacity:1; }
+  }
+
   #finishedMsg{display:none; font-size:22px; font-weight:900; color:var(--red); margin-top:10px;}
   #loadingMsg{color:var(--muted); font-size:14px; font-family:'JetBrains Mono',monospace;}
   .back-link{
@@ -317,6 +350,17 @@ function tick(){
   if (total > 0) setRingProgress((elapsed / total) * 100);
 }
 
+function setDigit(el, val){
+  if (el.innerText !== val){
+    el.innerText = val;
+    if (document.body.getAttribute("data-style") === "flipclock"){
+      el.classList.remove("flip-anim");
+      void el.offsetWidth; /* إعادة تشغيل الأنيميشن */
+      el.classList.add("flip-anim");
+    }
+  }
+}
+
 function renderDigits(diff){
   diff = Math.max(0, diff);
   const totalSeconds = Math.floor(diff / 1000);
@@ -325,10 +369,10 @@ function renderDigits(diff){
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
-  document.getElementById("dDays").innerText = pad(days);
-  document.getElementById("dHours").innerText = pad(hours);
-  document.getElementById("dMinutes").innerText = pad(minutes);
-  document.getElementById("dSeconds").innerText = pad(seconds);
+  setDigit(document.getElementById("dDays"), pad(days));
+  setDigit(document.getElementById("dHours"), pad(hours));
+  setDigit(document.getElementById("dMinutes"), pad(minutes));
+  setDigit(document.getElementById("dSeconds"), pad(seconds));
 }
 
 db.ref('countdown').on('value', (snapshot) => {
