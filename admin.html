@@ -153,12 +153,17 @@
 
   <button type="button" class="hub-btn" onclick="showPanel('challenge')">
     <span class="icon">🔥</span>
-    <span class="txt"><b>تحدي انستا</b><small>بدء أو إيقاف مؤقت التحدي</small></span>
+    <span class="txt"><b>تحدي الأستاذ</b><small>بدء أو إيقاف مؤقت التحدي</small></span>
   </button>
 
   <button type="button" class="hub-btn" onclick="showPanel('themes')">
     <span class="icon">🎨</span>
-    <span class="txt"><b>الثيمات والأنماط</b><small>لون وشكل أرقام المؤقتات في صفحة العرض</small></span>
+    <span class="txt"><b>ثيمات المؤقت الرئيسي</b><small>لون وشكل أرقام المؤقت الرئيسي في صفحة العرض</small></span>
+  </button>
+
+  <button type="button" class="hub-btn" onclick="showPanel('studentStyle')">
+    <span class="icon">📚</span>
+    <span class="txt"><b>نمط مؤقت الطالب</b><small>شكل أرقام مؤقت الطالب (مستقل عن باقي المؤقتات)</small></span>
   </button>
 
   <button id="logoutBtnHub" onclick="doLogout()">تسجيل الخروج</button>
@@ -189,10 +194,10 @@
   <p class="hint" id="currentStateHint">جارٍ تحميل الحالة الحالية...</p>
 </div>
 
-<!-- لوحة تحدي انستا -->
+<!-- لوحة تحدي الأستاذ -->
 <div class="card hidden" id="challengePanel">
   <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
-  <p class="eyebrow">🔥 تحدي انستا</p>
+  <p class="eyebrow">🔥 تحدي الأستاذ</p>
   <h1>ضبط التحدي</h1>
 
   <label>عنوان التحدي</label>
@@ -224,6 +229,19 @@
     <button class="toggle-btn" onclick="stopChallenge()">⏹️ إيقاف التحدي</button>
   </div>
   <div id="challengeStatusMsg" class="hint"></div>
+
+  <div class="divider"></div>
+  <label>نمط عرض أرقام تحدي الأستاذ (مستقل عن باقي المؤقتات)</label>
+  <div class="themes" id="challengeStylesGrid">
+    <button type="button" class="theme-btn active" id="chstyle-default" onclick="setChallengeStyle('default')">🔲 افتراضي</button>
+    <button type="button" class="theme-btn" id="chstyle-circular" onclick="setChallengeStyle('circular')">⭕ دائري</button>
+    <button type="button" class="theme-btn" id="chstyle-pixel" onclick="setChallengeStyle('pixel')">👾 بكسل</button>
+    <button type="button" class="theme-btn" id="chstyle-neon" onclick="setChallengeStyle('neon')">✨ نيون</button>
+    <button type="button" class="theme-btn" id="chstyle-ring" onclick="setChallengeStyle('ring')">🟠 حلقي</button>
+    <button type="button" class="theme-btn" id="chstyle-digital" onclick="setChallengeStyle('digital')">⬛ رقمي بسيط</button>
+    <button type="button" class="theme-btn" id="chstyle-dotmatrix" onclick="setChallengeStyle('dotmatrix')">🔶 نقطي LED</button>
+  </div>
+  <div id="challengeStyleSaveStatus" class="hint"></div>
 </div>
 
 <!-- لوحة الثيمات والأنماط -->
@@ -259,11 +277,35 @@
     <button type="button" class="theme-btn" id="style-circular" onclick="setStyle('circular')">⭕ دائري</button>
     <button type="button" class="theme-btn" id="style-pixel" onclick="setStyle('pixel')">👾 بكسل</button>
     <button type="button" class="theme-btn" id="style-neon" onclick="setStyle('neon')">✨ نيون</button>
+    <button type="button" class="theme-btn" id="style-ring" onclick="setStyle('ring')">🟠 حلقي</button>
+    <button type="button" class="theme-btn" id="style-digital" onclick="setStyle('digital')">⬛ رقمي بسيط</button>
+    <button type="button" class="theme-btn" id="style-dotmatrix" onclick="setStyle('dotmatrix')">🔶 نقطي LED</button>
   </div>
 
   <div id="themeSaveStatus"></div>
   <div class="divider"></div>
   <p class="hint">أي اختيار هنا يُحفظ ويُطبّق فورًا على صفحة العرض — لا حاجة للضغط على أي زر إضافي، وكل نمط يغيّر شكل صندوق الأرقام بالكامل (الشكل، الخط، الحدود، والتوهج).</p>
+</div>
+
+<!-- لوحة نمط مؤقت الطالب -->
+<div class="card hidden" id="studentStylePanel">
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
+  <p class="eyebrow">📚 نمط مؤقت الطالب</p>
+  <h1>شكل أرقام مؤقت الطالب</h1>
+
+  <label>نمط عرض الأرقام (مستقل عن المؤقت الرئيسي وتحدي الأستاذ)</label>
+  <div class="themes" id="studentStylesGrid">
+    <button type="button" class="theme-btn active" id="stustyle-default" onclick="setStudentStyle('default')">🔲 افتراضي</button>
+    <button type="button" class="theme-btn" id="stustyle-circular" onclick="setStudentStyle('circular')">⭕ دائري</button>
+    <button type="button" class="theme-btn" id="stustyle-pixel" onclick="setStudentStyle('pixel')">👾 بكسل</button>
+    <button type="button" class="theme-btn" id="stustyle-neon" onclick="setStudentStyle('neon')">✨ نيون</button>
+    <button type="button" class="theme-btn" id="stustyle-ring" onclick="setStudentStyle('ring')">🟠 حلقي</button>
+    <button type="button" class="theme-btn" id="stustyle-digital" onclick="setStudentStyle('digital')">⬛ رقمي بسيط</button>
+    <button type="button" class="theme-btn" id="stustyle-dotmatrix" onclick="setStudentStyle('dotmatrix')">🔶 نقطي LED</button>
+  </div>
+  <div id="studentStyleSaveStatus" class="hint"></div>
+  <div class="divider"></div>
+  <p class="hint">هذا النمط يُطبَّق على صفحة مؤقت الطالب لجميع الطلاب فور الحفظ.</p>
 </div>
 
 </div><!-- /.page -->
@@ -291,8 +333,10 @@ let currentMode = "down";
 let currentTheme = "broadcast";
 let currentStyle = "default";
 let currentChallengeMode = "down";
+let currentChallengeStyle = "default";
+let currentStudentStyle = "default";
 const THEME_IDS = ["broadcast", "aurora", "ember", "arctic", "royal"];
-const STYLE_IDS = ["default", "circular", "pixel", "neon"];
+const STYLE_IDS = ["default", "circular", "pixel", "neon", "ring", "digital", "dotmatrix"];
 
 /* ============ التنقل بين اللوحات ============ */
 function hideAllPanels(){
@@ -300,6 +344,7 @@ function hideAllPanels(){
   document.getElementById("mainTimerPanel").classList.add("hidden");
   document.getElementById("challengePanel").classList.add("hidden");
   document.getElementById("themesPanel").classList.add("hidden");
+  document.getElementById("studentStylePanel").classList.add("hidden");
 }
 
 window.showHub = function(){
@@ -312,6 +357,7 @@ window.showPanel = function(name){
   if (name === "main") document.getElementById("mainTimerPanel").classList.remove("hidden");
   else if (name === "challenge") document.getElementById("challengePanel").classList.remove("hidden");
   else if (name === "themes") document.getElementById("themesPanel").classList.remove("hidden");
+  else if (name === "studentStyle") document.getElementById("studentStylePanel").classList.remove("hidden");
 };
 
 /* ============ الثيمات والأنماط (تُحفظ فورًا) ============ */
@@ -354,11 +400,69 @@ window.setChallengeMode = function(mode){
   document.getElementById("chBtnUp").classList.toggle("active", mode === "up");
 };
 
+window.setChallengeStyle = function(style, save){
+  if (save === undefined) save = true;
+  currentChallengeStyle = style;
+  STYLE_IDS.forEach(id => {
+    document.getElementById("chstyle-" + id).classList.toggle("active", id === style);
+  });
+  if (save) saveChallengeStyle();
+};
+
+function saveChallengeStyle(){
+  const msg = document.getElementById("challengeStyleSaveStatus");
+  msg.style.color = "#7d8698";
+  msg.innerText = "جارٍ الحفظ...";
+  db.ref('challenge').update({ style: currentChallengeStyle })
+    .then(() => {
+      msg.style.color = "#2ecc71";
+      msg.innerText = "تم الحفظ ✓ — النمط ظاهر الآن في صفحة تحدي الأستاذ.";
+    })
+    .catch((error) => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "فشل الحفظ: " + error.message;
+    });
+}
+
+window.setStudentStyle = function(style, save){
+  if (save === undefined) save = true;
+  currentStudentStyle = style;
+  STYLE_IDS.forEach(id => {
+    document.getElementById("stustyle-" + id).classList.toggle("active", id === style);
+  });
+  if (save) saveStudentStyle();
+};
+
+function saveStudentStyle(){
+  const msg = document.getElementById("studentStyleSaveStatus");
+  msg.style.color = "#7d8698";
+  msg.innerText = "جارٍ الحفظ...";
+  db.ref('studentSettings').update({ style: currentStudentStyle })
+    .then(() => {
+      msg.style.color = "#2ecc71";
+      msg.innerText = "تم الحفظ ✓ — النمط ظاهر الآن في صفحة مؤقت الطالب.";
+    })
+    .catch((error) => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "فشل الحفظ: " + error.message;
+    });
+}
+
+function loadStudentStyleState(){
+  db.ref('studentSettings').once('value')
+    .then((snapshot) => {
+      const data = snapshot.val();
+      const style = (data && STYLE_IDS.includes(data.style)) ? data.style : "default";
+      setStudentStyle(style, false);
+    })
+    .catch(() => {});
+}
+
 window.setMode = function(mode){
   currentMode = mode;
   document.getElementById("btnDown").classList.toggle("active", mode === "down");
   document.getElementById("btnUp").classList.toggle("active", mode === "up");
-  document.getElementById("dtLabel").innerText = mode === "down" ? "وقت انتهاء الحدث" : "وقت بداية الحدث";
+  document.getElementById("dtLabel").innerText = mode === "down" ? "وقت انتهاء الحدث" : "الوقت الذي سيصل إليه العد التصاعدي";
 };
 
 window.doLogin = function(){
@@ -386,6 +490,7 @@ auth.onAuthStateChanged((user) => {
     tally.classList.add("live");
     loadCurrentState();
     loadChallengeState();
+    loadStudentStyleState();
     showHub();
   } else {
     hideAllPanels();
@@ -443,6 +548,7 @@ function loadChallengeState(){
         document.getElementById("challengeDuration").value = `${hh}:${mm}`;
       }
       setChallengeMode(data.mode === "up" ? "up" : "down");
+      setChallengeStyle(STYLE_IDS.includes(data.style) ? data.style : "default", false);
       document.getElementById("colorStart").value = data.colorStart || "#000000";
       document.getElementById("colorEnd").value = data.colorEnd || "#ff0000";
 
@@ -490,7 +596,8 @@ window.startChallenge = function(){
     startTime: Date.now(),
     durationMs: minutes * 60000,
     colorStart: colorStart,
-    colorEnd: colorEnd
+    colorEnd: colorEnd,
+    style: currentChallengeStyle
   })
     .then(() => {
       msg.style.color = "#2ecc71";
