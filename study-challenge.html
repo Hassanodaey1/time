@@ -204,7 +204,7 @@
 </head>
 <body>
 
-<a href="student-timer.html" class="back-link">‹ مؤقت الطالب</a>
+<a href="index.html" class="back-link">‹ الرئيسية</a>
 <button class="profile-btn" onclick="openProfileModal(false)">👤 الملف الشخصي</button>
 
 <div class="wrap" id="mainWrap" style="display:none;">
@@ -257,7 +257,7 @@
     <p class="eyebrow">🏆 تحدي الدراسة</p>
     <h1>غير مفعّل حاليًا</h1>
     <p class="greeting">لا يوجد تحدي دراسة مفعّل من الأستاذ في الوقت الحالي 🙂</p>
-    <a href="student-timer.html" style="display:inline-block; margin-top:10px; color:var(--accent); font-weight:700; text-decoration:none; font-size:13px;">‹ رجوع لمؤقت الطالب</a>
+    <a href="index.html" style="display:inline-block; margin-top:10px; color:var(--accent); font-weight:700; text-decoration:none; font-size:13px;">‹ رجوع للصفحة الرئيسية</a>
   </div>
 </div>
 
@@ -373,7 +373,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-db.ref('studentSettings/style').on('value', (snapshot) => {
+db.ref('studyChallengeSettings/style').on('value', (snapshot) => {
   document.body.setAttribute("data-style", snapshot.val() || "default");
 });
 db.ref('themeSettings/theme').on('value', (snapshot) => {
@@ -583,7 +583,7 @@ function formatTotal(seconds){
   return `${minutes} د`;
 }
 
-db.ref('studyLeaderboard').orderByChild('totalSeconds').limitToLast(50).on('value', (snapshot) => {
+function renderLeaderboard(snapshot){
   const rows = [];
   snapshot.forEach(child => { rows.push({ id: child.key, ...child.val() }); });
   rows.reverse();
@@ -613,7 +613,19 @@ db.ref('studyLeaderboard').orderByChild('totalSeconds').limitToLast(50).on('valu
       </div>
     `;
   }).join("");
+}
+
+const leaderboardRef = db.ref('studyLeaderboard').orderByChild('totalSeconds').limitToLast(50);
+
+/* تحديث لحظي فوري عند أي تغيير */
+leaderboardRef.on('value', renderLeaderboard, () => {
+  document.getElementById("leaderboardList").innerHTML = '<p class="empty-note">تعذّر تحميل الترتيب.</p>';
 });
+
+/* تحديث احتياطي كل دقيقة، لضمان بقاء اللائحة محدّثة دائمًا حتى لو انقطع الاتصال اللحظي مؤقتًا */
+setInterval(() => {
+  leaderboardRef.once('value').then(renderLeaderboard).catch(() => {});
+}, 60000);
 
 function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
