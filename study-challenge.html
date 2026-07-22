@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0e14">
+<title>تحدي الدراسة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#0d1b2a; --panel:#122438; --accent:#ffb400; --muted:#5f8aa6; --border:#1c344a; --green:#2ecc71; --red:#ff3b30; }
+  body[data-theme="aurora"]{ --accent:#00d4aa; }
+  body[data-theme="ember"]{ --accent:#ff6b35; }
+  body[data-theme="arctic"]{ --accent:#48cae4; }
+  body[data-theme="royal"]{ --accent:#ffd60a; }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:#f2f4f8; font-family:'Tajawal',sans-serif;
+    display:flex; align-items:flex-start; justify-content:center; padding:70px 18px 30px;
+    min-height:100vh;
+  }
+  .back-link{
+    position:fixed; top:18px; inset-inline-start:18px; font-size:13px; color:var(--muted);
+    text-decoration:none; z-index:5;
+  }
+  .profile-btn{
+    position:fixed; top:14px; inset-inline-end:18px; z-index:5;
+    display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:20px;
+    border:1px solid var(--border); background:var(--panel); color:#fff; font-size:12.5px;
+    font-family:'Tajawal',sans-serif; font-weight:700; cursor:pointer;
+  }
+  .wrap{width:100%; max-width:440px; display:flex; flex-direction:column; gap:16px;}
+  .card{
+    width:100%; background:var(--panel); border:1px solid var(--border);
+    border-radius:20px; padding:28px 24px; text-align:center;
+  }
+  .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--accent);
+    text-transform:uppercase; margin:0 0 8px; }
+  h1{margin:0 0 6px; font-size:20px; font-weight:900;}
+  .greeting{font-size:13px; color:var(--muted); margin:0 0 22px;}
+
+  .presets{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;}
+  .preset-btn{
+    padding:12px 4px; border-radius:10px; border:1px solid var(--border); background:#0f2032;
+    color:#fff; font-family:'JetBrains Mono',monospace; font-weight:700; cursor:pointer; font-size:14px;
+  }
+  .preset-btn.active{border-color:var(--accent); color:var(--accent); background:rgba(72,202,228,.1);}
+
+  .custom-row{display:flex; gap:8px; margin-bottom:20px;}
+  .custom-row input{
+    flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:#0f2032;
+    color:#fff; font-family:'Tajawal',sans-serif; font-size:14.5px;
+  }
+
+  .digits{display:flex; justify-content:center; gap:10px; margin-bottom:22px;}
+  .unit{display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .flip{
+    background:#0a1826; border:1px solid var(--border); border-radius:10px;
+    padding:14px 8px; min-width:82px; font-family:'JetBrains Mono',monospace;
+    font-size:38px; font-weight:700; color:var(--accent);
+  }
+  .unit label{font-size:11px; color:var(--muted); letter-spacing:2px;}
+
+  .controls{display:flex; gap:8px;}
+  button.primary{
+    flex:1; padding:14px; border:none; border-radius:10px; background:var(--accent);
+    color:#06222d; font-weight:900; font-size:15px; cursor:pointer; font-family:'Tajawal',sans-serif;
+  }
+  button.secondary{
+    flex:1; padding:14px; border:1px solid var(--border); border-radius:10px; background:transparent;
+    color:var(--muted); font-weight:700; font-size:14px; cursor:pointer; font-family:'Tajawal',sans-serif;
+  }
+  #doneMsg{display:none; font-size:20px; font-weight:900; color:var(--green); margin-bottom:14px;}
+  .hidden{display:none !important;}
+
+  /* الأنماط: نفس أنماط مؤقت الطالب الأساسي */
+  :root{--ring-pct:0%;}
+  body[data-style="circular"] .digits{gap:14px;}
+  body[data-style="circular"] .flip{
+    border-radius:50%; width:78px; height:78px; min-width:78px;
+    display:flex; align-items:center; justify-content:center; padding:0;
+    border:2px solid var(--accent); background:#0a1826; font-size:22px;
+  }
+  body[data-style="pixel"] .eyebrow, body[data-style="pixel"] h1, body[data-style="pixel"] .unit label{font-family:'Press Start 2P', monospace;}
+  body[data-style="pixel"] h1{font-size:14px; line-height:1.8;}
+  body[data-style="pixel"] .eyebrow{font-size:9px;}
+  body[data-style="pixel"] .unit label{font-size:7px;}
+  body[data-style="pixel"] .card{background:#000; border-color:#003300;}
+  body[data-style="pixel"] .flip{
+    font-family:'Press Start 2P', monospace; font-size:18px; border-radius:0;
+    border:3px solid var(--accent); background:#000;
+  }
+  body[data-style="neon"] .card{background:#050507;}
+  body[data-style="neon"] .digits{gap:22px;}
+  body[data-style="neon"] .flip{
+    background:transparent; border:none; font-size:44px; letter-spacing:2px;
+    text-shadow:0 0 8px var(--accent), 0 0 22px var(--accent), 0 0 40px var(--accent);
+  }
+  body[data-style="ring"] .digits{
+    position:relative; width:220px; height:220px; border-radius:50%; margin:0 auto 22px;
+    align-items:center; padding:24px; gap:2px; display:flex;
+    background: conic-gradient(var(--accent) var(--ring-pct), #0a1826 0);
+  }
+  body[data-style="ring"] .digits::before{
+    content:""; position:absolute; inset:10px; border-radius:50%; background:var(--panel);
+  }
+  body[data-style="ring"] .flip{ position:relative; z-index:1; background:transparent; border:none; font-size:22px; min-width:auto; padding:0 2px;}
+  body[data-style="ring"] .unit{ position:relative; z-index:1; }
+  body[data-style="ring"] .unit label{ font-size:9px;}
+  body[data-style="digital"] .card{background:#000; border:none;}
+  body[data-style="digital"] .digits{gap:4px;}
+  body[data-style="digital"] .flip{ background:transparent; border:none; font-size:52px; min-width:auto; padding:4px 6px; color:#fff;}
+  body[data-style="digital"] .unit label{ display:none; }
+  body[data-style="dotmatrix"] .card{background:#000; border-color:#141414;}
+  body[data-style="dotmatrix"] .flip{
+    background:radial-gradient(circle, rgba(255,140,26,.12) 1px, transparent 1.5px) 0 0/6px 6px, #050505;
+    border:2px solid #1a1a1a; border-radius:4px; color:#ff8c1a;
+    text-shadow:0 0 6px #ff8c1a, 0 0 14px rgba(255,140,26,.5);
+  }
+  body[data-style="dotmatrix"] .unit label{ color:#a3651f; }
+  body[data-style="flipclock"]{ background:#000; }
+  body[data-style="flipclock"] .card{ background:#000; border:none; }
+  body[data-style="flipclock"] .eyebrow{ color:#4aa8ff; }
+  body[data-style="flipclock"] .preset-btn{ background:#101418; border-color:#1c232b; color:#8aa0b8; }
+  body[data-style="flipclock"] .preset-btn.active{ border-color:#4aa8ff; color:#4aa8ff; background:rgba(74,168,255,.1); }
+  body[data-style="flipclock"] .custom-row input{ background:#101418; border-color:#1c232b; color:#fff; }
+  body[data-style="flipclock"] .digits{ gap:8px; }
+  body[data-style="flipclock"] .unit{ perspective:300px; }
+  body[data-style="flipclock"] .unit label{ color:#4a5a6a; }
+  body[data-style="flipclock"] .flip{
+    position:relative; background:#14191f; border:none; border-radius:10px;
+    color:#4aa8ff; font-size:52px; min-width:78px; padding:16px 8px;
+    text-shadow:0 0 14px rgba(74,168,255,.55);
+    box-shadow:0 8px 18px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
+    overflow:hidden; transform-style:preserve-3d;
+  }
+  body[data-style="flipclock"] .flip::before{
+    content:""; position:absolute; left:0; right:0; top:50%; height:2px;
+    background:#000; transform:translateY(-1px); z-index:2;
+  }
+  body[data-style="flipclock"] .flip::after{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(to bottom, rgba(255,255,255,.03) 0%, transparent 48%, rgba(0,0,0,.18) 52%, rgba(0,0,0,.3) 100%);
+    pointer-events:none;
+  }
+  body[data-style="flipclock"] .flip.flip-anim{ animation:flipDigit .5s ease; }
+  @keyframes flipDigit{
+    0%{ transform:rotateX(0deg); }
+    48%{ transform:rotateX(-90deg); opacity:.5; }
+    52%{ transform:rotateX(90deg); opacity:.5; }
+    100%{ transform:rotateX(0deg); opacity:1; }
+  }
+  body[data-style="flipclock"] .controls button.secondary{ border-color:#1c232b; color:#8aa0b8; }
+
+  /* لوحة الترتيب */
+  .leaderboard-card{padding:22px 20px;}
+  .leaderboard-title{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .leaderboard-title h2{font-size:15px; margin:0; font-weight:900;}
+  .leaderboard-title span{font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+  .leaderboard-list{max-height:420px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-inline-end:4px;}
+  .leaderboard-list::-webkit-scrollbar{width:6px;}
+  .leaderboard-list::-webkit-scrollbar-thumb{background:var(--border); border-radius:6px;}
+  .rank-row{
+    display:flex; align-items:center; gap:10px; background:#0f2032; border:1px solid var(--border);
+    border-radius:12px; padding:10px 12px;
+  }
+  .rank-row.me{border-color:var(--accent); background:rgba(255,180,0,.08);}
+  .rank-num{
+    width:26px; height:26px; border-radius:50%; background:#0a1826; display:flex; align-items:center;
+    justify-content:center; font-size:11.5px; font-weight:900; font-family:'JetBrains Mono',monospace;
+    color:var(--muted); flex-shrink:0;
+  }
+  .rank-row:nth-child(1) .rank-num{background:#4a3a00; color:#ffd700;}
+  .rank-row:nth-child(2) .rank-num{background:#3a3a3a; color:#c8c8c8;}
+  .rank-row:nth-child(3) .rank-num{background:#3a2a1a; color:#cd7f32;}
+  .rank-info{flex:1; text-align:start; overflow:hidden;}
+  .rank-name{font-size:13.5px; font-weight:700; margin:0 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rank-loc{font-size:10.5px; color:var(--muted); margin:0;}
+  .rank-time{font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:var(--accent); flex-shrink:0;}
+  .empty-note{font-size:12px; color:var(--muted); text-align:center; padding:14px 0;}
+
+  /* الشاشة المنبثقة للملف الشخصي */
+  .overlay{
+    position:fixed; inset:0; background:rgba(3,8,14,.75); display:flex; align-items:center;
+    justify-content:center; padding:20px; z-index:20;
+  }
+  .modal{
+    width:100%; max-width:400px; background:var(--panel); border:1px solid var(--border);
+    border-radius:18px; padding:26px 22px; text-align:start;
+  }
+  .modal h2{margin:0 0 16px; font-size:17px; font-weight:900; text-align:center;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12.5px; color:var(--muted); margin-bottom:6px;}
+  .field input, .field select{
+    width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--border);
+    background:#0f2032; color:#fff; font-family:'Tajawal',sans-serif; font-size:14px;
+  }
+  .modal .primary{width:100%; margin-top:6px;}
+  .modal-error{color:var(--red); font-size:12px; text-align:center; margin:-8px 0 12px; display:none;}
+</style>
+</head>
+<body>
+
+<a href="student-timer.html" class="back-link">‹ مؤقت الطالب</a>
+<button class="profile-btn" onclick="openProfileModal(false)">👤 الملف الشخصي</button>
+
+<div class="wrap" id="mainWrap" style="display:none;">
+  <div class="card">
+    <p class="eyebrow">🏆 تحدي الدراسة</p>
+    <h1>من يدرس لمدة أطول؟</h1>
+    <p class="greeting" id="greeting">مرحبًا بك</p>
+
+    <div id="setupView">
+      <div class="presets">
+        <button class="preset-btn" onclick="pickPreset(5, this)">٥ د</button>
+        <button class="preset-btn active" onclick="pickPreset(15, this)">١٥ د</button>
+        <button class="preset-btn" onclick="pickPreset(25, this)">٢٥ د</button>
+        <button class="preset-btn" onclick="pickPreset(45, this)">٤٥ د</button>
+      </div>
+      <div class="custom-row">
+        <input type="time" id="customTime" step="60">
+      </div>
+      <p style="font-size:11.5px; color:var(--muted); margin:-14px 0 20px;">أو حدد وقتًا مخصصًا (ساعة : دقيقة) — بحد أقصى 23:59</p>
+      <button class="primary" onclick="startTimer()">▶️ ابدأ الدراسة</button>
+    </div>
+
+    <div id="runningView" class="hidden">
+      <p id="doneMsg">🎉 أحسنت! تمت إضافة وقتك إلى الترتيب</p>
+      <div class="digits" id="digitsWrap" style="display:flex;">
+        <div class="unit"><div class="flip" id="dHours">00</div><label>ساعة</label></div>
+        <div class="unit"><div class="flip" id="dMinutes">00</div><label>دقيقة</label></div>
+        <div class="unit"><div class="flip" id="dSeconds">00</div><label>ثانية</label></div>
+      </div>
+      <div class="controls">
+        <button class="secondary" id="pauseBtn" onclick="togglePause()">⏸️ إيقاف مؤقت</button>
+        <button class="secondary" onclick="resetTimer()">🔄 إعادة ضبط</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card leaderboard-card">
+    <div class="leaderboard-title">
+      <h2>🏆 ترتيب الطلاب</h2>
+      <span id="lbCount">—</span>
+    </div>
+    <div class="leaderboard-list" id="leaderboardList">
+      <p class="empty-note">جارٍ تحميل الترتيب...</p>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="inactiveWrap" style="display:none;">
+  <div class="card">
+    <p class="eyebrow">🏆 تحدي الدراسة</p>
+    <h1>غير مفعّل حاليًا</h1>
+    <p class="greeting">لا يوجد تحدي دراسة مفعّل من الأستاذ في الوقت الحالي 🙂</p>
+    <a href="student-timer.html" style="display:inline-block; margin-top:10px; color:var(--accent); font-weight:700; text-decoration:none; font-size:13px;">‹ رجوع لمؤقت الطالب</a>
+  </div>
+</div>
+
+<div class="overlay" id="profileOverlay">
+  <div class="modal">
+    <h2>📝 معلوماتك الشخصية</h2>
+    <p class="modal-error" id="profileError">فضلاً عبّئ الاسم والعمر والبلد بشكل صحيح</p>
+    <div class="field">
+      <label>الاسم</label>
+      <input type="text" id="fName" placeholder="اكتب اسمك">
+    </div>
+    <div class="field">
+      <label>العمر</label>
+      <input type="number" id="fAge" min="5" max="100" placeholder="اكتب عمرك">
+    </div>
+    <div class="field">
+      <label>البلد</label>
+      <select id="fCountry" onchange="onCountryChange()">
+        <option value="العراق">العراق</option>
+        <option value="السعودية">السعودية</option>
+        <option value="الأردن">الأردن</option>
+        <option value="سوريا">سوريا</option>
+        <option value="لبنان">لبنان</option>
+        <option value="مصر">مصر</option>
+        <option value="الكويت">الكويت</option>
+        <option value="الإمارات">الإمارات</option>
+        <option value="قطر">قطر</option>
+        <option value="البحرين">البحرين</option>
+        <option value="عُمان">عُمان</option>
+        <option value="اليمن">اليمن</option>
+        <option value="فلسطين">فلسطين</option>
+        <option value="ليبيا">ليبيا</option>
+        <option value="تونس">تونس</option>
+        <option value="الجزائر">الجزائر</option>
+        <option value="المغرب">المغرب</option>
+        <option value="السودان">السودان</option>
+        <option value="أخرى">أخرى</option>
+      </select>
+    </div>
+    <div class="field" id="iraqGovField">
+      <label>المحافظة</label>
+      <select id="fGovIraq">
+        <option value="بغداد">بغداد</option>
+        <option value="البصرة">البصرة</option>
+        <option value="نينوى">نينوى</option>
+        <option value="أربيل">أربيل</option>
+        <option value="النجف">النجف</option>
+        <option value="كربلاء">كربلاء</option>
+        <option value="الأنبار">الأنبار</option>
+        <option value="ذي قار">ذي قار</option>
+        <option value="ديالى">ديالى</option>
+        <option value="كركوك">كركوك</option>
+        <option value="بابل">بابل</option>
+        <option value="واسط">واسط</option>
+        <option value="ميسان">ميسان</option>
+        <option value="المثنى">المثنى</option>
+        <option value="القادسية">القادسية</option>
+        <option value="صلاح الدين">صلاح الدين</option>
+        <option value="دهوك">دهوك</option>
+        <option value="السليمانية">السليمانية</option>
+      </select>
+    </div>
+    <div class="field hidden" id="otherGovField">
+      <label>المحافظة / المنطقة</label>
+      <input type="text" id="fGovOther" placeholder="اكتب اسم المحافظة أو المنطقة">
+    </div>
+    <button class="primary" onclick="saveProfile()">💾 حفظ</button>
+  </div>
+</div>
+
+<script src="timer-sounds.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script>
+/* ================= المؤقت ================= */
+let selectedMinutes = 15;
+let remainingMs = 0;
+let totalMs = 0;
+let paused = false;
+let timerHandle = null;
+let midAlerted = false, lastMinuteAlerted = false;
+const baseTitle = document.title;
+
+const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
+
+function formatDuration(ms){
+  ms = Math.max(0, ms);
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  return `${pad(minutes)}:${pad(seconds)}`;
+}
+
+let wakeLock = null;
+async function requestWakeLock(){
+  try{ if ("wakeLock" in navigator){ wakeLock = await navigator.wakeLock.request("screen"); } }catch(e){}
+}
+document.addEventListener("visibilitychange", () => {
+  if (wakeLock !== null && document.visibilityState === "visible") requestWakeLock();
+});
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDoZPCTfHBg-gCupUOd6FPqMMiJm4jT1vA",
+  authDomain: "time-7971c.firebaseapp.com",
+  databaseURL: "https://time-7971c-default-rtdb.firebaseio.com",
+  projectId: "time-7971c",
+  storageBucket: "time-7971c.firebasestorage.app",
+  messagingSenderId: "511397609426",
+  appId: "1:511397609426:web:06ce68a87617922c68120b"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+db.ref('studentSettings/style').on('value', (snapshot) => {
+  document.body.setAttribute("data-style", snapshot.val() || "default");
+});
+db.ref('themeSettings/theme').on('value', (snapshot) => {
+  document.body.setAttribute("data-theme", snapshot.val() || "broadcast");
+});
+
+db.ref('studyChallengeSettings/active').once('value').then((snapshot) => {
+  const active = !!snapshot.val();
+  document.getElementById("mainWrap").style.display = active ? "flex" : "none";
+  document.getElementById("inactiveWrap").style.display = active ? "none" : "flex";
+});
+
+function setRingProgress(pct){
+  pct = Math.max(0, Math.min(100, pct));
+  document.body.style.setProperty('--ring-pct', pct + '%');
+}
+
+window.pickPreset = function(minutes, el){
+  selectedMinutes = minutes;
+  document.getElementById("customTime").value = "";
+  document.querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
+  el.classList.add("active");
+};
+
+window.startTimer = function(){
+  if (!getProfile()){ openProfileModal(true); return; }
+  const customVal = document.getElementById("customTime").value;
+  let minutes = selectedMinutes;
+  if (customVal){
+    const [hh, mm] = customVal.split(":").map(Number);
+    const customMinutes = (hh * 60) + mm;
+    if (customMinutes > 0) minutes = customMinutes;
+  }
+
+  totalMs = minutes * 60 * 1000;
+  remainingMs = totalMs;
+  paused = false;
+  midAlerted = false;
+  lastMinuteAlerted = false;
+
+  document.getElementById("setupView").classList.add("hidden");
+  document.getElementById("runningView").classList.remove("hidden");
+  document.getElementById("doneMsg").style.display = "none";
+  document.getElementById("digitsWrap").style.display = "flex";
+  document.getElementById("pauseBtn").innerText = "⏸️ إيقاف مؤقت";
+
+  window.playTimerAlert("start");
+  setRingProgress(100);
+  renderTime();
+  requestWakeLock();
+  if (timerHandle) clearInterval(timerHandle);
+  timerHandle = setInterval(step, 1000);
+};
+
+function step(){
+  if (paused) return;
+  remainingMs -= 1000;
+
+  if (remainingMs <= 0){
+    clearInterval(timerHandle);
+    remainingMs = 0;
+    renderTime();
+    setRingProgress(0);
+    window.playTimerAlert("finish");
+    document.getElementById("digitsWrap").style.display = "none";
+    document.getElementById("doneMsg").style.display = "block";
+    document.title = "🎉 انتهت الجلسة";
+    if (wakeLock){ wakeLock.release().catch(()=>{}); wakeLock = null; }
+    bankStudyTime(Math.round(totalMs / 1000));
+    return;
+  }
+
+  const progress = 1 - (remainingMs / totalMs);
+  if (progress >= 0.5 && !midAlerted){ midAlerted = true; window.playTimerAlert("mid"); }
+  if (remainingMs <= 60000 && !lastMinuteAlerted){ lastMinuteAlerted = true; window.playTimerAlert("lastMinute"); }
+
+  setRingProgress((remainingMs / totalMs) * 100);
+  renderTime();
+  document.title = "📚 " + formatDuration(remainingMs);
+}
+
+function setDigit(el, val){
+  if (el.innerText !== val){
+    el.innerText = val;
+    if (document.body.getAttribute("data-style") === "flipclock"){
+      el.classList.remove("flip-anim");
+      void el.offsetWidth;
+      el.classList.add("flip-anim");
+    }
+  }
+}
+
+function renderTime(){
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  setDigit(document.getElementById("dHours"), pad(hours));
+  setDigit(document.getElementById("dMinutes"), pad(minutes));
+  setDigit(document.getElementById("dSeconds"), pad(seconds));
+}
+
+window.togglePause = function(){
+  paused = !paused;
+  document.getElementById("pauseBtn").innerText = paused ? "▶️ استئناف" : "⏸️ إيقاف مؤقت";
+};
+
+window.resetTimer = function(){
+  if (timerHandle) clearInterval(timerHandle);
+  const studiedMs = totalMs - remainingMs;
+  if (studiedMs > 1000) bankStudyTime(Math.round(studiedMs / 1000));
+  document.getElementById("setupView").classList.remove("hidden");
+  document.getElementById("runningView").classList.add("hidden");
+  document.title = baseTitle;
+  if (wakeLock){ wakeLock.release().catch(()=>{}); wakeLock = null; }
+};
+
+/* ================= الملف الشخصي ================= */
+const PROFILE_KEY = "studyChallengeProfile";
+
+function getProfile(){
+  try{
+    const raw = localStorage.getItem(PROFILE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+function uid(){
+  return "s_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+window.onCountryChange = function(){
+  const isIraq = document.getElementById("fCountry").value === "العراق";
+  document.getElementById("iraqGovField").classList.toggle("hidden", !isIraq);
+  document.getElementById("otherGovField").classList.toggle("hidden", isIraq);
+};
+
+window.openProfileModal = function(forced){
+  const p = getProfile();
+  if (p){
+    document.getElementById("fName").value = p.name || "";
+    document.getElementById("fAge").value = p.age || "";
+    document.getElementById("fCountry").value = p.country || "العراق";
+    onCountryChange();
+    if (p.country === "العراق") document.getElementById("fGovIraq").value = p.governorate || "بغداد";
+    else document.getElementById("fGovOther").value = p.governorate || "";
+  } else {
+    onCountryChange();
+  }
+  document.getElementById("profileError").style.display = "none";
+  document.getElementById("profileOverlay").style.display = "flex";
+};
+
+window.saveProfile = function(){
+  const name = document.getElementById("fName").value.trim();
+  const age = parseInt(document.getElementById("fAge").value, 10);
+  const country = document.getElementById("fCountry").value;
+  const isIraq = country === "العراق";
+  const governorate = isIraq
+    ? document.getElementById("fGovIraq").value
+    : document.getElementById("fGovOther").value.trim();
+
+  if (!name || !age || age < 5 || age > 100 || !country || !governorate){
+    document.getElementById("profileError").style.display = "block";
+    return;
+  }
+
+  let p = getProfile();
+  if (!p) p = { id: uid() };
+  p.name = name;
+  p.age = age;
+  p.country = country;
+  p.governorate = governorate;
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+
+  db.ref('studyLeaderboard/' + p.id).update({
+    name: p.name, age: p.age, country: p.country, governorate: p.governorate,
+    updatedAt: firebase.database.ServerValue.TIMESTAMP
+  });
+  db.ref('studyLeaderboard/' + p.id + '/totalSeconds').transaction(cur => cur === null ? 0 : cur);
+
+  document.getElementById("profileOverlay").style.display = "none";
+  updateGreeting();
+};
+
+function updateGreeting(){
+  const p = getProfile();
+  document.getElementById("greeting").innerText = p ? `مرحبًا، ${p.name} 👋` : "مرحبًا بك";
+}
+
+function bankStudyTime(seconds){
+  const p = getProfile();
+  if (!p || seconds <= 0) return;
+  db.ref('studyLeaderboard/' + p.id + '/totalSeconds').transaction(cur => (cur || 0) + seconds);
+  db.ref('studyLeaderboard/' + p.id).update({
+    name: p.name, age: p.age, country: p.country, governorate: p.governorate,
+    updatedAt: firebase.database.ServerValue.TIMESTAMP
+  });
+}
+
+/* ================= لوحة الترتيب ================= */
+function formatTotal(seconds){
+  seconds = seconds || 0;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) return `${hours} س ${minutes} د`;
+  return `${minutes} د`;
+}
+
+db.ref('studyLeaderboard').orderByChild('totalSeconds').limitToLast(50).on('value', (snapshot) => {
+  const rows = [];
+  snapshot.forEach(child => { rows.push({ id: child.key, ...child.val() }); });
+  rows.reverse();
+
+  const listEl = document.getElementById("leaderboardList");
+  const countEl = document.getElementById("lbCount");
+  const myProfile = getProfile();
+
+  countEl.innerText = rows.length + " طالب";
+
+  if (rows.length === 0){
+    listEl.innerHTML = '<p class="empty-note">لا يوجد طلاب في الترتيب بعد — كن أول من يبدأ!</p>';
+    return;
+  }
+
+  listEl.innerHTML = rows.map((r, i) => {
+    const isMe = myProfile && r.id === myProfile.id;
+    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i + 1);
+    return `
+      <div class="rank-row ${isMe ? 'me' : ''}">
+        <div class="rank-num">${medal}</div>
+        <div class="rank-info">
+          <p class="rank-name">${escapeHtml(r.name || "طالب")}${isMe ? " (أنت)" : ""}</p>
+          <p class="rank-loc">${escapeHtml(r.governorate || "")} • ${escapeHtml(r.country || "")}</p>
+        </div>
+        <div class="rank-time">${formatTotal(r.totalSeconds)}</div>
+      </div>
+    `;
+  }).join("");
+});
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+/* ================= بدء التشغيل ================= */
+updateGreeting();
+if (!getProfile()){
+  openProfileModal(true);
+} else {
+  document.getElementById("profileOverlay").style.display = "none";
+}
+</script>
+</body>
+</html>
