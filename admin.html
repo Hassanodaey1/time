@@ -274,6 +274,7 @@
       <button type="button" class="theme-btn" id="style-ring" onclick="setStyle('ring')">🟠 حلقي</button>
       <button type="button" class="theme-btn" id="style-digital" onclick="setStyle('digital')">⬛ رقمي بسيط</button>
       <button type="button" class="theme-btn" id="style-dotmatrix" onclick="setStyle('dotmatrix')">🔶 نقطي LED</button>
+      <button type="button" class="theme-btn" id="style-flipclock" onclick="setStyle('flipclock')">🕐 فليب كلوك</button>
     </div>
     <div id="themeSaveStatus" class="hint"></div>
   </div>
@@ -288,6 +289,7 @@
       <button type="button" class="theme-btn" id="chstyle-ring" onclick="setChallengeStyle('ring')">🟠 حلقي</button>
       <button type="button" class="theme-btn" id="chstyle-digital" onclick="setChallengeStyle('digital')">⬛ رقمي بسيط</button>
       <button type="button" class="theme-btn" id="chstyle-dotmatrix" onclick="setChallengeStyle('dotmatrix')">🔶 نقطي LED</button>
+      <button type="button" class="theme-btn" id="chstyle-flipclock" onclick="setChallengeStyle('flipclock')">🕐 فليب كلوك</button>
     </div>
     <div id="challengeStyleSaveStatus" class="hint"></div>
   </div>
@@ -302,6 +304,7 @@
       <button type="button" class="theme-btn" id="stustyle-ring" onclick="setStudentStyle('ring')">🟠 حلقي</button>
       <button type="button" class="theme-btn" id="stustyle-digital" onclick="setStudentStyle('digital')">⬛ رقمي بسيط</button>
       <button type="button" class="theme-btn" id="stustyle-dotmatrix" onclick="setStudentStyle('dotmatrix')">🔶 نقطي LED</button>
+      <button type="button" class="theme-btn" id="stustyle-flipclock" onclick="setStudentStyle('flipclock')">🕐 فليب كلوك</button>
     </div>
     <div id="studentStyleSaveStatus" class="hint"></div>
   </div>
@@ -338,7 +341,7 @@ let currentChallengeMode = "down";
 let currentChallengeStyle = "default";
 let currentStudentStyle = "default";
 const THEME_IDS = ["broadcast", "aurora", "ember", "arctic", "royal"];
-const STYLE_IDS = ["default", "circular", "pixel", "neon", "ring", "digital", "dotmatrix"];
+const STYLE_IDS = ["default", "circular", "pixel", "neon", "ring", "digital", "dotmatrix", "flipclock"];
 
 /* ============ التنقل بين اللوحات ============ */
 function hideAllPanels(){
