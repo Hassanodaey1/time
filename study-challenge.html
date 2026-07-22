@@ -181,6 +181,20 @@
   .rank-loc{font-size:10.5px; color:var(--muted); margin:0;}
   .rank-time{font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:var(--accent); flex-shrink:0;}
   .empty-note{font-size:12px; color:var(--muted); text-align:center; padding:14px 0;}
+  .badge-icon{font-size:13px; margin-inline-start:4px;}
+
+  .session-notice{
+    margin:14px 0 0; padding:10px 12px; border-radius:10px; font-size:12px; text-align:center;
+    background:rgba(255,59,48,.1); border:1px solid rgba(255,59,48,.35); color:#ff8a80;
+  }
+  .my-rank-banner{
+    margin:0 0 10px; padding:10px 12px; border-radius:10px; font-size:12.5px; text-align:center;
+    background:rgba(255,180,0,.08); border:1px solid var(--accent); color:var(--accent); font-weight:700;
+  }
+  .streak-info{
+    margin:0 0 10px; padding:8px 12px; border-radius:10px; font-size:12px; text-align:center;
+    background:rgba(255,107,53,.08); border:1px solid var(--border); color:var(--muted);
+  }
 
   /* الشاشة المنبثقة للملف الشخصي */
   .overlay{
@@ -238,6 +252,7 @@
         <button class="secondary" id="pauseBtn" onclick="togglePause()">⏸️ إيقاف مؤقت</button>
         <button class="secondary" onclick="resetTimer()">🔄 إعادة ضبط</button>
       </div>
+      <p class="session-notice" id="sessionNotice" style="display:none;"></p>
     </div>
   </div>
 
@@ -246,6 +261,8 @@
       <h2>🏆 ترتيب الطلاب</h2>
       <span id="lbCount">—</span>
     </div>
+    <p class="my-rank-banner" id="myRankBanner" style="display:none;"></p>
+    <p class="streak-info" id="streakInfo" style="display:none;"></p>
     <div class="leaderboard-list" id="leaderboardList">
       <p class="empty-note">جارٍ تحميل الترتيب...</p>
     </div>
@@ -339,6 +356,7 @@ let secondsSinceBank = 0;
 let remainingMs = 0;
 let totalMs = 0;
 let paused = false;
+let dailyCapReached = false;
 let timerHandle = null;
 let midAlerted = false, lastMinuteAlerted = false;
 const baseTitle = document.title;
@@ -359,8 +377,60 @@ let wakeLock = null;
 async function requestWakeLock(){
   try{ if ("wakeLock" in navigator){ wakeLock = await navigator.wakeLock.request("screen"); } }catch(e){}
 }
+
+/* ================= الوقت الحقيقي (متزامن مع السيرفر) ================= */
+let serverTimeOffset = 0;
+function serverNow(){ return Date.now() + serverTimeOffset; }
+
+const DAILY_CAP_SECONDS = 6 * 60 * 60; // الحد الأقصى المحسوب يوميًا لكل طالب: ٦ ساعات
+
+/* ================= إيقاف تلقائي عند مغادرة الصفحة ================= */
+const AUTO_RESUME_GRACE_MS = 8000; // غيبة أقصر من هذا تُستأنف تلقائيًا وبصمت
+let hiddenAt = null;
+
+function isSessionRunning(){
+  return !document.getElementById("runningView").classList.contains("hidden")
+    && document.getElementById("digitsWrap").style.display !== "none";
+}
+
+function showSessionNotice(text){
+  const el = document.getElementById("sessionNotice");
+  if (!el) return;
+  el.innerText = text;
+  el.style.display = "block";
+}
+function hideSessionNotice(){
+  const el = document.getElementById("sessionNotice");
+  if (el) el.style.display = "none";
+}
+
 document.addEventListener("visibilitychange", () => {
-  if (wakeLock !== null && document.visibilityState === "visible") requestWakeLock();
+  if (document.visibilityState === "hidden"){
+    if (isSessionRunning() && !paused){
+      hiddenAt = Date.now();
+      paused = true;
+      document.getElementById("pauseBtn").innerText = "▶️ استئناف";
+    }
+    return;
+  }
+
+  // رجع الطالب للصفحة
+  if (wakeLock !== null) requestWakeLock();
+  if (hiddenAt === null) return;
+
+  const awayMs = Date.now() - hiddenAt;
+  hiddenAt = null;
+
+  if (!isSessionRunning()) return;
+
+  if (awayMs <= AUTO_RESUME_GRACE_MS && !dailyCapReached){
+    // غيبة قصيرة (تبديل تطبيق سريع) — استئناف تلقائي بصمت
+    paused = false;
+    document.getElementById("pauseBtn").innerText = "⏸️ إيقاف مؤقت";
+  } else if (!dailyCapReached){
+    // غيبة طويلة — يبقى موقوف والطالب لازم يضغط استئناف بنفسه
+    showSessionNotice("⏸️ تم إيقاف المؤقت تلقائيًا لأنك غادرت الصفحة. اضغط «استئناف» للمتابعة.");
+  }
 });
 
 const firebaseConfig = {
@@ -374,6 +444,10 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+db.ref(".info/serverTimeOffset").on("value", (snap) => {
+  serverTimeOffset = snap.val() || 0;
+});
 
 db.ref('studyChallengeSettings/style').on('value', (snapshot) => {
   document.body.setAttribute("data-style", snapshot.val() || "default");
@@ -413,6 +487,7 @@ window.startTimer = function(){
   totalMs = minutes * 60 * 1000;
   remainingMs = totalMs;
   paused = false;
+  dailyCapReached = false;
   midAlerted = false;
   lastMinuteAlerted = false;
   bankedSeconds = 0;
@@ -423,6 +498,7 @@ window.startTimer = function(){
   document.getElementById("doneMsg").style.display = "none";
   document.getElementById("digitsWrap").style.display = "flex";
   document.getElementById("pauseBtn").innerText = "⏸️ إيقاف مؤقت";
+  hideSessionNotice();
 
   window.playTimerAlert("start");
   setRingProgress(100);
@@ -492,8 +568,13 @@ function renderTime(){
 }
 
 window.togglePause = function(){
+  if (dailyCapReached && paused){
+    showSessionNotice("🚫 وصلت للحد الأقصى اليومي (٦ ساعات). رجعلك باچر 💪");
+    return;
+  }
   paused = !paused;
   document.getElementById("pauseBtn").innerText = paused ? "▶️ استئناف" : "⏸️ إيقاف مؤقت";
+  if (!paused) hideSessionNotice();
 };
 
 window.resetTimer = function(){
@@ -585,15 +666,70 @@ function updateGreeting(){
   document.getElementById("greeting").innerText = p ? `مرحبًا، ${p.name} 👋` : "مرحبًا بك";
 }
 
+function getBadge(totalSeconds){
+  const hours = (totalSeconds || 0) / 3600;
+  if (hours >= 150) return { icon: "🥇", label: "ذهبية" };
+  if (hours >= 50)  return { icon: "🥈", label: "فضية" };
+  if (hours >= 10)  return { icon: "🥉", label: "برونزية" };
+  return null;
+}
+
 function bankStudyTime(seconds){
   const p = getProfile();
   if (!p || seconds <= 0) return;
   const ref = db.ref('studyLeaderboard/' + p.id);
-  ref.child('totalSeconds').once('value').then(snap => {
-    const newTotal = (snap.val() || 0) + seconds;
+
+  ref.once('value').then(snap => {
+    const cur = snap.val() || {};
+    const nowServer = serverNow();
+    const todayIndex = Math.floor(nowServer / 86400000);
+    const thisWeekIndex = Math.floor(nowServer / 604800000);
+
+    /* ---- الحد اليومي (٦ ساعات) ---- */
+    let dayIndex = cur.dayIndex;
+    let daySeconds = cur.daySeconds || 0;
+    if (dayIndex !== todayIndex){ dayIndex = todayIndex; daySeconds = 0; }
+
+    const dailyRemaining = DAILY_CAP_SECONDS - daySeconds;
+    if (dailyRemaining <= 0){
+      paused = true;
+      dailyCapReached = true;
+      document.getElementById("pauseBtn").innerText = "▶️ استئناف";
+      showSessionNotice("🚫 وصلت للحد الأقصى اليومي (٦ ساعات). رجعلك باچر 💪");
+      return;
+    }
+
+    const bankedNow = Math.min(seconds, dailyRemaining);
+    daySeconds += bankedNow;
+    if (bankedNow < seconds){
+      paused = true;
+      dailyCapReached = true;
+      document.getElementById("pauseBtn").innerText = "▶️ استئناف";
+      showSessionNotice("🚫 وصلت للحد الأقصى اليومي (٦ ساعات). رجعلك باچر 💪");
+    }
+
+    /* ---- سلسلة الأيام المتتالية ---- */
+    let streak = cur.streak || 0;
+    let lastStudyDayIndex = cur.lastStudyDayIndex;
+    if (lastStudyDayIndex !== todayIndex){
+      streak = (lastStudyDayIndex === todayIndex - 1) ? streak + 1 : 1;
+      lastStudyDayIndex = todayIndex;
+    }
+
+    /* ---- الترتيب الأسبوعي ---- */
+    let weekIndex = cur.weekIndex;
+    let weeklySeconds = cur.weeklySeconds || 0;
+    if (weekIndex !== thisWeekIndex){ weekIndex = thisWeekIndex; weeklySeconds = 0; }
+    weeklySeconds += bankedNow;
+
+    const newTotal = (cur.totalSeconds || 0) + bankedNow;
+
     ref.update({
       name: p.name, age: p.age, country: p.country, governorate: p.governorate,
       totalSeconds: newTotal,
+      dayIndex, daySeconds,
+      weekIndex, weeklySeconds,
+      streak, lastStudyDayIndex,
       updatedAt: firebase.database.ServerValue.TIMESTAMP
     });
   });
@@ -627,11 +763,13 @@ function renderLeaderboard(snapshot){
   listEl.innerHTML = rows.map((r, i) => {
     const isMe = myProfile && r.id === myProfile.id;
     const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i + 1);
+    const badge = getBadge(r.totalSeconds);
+    const streakTag = r.streak >= 2 ? ` <span title="سلسلة أيام">🔥${r.streak}</span>` : "";
     return `
       <div class="rank-row ${isMe ? 'me' : ''}">
         <div class="rank-num">${medal}</div>
         <div class="rank-info">
-          <p class="rank-name">${escapeHtml(r.name || "طالب")}${isMe ? " (أنت)" : ""}</p>
+          <p class="rank-name">${escapeHtml(r.name || "طالب")}${isMe ? " (أنت)" : ""}${badge ? `<span class="badge-icon" title="${badge.label}">${badge.icon}</span>` : ""}${streakTag}</p>
           <p class="rank-loc">${escapeHtml(r.governorate || "")} • ${escapeHtml(r.country || "")}</p>
         </div>
         <div class="rank-time">${formatTotal(r.totalSeconds)}</div>
@@ -654,6 +792,39 @@ setInterval(() => {
 
 function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+/* ================= ترتيبك الشخصي + السلسلة ================= */
+function updateMyRankBanner(myTotalSeconds){
+  const banner = document.getElementById("myRankBanner");
+  if (!banner) return;
+  db.ref('studyLeaderboard').orderByChild('totalSeconds').startAt(myTotalSeconds + 1).once('value')
+    .then(snap => {
+      const rank = snap.numChildren() + 1;
+      banner.innerHTML = `📊 ترتيبك الحالي: <b>#${rank}</b>`;
+      banner.style.display = "block";
+    })
+    .catch(() => {});
+}
+
+function updateStreakInfo(streak){
+  const el = document.getElementById("streakInfo");
+  if (!el) return;
+  if (streak >= 2){
+    el.innerText = `🔥 سلسلة ${streak} أيام متتالية — استمر!`;
+    el.style.display = "block";
+  } else {
+    el.style.display = "none";
+  }
+}
+
+const myProfileOnLoad = getProfile();
+if (myProfileOnLoad){
+  db.ref('studyLeaderboard/' + myProfileOnLoad.id).on('value', (snap) => {
+    const val = snap.val() || {};
+    updateMyRankBanner(val.totalSeconds || 0);
+    updateStreakInfo(val.streak || 0);
+  });
 }
 
 /* ================= بدء التشغيل ================= */
