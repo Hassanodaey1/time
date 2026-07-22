@@ -7,6 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
+  :root{ --theme-color:#ffb400; }
+  body[data-theme="aurora"]{ --theme-color:#00d4aa; }
+  body[data-theme="ember"]{ --theme-color:#ff6b35; }
+  body[data-theme="arctic"]{ --theme-color:#48cae4; }
+  body[data-theme="royal"]{ --theme-color:#ffd60a; }
   *{box-sizing:border-box;}
   html,body{height:100%; margin:0;}
   body{
@@ -29,7 +34,7 @@
   .flip{
     background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.25); border-radius:10px;
     padding:14px 6px; min-width:78px; font-family:'JetBrains Mono',monospace;
-    font-size:38px; font-weight:700; color:#fff; backdrop-filter: blur(2px);
+    font-size:38px; font-weight:700; color:var(--theme-color); backdrop-filter: blur(2px);
   }
   .unit label{font-size:11px; color:rgba(255,255,255,.7); letter-spacing:2px;}
   #motivation{font-size:16px; font-weight:700; min-height:24px; margin-top:6px;}
@@ -42,7 +47,7 @@
   body[data-style="circular"] .flip{
     border-radius:50%; width:78px; height:78px; min-width:78px;
     display:flex; align-items:center; justify-content:center; padding:0;
-    border:2px solid rgba(255,255,255,.6); background:rgba(0,0,0,.35); font-size:22px;
+    border:2px solid var(--theme-color); background:rgba(0,0,0,.35); font-size:22px;
   }
 
   body[data-style="pixel"] .eyebrow, body[data-style="pixel"] h1, body[data-style="pixel"] .unit label{font-family:'Press Start 2P', monospace;}
@@ -51,19 +56,19 @@
   body[data-style="pixel"] .unit label{font-size:7px;}
   body[data-style="pixel"] .flip{
     font-family:'Press Start 2P', monospace; font-size:18px; border-radius:0;
-    border:3px solid #fff; background:rgba(0,0,0,.5); backdrop-filter:none;
+    border:3px solid var(--theme-color); background:rgba(0,0,0,.5); backdrop-filter:none;
   }
 
   body[data-style="neon"] .digits{gap:22px;}
   body[data-style="neon"] .flip{
     background:transparent; border:none; font-size:44px; letter-spacing:2px;
-    text-shadow:0 0 8px #fff, 0 0 22px rgba(255,255,255,.6), 0 0 40px rgba(255,255,255,.4);
+    text-shadow:0 0 8px var(--theme-color), 0 0 22px var(--theme-color), 0 0 40px var(--theme-color);
   }
 
   body[data-style="ring"] .digits{
     position:relative; width:220px; height:220px; border-radius:50%; margin:0 auto 24px;
     align-items:center; padding:24px; gap:2px;
-    background: conic-gradient(#fff var(--ring-pct), rgba(255,255,255,.14) 0);
+    background: conic-gradient(var(--theme-color) var(--ring-pct), rgba(255,255,255,.14) 0);
   }
   body[data-style="ring"] .digits::before{
     content:""; position:absolute; inset:10px; border-radius:50%; background:rgba(0,0,0,.55);
@@ -229,6 +234,10 @@ db.ref('challenge').on('value', (snapshot) => {
   if (timerHandle) clearInterval(timerHandle);
   tick();
   timerHandle = setInterval(tick, 1000);
+});
+
+db.ref('themeSettings/theme').on('value', (snapshot) => {
+  document.body.setAttribute("data-theme", snapshot.val() || "broadcast");
 });
 </script>
 </body>
