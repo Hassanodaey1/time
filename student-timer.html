@@ -246,38 +246,6 @@
   .calc-btn.eq{background:var(--accent); color:#06222d; border-color:var(--accent);}
   .calc-btn.zero{grid-column:span 2;}
 
-  /* ================= تذكير شرب الماء ================= */
-  .water-toggle{
-    width:42px; height:24px; border-radius:20px; background:#0f2032; border:1px solid var(--border);
-    position:relative; flex-shrink:0; cursor:pointer; transition:background .2s ease;
-  }
-  .water-toggle::after{
-    content:""; position:absolute; top:2px; inset-inline-start:2px; width:18px; height:18px;
-    border-radius:50%; background:var(--muted); transition:inset-inline-start .2s ease, background .2s ease;
-  }
-  .water-toggle.on{background:rgba(72,202,228,.18); border-color:#48cae4;}
-  .water-toggle.on::after{background:#48cae4; inset-inline-start:20px;}
-
-  .info-btn{
-    width:26px; height:26px; border-radius:50%; border:1px solid var(--border); background:#0f2032;
-    color:var(--muted); font-size:13px; font-weight:900; display:flex; align-items:center; justify-content:center;
-    cursor:pointer; flex-shrink:0; font-family:'Tajawal',sans-serif;
-  }
-  .info-btn:active{transform:scale(0.92);}
-
-  .water-modal{
-    width:100%; max-width:380px; background:var(--panel); border:1px solid var(--border);
-    border-radius:20px; padding:24px 22px; text-align:start; max-height:82vh; overflow-y:auto;
-  }
-  .water-modal h2{margin:0 0 4px; font-size:17px; font-weight:900; text-align:center;}
-  .water-modal .sub{text-align:center; font-size:12px; color:var(--muted); margin:0 0 18px;}
-  .water-amount{background:#0f2032; border:1px solid #1c344a; border-radius:14px; padding:16px; text-align:center; margin-bottom:18px;}
-  .water-amount .num{font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:900; color:#48cae4;}
-  .water-amount .lbl{font-size:11.5px; color:var(--muted); margin-top:4px; line-height:1.5;}
-  .water-benefits{list-style:none; margin:0 0 16px; padding:0; display:flex; flex-direction:column; gap:11px;}
-  .water-benefits li{display:flex; gap:10px; align-items:flex-start; font-size:13px; line-height:1.6;}
-  .water-note{font-size:11px; color:var(--muted); margin:0 0 18px; line-height:1.6; padding:10px 12px; background:#0f2032; border-radius:10px;}
-
   /* ================= تنبيه المنبه عند حلول الوقت ================= */
   .reminder-alert{
     width:100%; max-width:360px; background:var(--panel); border:2px solid var(--accent);
@@ -376,47 +344,6 @@
     </span>
     <span class="count hidden" id="taskCountBadge">0</span>
   </button>
-
-  <div class="hub-item" onclick="toggleWaterReminder()" style="cursor:pointer;">
-    <span class="icon">💧</span>
-    <span class="txt">
-      <p class="title">تذكير شرب الماء</p>
-      <p class="desc" id="waterDesc">تنبيه دوري يذكرك تشرب موية أثناء الدراسة — متوقف</p>
-    </span>
-    <button class="info-btn" onclick="openWaterInfo(event)" aria-label="فوائد شرب الماء">!</button>
-    <span class="water-toggle" id="waterToggleSwitch"></span>
-  </div>
-</div>
-
-<div class="overlay" id="waterInfoOverlay">
-  <div class="water-modal">
-    <h2>💧 فوائد شرب الماء</h2>
-    <p class="sub">ليش لازم تنتبه لهذا الشي وأنت تذاكر</p>
-    <div class="water-amount">
-      <div class="num">٢ - ٢.٧ لتر</div>
-      <div class="lbl">الكمية التقريبية التي يحتاجها جسم الإنسان البالغ يومياً من كل السوائل والأطعمة (تزيد مع الجو الحار أو النشاط البدني)</div>
-    </div>
-    <ul class="water-benefits">
-      <li><span>🧠</span><span>يحسّن التركيز والذاكرة — قلة شرب الماء تسبب تعب ذهني وبطء بالاستيعاب أثناء المذاكرة</span></li>
-      <li><span>⚡</span><span>يقلل الصداع والإرهاق اللي يصير بسبب الجلوس لفترة طويلة بدون شرب</span></li>
-      <li><span>😴</span><span>يحافظ على مستوى طاقتك ويقلل الشعور بالنعاس والخمول</span></li>
-      <li><span>🩺</span><span>يدعم عمل الكلى والدورة الدموية والهضم بشكل عام</span></li>
-    </ul>
-    <p class="water-note">ملاحظة: هذا رقم عام تقريبي وليس استشارة طبية — احتياج كل شخص من الماء يختلف حسب الوزن والنشاط والحالة الصحية والطقس.</p>
-    <button class="primary" onclick="closeWaterInfo()">فهمت 👍</button>
-  </div>
-</div>
-
-<div class="overlay" id="waterReminderOverlay">
-  <div class="reminder-alert">
-    <div class="bell">💧</div>
-    <h2>وقت شرب الماء!</h2>
-    <p>خذ استراحة قصيرة واشرب كوب ماء قبل لا ترجع تذاكر</p>
-    <div class="controls">
-      <button class="secondary" onclick="snoozeWaterReminder()">😴 تأجيل ١٠ د</button>
-      <button class="primary" onclick="dismissWaterReminder()">✅ شربت</button>
-    </div>
-  </div>
 </div>
 
 <div class="card hidden" id="timerCard">
@@ -1045,74 +972,6 @@ async function requestPomoWakeLock(){
 document.addEventListener("visibilitychange", () => {
   if (pomoWakeLock !== null && document.visibilityState === "visible") requestPomoWakeLock();
 });
-
-/* ================= تذكير شرب الماء ================= */
-const WATER_KEY = "water_reminder_enabled";
-const WATER_INTERVAL_MIN = 45;
-let waterEnabled = localStorage.getItem(WATER_KEY) === "1";
-let waterHandle = null;
-
-function updateWaterUI(){
-  const desc = document.getElementById("waterDesc");
-  const sw = document.getElementById("waterToggleSwitch");
-  if (waterEnabled){
-    desc.innerText = "تنبيه كل ٤٥ دقيقة يذكرك تشرب موية — مفعّل";
-    sw.classList.add("on");
-  } else {
-    desc.innerText = "تنبيه دوري يذكرك تشرب موية أثناء الدراسة — متوقف";
-    sw.classList.remove("on");
-  }
-}
-
-window.toggleWaterReminder = function(){
-  waterEnabled = !waterEnabled;
-  localStorage.setItem(WATER_KEY, waterEnabled ? "1" : "0");
-  updateWaterUI();
-  if (waterEnabled){
-    if ("Notification" in window && Notification.permission === "default"){
-      Notification.requestPermission();
-    }
-    startWaterCycle();
-  } else {
-    stopWaterCycle();
-  }
-};
-
-function startWaterCycle(){
-  if (waterHandle) clearInterval(waterHandle);
-  waterHandle = setInterval(triggerWaterReminder, WATER_INTERVAL_MIN * 60 * 1000);
-}
-function stopWaterCycle(){
-  if (waterHandle){ clearInterval(waterHandle); clearTimeout(waterHandle); }
-  waterHandle = null;
-}
-
-function triggerWaterReminder(){
-  document.getElementById("waterReminderOverlay").classList.add("show");
-  if (typeof playTimerAlert === "function") playTimerAlert("mid");
-  if ("Notification" in window && Notification.permission === "granted" && document.hidden){
-    try{ new Notification("💧 وقت شرب الماء", { body: "خذ استراحة قصيرة واشرب كوب ماء", icon: "favicon.svg" }); }catch(e){}
-  }
-}
-
-window.snoozeWaterReminder = function(){
-  document.getElementById("waterReminderOverlay").classList.remove("show");
-  if (waterHandle){ clearInterval(waterHandle); clearTimeout(waterHandle); }
-  waterHandle = setTimeout(() => { triggerWaterReminder(); startWaterCycle(); }, 10 * 60 * 1000);
-};
-window.dismissWaterReminder = function(){
-  document.getElementById("waterReminderOverlay").classList.remove("show");
-};
-window.openWaterInfo = function(e){
-  if (e) e.stopPropagation();
-  document.getElementById("waterInfoOverlay").classList.add("show");
-};
-window.closeWaterInfo = function(){
-  document.getElementById("waterInfoOverlay").classList.remove("show");
-};
-
-updateWaterUI();
-if (waterEnabled) startWaterCycle();
 
 /* ================= الحاسبة العائمة ================= */
 let calcExpr = "";
