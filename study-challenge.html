@@ -725,7 +725,6 @@ function bankStudyTime(seconds){
     const newTotal = (cur.totalSeconds || 0) + bankedNow;
 
     ref.update({
-      name: p.name, age: p.age, country: p.country, governorate: p.governorate,
       totalSeconds: newTotal,
       dayIndex, daySeconds,
       weekIndex, weeklySeconds,
