@@ -222,11 +222,22 @@
   .reminder-alert .bell{font-size:36px; margin-bottom:10px;}
   .reminder-alert h2{margin:0 0 6px; font-size:16px;}
   .reminder-alert p{margin:0 0 20px; font-size:13px; color:var(--muted);}
+
+  /* ================= بومودورو ================= */
+  .phase-badge{
+    font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:700; letter-spacing:1px;
+    padding:7px 14px; border-radius:20px; display:inline-block; margin-bottom:12px;
+    background:rgba(255,180,0,.12); color:var(--accent); border:1px solid var(--accent);
+  }
+  .phase-badge.break{ background:rgba(46,204,113,.12); color:var(--green); border-color:var(--green); }
+  .cycle-dots{display:flex; justify-content:center; gap:8px; margin-bottom:18px;}
+  .cycle-dots .dot{width:9px; height:9px; border-radius:50%; background:var(--border);}
+  .cycle-dots .dot.filled{background:var(--accent);}
 </style>
 </head>
 <body>
 
-<a href="index.html" class="back-link">‹ الرئيسية</a>
+<a href="index.html" class="back-link" id="homeLink">‹ الرئيسية</a>
 
 <div class="wrap" id="hubView">
   <p class="eyebrow" style="text-align:center;">📚 مؤقت الطالب</p>
@@ -240,13 +251,12 @@
     </span>
   </button>
 
-  <button class="hub-item disabled" onclick="alert('🍅 مؤقت البومودورو قريبًا إن شاء الله')">
+  <button class="hub-item" onclick="showView('pomodoro')">
     <span class="icon">🍅</span>
     <span class="txt">
       <p class="title">مؤقت بومودورو</p>
       <p class="desc">دورات عمل واستراحة تلقائية</p>
     </span>
-    <span class="soon">قريبًا</span>
   </button>
 
   <button class="hub-item" onclick="showView('tasks')">
@@ -289,6 +299,44 @@
       <button class="secondary" id="pauseBtn" onclick="togglePause()">⏸️ إيقاف مؤقت</button>
       <button class="secondary" onclick="resetTimer()">🔄 إعادة ضبط</button>
     </div>
+  </div>
+</div>
+
+<div class="card hidden" id="pomodoroCard">
+  <button class="back-btn" onclick="showView('hub')">‹ رجوع</button>
+  <p class="eyebrow">🍅 بومودورو</p>
+  <h1>دورات تركيز واستراحة</h1>
+
+  <div id="pomoSetupView">
+    <p style="font-size:12px; color:var(--muted); margin:-10px 0 10px; text-align:start;">مدة التركيز</p>
+    <div class="presets">
+      <button class="preset-btn" onclick="pickPomoWork(15, this)">١٥ د</button>
+      <button class="preset-btn active" onclick="pickPomoWork(25, this)">٢٥ د</button>
+      <button class="preset-btn" onclick="pickPomoWork(50, this)">٥٠ د</button>
+    </div>
+    <p style="font-size:12px; color:var(--muted); margin:0 0 10px; text-align:start;">مدة الاستراحة القصيرة</p>
+    <div class="presets">
+      <button class="preset-btn" onclick="pickPomoBreak(5, this)">٥ د</button>
+      <button class="preset-btn active" onclick="pickPomoBreak(10, this)">١٠ د</button>
+      <button class="preset-btn" onclick="pickPomoBreak(15, this)">١٥ د</button>
+    </div>
+    <p style="font-size:11.5px; color:var(--muted); margin:0 0 20px;">بعد كل ٤ دورات عمل، استراحة طويلة ١٥ دقيقة تلقائيًا</p>
+    <button class="primary" onclick="startPomodoro()">▶️ ابدأ البومودورو</button>
+  </div>
+
+  <div id="pomoRunningView" class="hidden">
+    <p class="phase-badge" id="pomoPhaseBadge">🧠 وقت التركيز</p>
+    <div class="cycle-dots" id="pomoCycleDots"></div>
+    <div class="digits" style="display:flex;">
+      <div class="unit"><div class="flip" id="pHours">00</div><label>ساعة</label></div>
+      <div class="unit"><div class="flip" id="pMinutes">00</div><label>دقيقة</label></div>
+      <div class="unit"><div class="flip" id="pSeconds">00</div><label>ثانية</label></div>
+    </div>
+    <div class="controls">
+      <button class="secondary" id="pomoPauseBtn" onclick="togglePomoPause()">⏸️ إيقاف مؤقت</button>
+      <button class="secondary" onclick="skipPomoPhase()">⏭️ تخطي المرحلة</button>
+    </div>
+    <button class="task-add-btn" style="margin-top:10px;" onclick="resetPomodoro()">🔄 إنهاء الجلسة</button>
   </div>
 </div>
 
@@ -499,10 +547,17 @@ window.resetTimer = function(){
 window.showView = function(name){
   document.getElementById("hubView").classList.add("hidden");
   document.getElementById("timerCard").classList.add("hidden");
+  document.getElementById("pomodoroCard").classList.add("hidden");
   document.getElementById("tasksCard").classList.add("hidden");
+  document.getElementById("homeLink").classList.add("hidden");
+
   if (name === "timer") document.getElementById("timerCard").classList.remove("hidden");
+  else if (name === "pomodoro") document.getElementById("pomodoroCard").classList.remove("hidden");
   else if (name === "tasks") document.getElementById("tasksCard").classList.remove("hidden");
-  else document.getElementById("hubView").classList.remove("hidden");
+  else {
+    document.getElementById("hubView").classList.remove("hidden");
+    document.getElementById("homeLink").classList.remove("hidden");
+  }
 };
 
 /* ================= لائحة المهام ================= */
@@ -701,6 +756,141 @@ window.snoozeReminder = function(){
 setInterval(checkReminders, 15000);
 renderTasks();
 checkReminders();
+
+/* ================= بومودورو ================= */
+let pomoWorkMinutes = 25;
+let pomoBreakMinutes = 10;
+const POMO_LONG_BREAK_MINUTES = 15;
+const POMO_CYCLES_BEFORE_LONG_BREAK = 4;
+
+let pomoPhase = "work"; // work | break | longBreak
+let pomoCycleCount = 0; // عدد دورات العمل المكتملة
+let pomoRemainingMs = 0;
+let pomoTotalMs = 0;
+let pomoPaused = false;
+let pomoHandle = null;
+let pomoWakeLock = null;
+
+window.pickPomoWork = function(minutes, el){
+  pomoWorkMinutes = minutes;
+  el.parentElement.querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
+  el.classList.add("active");
+};
+window.pickPomoBreak = function(minutes, el){
+  pomoBreakMinutes = minutes;
+  el.parentElement.querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
+  el.classList.add("active");
+};
+
+function renderPomoCycleDots(){
+  const wrap = document.getElementById("pomoCycleDots");
+  const doneInSet = pomoCycleCount % POMO_CYCLES_BEFORE_LONG_BREAK;
+  let dots = "";
+  for (let i = 0; i < POMO_CYCLES_BEFORE_LONG_BREAK; i++){
+    dots += `<span class="dot ${i < doneInSet ? 'filled' : ''}"></span>`;
+  }
+  wrap.innerHTML = dots;
+}
+
+function setPomoPhaseUI(){
+  const badge = document.getElementById("pomoPhaseBadge");
+  if (pomoPhase === "work"){
+    badge.innerText = "🧠 وقت التركيز";
+    badge.classList.remove("break");
+  } else if (pomoPhase === "break"){
+    badge.innerText = "☕ استراحة قصيرة";
+    badge.classList.add("break");
+  } else {
+    badge.innerText = "🌿 استراحة طويلة";
+    badge.classList.add("break");
+  }
+  renderPomoCycleDots();
+}
+
+function pomoPhaseMinutes(){
+  if (pomoPhase === "work") return pomoWorkMinutes;
+  if (pomoPhase === "break") return pomoBreakMinutes;
+  return POMO_LONG_BREAK_MINUTES;
+}
+
+window.startPomodoro = function(){
+  pomoPhase = "work";
+  pomoCycleCount = 0;
+  document.getElementById("pomoSetupView").classList.add("hidden");
+  document.getElementById("pomoRunningView").classList.remove("hidden");
+  beginPomoPhase();
+};
+
+function beginPomoPhase(){
+  pomoTotalMs = pomoPhaseMinutes() * 60 * 1000;
+  pomoRemainingMs = pomoTotalMs;
+  pomoPaused = false;
+  document.getElementById("pomoPauseBtn").innerText = "⏸️ إيقاف مؤقت";
+  setPomoPhaseUI();
+  renderPomoTime();
+  if (typeof window.playTimerAlert === "function") window.playTimerAlert("start");
+  requestPomoWakeLock();
+  if (pomoHandle) clearInterval(pomoHandle);
+  pomoHandle = setInterval(pomoStep, 1000);
+}
+
+function pomoStep(){
+  if (pomoPaused) return;
+  pomoRemainingMs -= 1000;
+  if (pomoRemainingMs <= 0){
+    pomoRemainingMs = 0;
+    renderPomoTime();
+    advancePomoPhase();
+    return;
+  }
+  renderPomoTime();
+}
+
+function advancePomoPhase(){
+  if (typeof window.playTimerAlert === "function") window.playTimerAlert("finish");
+  if (pomoPhase === "work"){
+    pomoCycleCount++;
+    pomoPhase = (pomoCycleCount % POMO_CYCLES_BEFORE_LONG_BREAK === 0) ? "longBreak" : "break";
+  } else {
+    pomoPhase = "work";
+  }
+  beginPomoPhase();
+}
+
+window.skipPomoPhase = function(){
+  if (pomoHandle) clearInterval(pomoHandle);
+  advancePomoPhase();
+};
+
+window.togglePomoPause = function(){
+  pomoPaused = !pomoPaused;
+  document.getElementById("pomoPauseBtn").innerText = pomoPaused ? "▶️ استئناف" : "⏸️ إيقاف مؤقت";
+};
+
+window.resetPomodoro = function(){
+  if (pomoHandle) clearInterval(pomoHandle);
+  document.getElementById("pomoSetupView").classList.remove("hidden");
+  document.getElementById("pomoRunningView").classList.add("hidden");
+  if (pomoWakeLock){ pomoWakeLock.release().catch(()=>{}); pomoWakeLock = null; }
+};
+
+function renderPomoTime(){
+  const totalSeconds = Math.floor(pomoRemainingMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  document.getElementById("pHours").innerText = pad(hours);
+  document.getElementById("pMinutes").innerText = pad(minutes);
+  document.getElementById("pSeconds").innerText = pad(seconds);
+}
+
+async function requestPomoWakeLock(){
+  try{ if ("wakeLock" in navigator){ pomoWakeLock = await navigator.wakeLock.request("screen"); } }catch(e){}
+}
+document.addEventListener("visibilitychange", () => {
+  if (pomoWakeLock !== null && document.visibilityState === "visible") requestPomoWakeLock();
+});
+
 </script>
 </body>
 </html>
