@@ -194,11 +194,94 @@
   @media (max-width:480px){
     .flip{min-width:60px; font-size:26px; padding:10px 4px;}
   }
+
+  /* ================= الحاسبة العائمة ================= */
+  .calc-fab{
+    position:fixed; bottom:18px; inset-inline-end:18px; width:50px; height:50px; border-radius:50%;
+    background:var(--panel); border:1px solid var(--border); color:var(--amber); font-size:20px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:20;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);
+  }
+  .calc-fab:active{transform:scale(0.94);}
+  .calc-overlay{
+    position:fixed; inset:0; background:rgba(3,8,14,.75); display:none; align-items:center;
+    justify-content:center; padding:20px; z-index:30;
+  }
+  .calc-overlay.show{display:flex;}
+  .calc-modal{
+    width:100%; max-width:320px; background:var(--panel); border:1px solid var(--border);
+    border-radius:20px; padding:18px; text-align:center;
+  }
+  .calc-modal .calc-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .calc-modal .calc-head h2{margin:0; font-size:14px; font-weight:900; color:#fff;}
+  .calc-close{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
+  .calc-screen{
+    background:#0e1119; border:1px solid var(--border); border-radius:12px; padding:14px 12px;
+    margin-bottom:12px; text-align:end; min-height:64px; display:flex; flex-direction:column; justify-content:center;
+  }
+  .calc-expr{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); min-height:16px; word-break:break-all;}
+  .calc-result{font-family:'JetBrains Mono',monospace; font-size:24px; font-weight:900; color:#fff; word-break:break-all;}
+  .calc-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
+  .calc-btn{
+    padding:14px 0; border-radius:10px; border:1px solid var(--border); background:#0e1119; color:#fff;
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; cursor:pointer;
+  }
+  .calc-btn:active{transform:scale(0.95);}
+  .calc-btn.op{color:var(--amber); border-color:var(--amber);}
+  .calc-btn.fn{color:var(--muted); font-size:13px;}
+  .calc-btn.eq{background:var(--amber); color:#06222d; border-color:var(--amber);}
+  .calc-btn.zero{grid-column:span 2;}
 </style>
 </head>
 <body data-theme="broadcast" data-style="default">
 <a href="index.html" class="back-link">‹ الرئيسية</a>
 <button type="button" id="fullscreenBtn" class="fs-btn" onclick="toggleFullscreen()" title="ملء الشاشة">⛶</button>
+
+<button class="calc-fab" onclick="openCalc()" aria-label="حاسبة">🧮</button>
+
+<div class="calc-overlay" id="calcOverlay">
+  <div class="calc-modal">
+    <div class="calc-head">
+      <h2>🧮 حاسبة</h2>
+      <button class="calc-close" onclick="closeCalc()">✕</button>
+    </div>
+    <div class="calc-screen">
+      <div class="calc-expr" id="calcExprLine">&nbsp;</div>
+      <div class="calc-result" id="calcResultLine">0</div>
+    </div>
+    <div class="calc-grid">
+      <button class="calc-btn fn" onclick="calcClear()">C</button>
+      <button class="calc-btn fn" onclick="calcBackspace()">⌫</button>
+      <button class="calc-btn fn" onclick="calcInput('(')">(</button>
+      <button class="calc-btn fn" onclick="calcInput(')')">)</button>
+
+      <button class="calc-btn fn" onclick="calcInput('√')">√</button>
+      <button class="calc-btn fn" onclick="calcInput('²')">x²</button>
+      <button class="calc-btn fn" onclick="calcInput('%')">%</button>
+      <button class="calc-btn op" onclick="calcInput('÷')">÷</button>
+
+      <button class="calc-btn" onclick="calcInput('7')">7</button>
+      <button class="calc-btn" onclick="calcInput('8')">8</button>
+      <button class="calc-btn" onclick="calcInput('9')">9</button>
+      <button class="calc-btn op" onclick="calcInput('×')">×</button>
+
+      <button class="calc-btn" onclick="calcInput('4')">4</button>
+      <button class="calc-btn" onclick="calcInput('5')">5</button>
+      <button class="calc-btn" onclick="calcInput('6')">6</button>
+      <button class="calc-btn op" onclick="calcInput('-')">-</button>
+
+      <button class="calc-btn" onclick="calcInput('1')">1</button>
+      <button class="calc-btn" onclick="calcInput('2')">2</button>
+      <button class="calc-btn" onclick="calcInput('3')">3</button>
+      <button class="calc-btn op" onclick="calcInput('+')">+</button>
+
+      <button class="calc-btn zero" onclick="calcInput('0')">0</button>
+      <button class="calc-btn" onclick="calcInput('.')">.</button>
+      <button class="calc-btn eq" onclick="calcEquals()">=</button>
+    </div>
+  </div>
+</div>
+
 
 <div class="monitor">
   <div class="tally"><span class="dot"></span><span id="modeLabel">ON AIR</span></div>
@@ -408,6 +491,169 @@ db.ref('countdown').on('value', (snapshot) => {
 db.ref('themeSettings/theme').on('value', (snapshot) => {
   document.body.setAttribute("data-theme", snapshot.val() || "broadcast");
 });
+</script>
+
+<script>
+/* ================= الحاسبة العائمة ================= */
+let calcExpr = "";
+
+window.openCalc = function(){
+  document.getElementById("calcOverlay").classList.add("show");
+};
+window.closeCalc = function(){
+  document.getElementById("calcOverlay").classList.remove("show");
+};
+
+function calcRender(){
+  document.getElementById("calcExprLine").innerHTML = calcExpr ? calcExpr : "&nbsp;";
+}
+
+const CALC_OPS = ["+", "-", "×", "÷"];
+
+window.calcInput = function(ch){
+  const last = calcExpr.slice(-1);
+  const atStart = calcExpr === "" || last === "(" || last === "√";
+
+  if (ch === "."){
+    const seg = calcExpr.match(/[0-9]*\.?[0-9]*$/)[0];
+    if (seg.includes(".")) return;
+    if (seg === "") calcExpr += "0";
+  }
+
+  if (CALC_OPS.includes(ch)){
+    if (atStart && ch !== "-") return;
+    if (atStart && ch === "-" && last === "√") return;
+    if (CALC_OPS.includes(last)) calcExpr = calcExpr.slice(0, -1);
+  }
+
+  if (ch === "%" || ch === "²"){
+    if (calcExpr === "" || CALC_OPS.includes(last) || last === "(" || last === "√") return;
+  }
+
+  if (ch === ")"){
+    const opens = (calcExpr.match(/\(/g) || []).length;
+    const closes = (calcExpr.match(/\)/g) || []).length;
+    if (closes >= opens || atStart) return;
+  }
+
+  calcExpr += ch;
+  calcRender();
+};
+window.calcBackspace = function(){
+  calcExpr = calcExpr.slice(0, -1);
+  calcRender();
+};
+window.calcClear = function(){
+  calcExpr = "";
+  document.getElementById("calcResultLine").innerText = "0";
+  calcRender();
+};
+
+/* Safe expression evaluator — no eval(). Supports + - × ÷ ^ ( ) √ x² % */
+function calcTokenize(str){
+  const tokens = [];
+  let i = 0;
+  while (i < str.length){
+    const c = str[i];
+    if (c === " "){ i++; continue; }
+    if (/[0-9.]/.test(c)){
+      let num = "";
+      while (i < str.length && /[0-9.]/.test(str[i])){ num += str[i]; i++; }
+      tokens.push({ type: "num", value: parseFloat(num) });
+      continue;
+    }
+    if ("+-()%√²".includes(c)){ tokens.push({ type: c }); i++; continue; }
+    if (c === "×"){ tokens.push({ type: "*" }); i++; continue; }
+    if (c === "÷"){ tokens.push({ type: "/" }); i++; continue; }
+    i++;
+  }
+  return tokens;
+}
+
+function calcParse(tokens){
+  let pos = 0;
+  const peek = () => tokens[pos];
+  const next = () => tokens[pos++];
+
+  function parseExpr(){
+    let left = parseTerm();
+    while (peek() && (peek().type === "+" || peek().type === "-")){
+      const op = next().type;
+      const right = parseTerm();
+      left = op === "+" ? left + right : left - right;
+    }
+    return left;
+  }
+  function parseTerm(){
+    let left = parseUnary();
+    while (peek() && (peek().type === "*" || peek().type === "/")){
+      const op = next().type;
+      const right = parseUnary();
+      if (op === "*") left = left * right;
+      else { if (right === 0) throw new Error("div0"); left = left / right; }
+    }
+    return left;
+  }
+  function parseUnary(){
+    if (peek() && peek().type === "-"){ next(); return -parseUnary(); }
+    return parsePostfix();
+  }
+  function parsePostfix(){
+    let val = parsePrimary();
+    while (peek() && (peek().type === "%" || peek().type === "²")){
+      const op = next().type;
+      val = op === "%" ? val / 100 : val * val;
+    }
+    return val;
+  }
+  function parsePrimary(){
+    const t = peek();
+    if (!t) throw new Error("unexpected end");
+    if (t.type === "num"){ next(); return t.value; }
+    if (t.type === "("){
+      next();
+      const val = parseExpr();
+      if (peek() && peek().type === ")") next();
+      return val;
+    }
+    if (t.type === "√"){
+      next();
+      if (peek() && peek().type === "("){
+        next();
+        const val = parseExpr();
+        if (peek() && peek().type === ")") next();
+        if (val < 0) throw new Error("neg-sqrt");
+        return Math.sqrt(val);
+      }
+      const val = parsePostfix();
+      if (val < 0) throw new Error("neg-sqrt");
+      return Math.sqrt(val);
+    }
+    throw new Error("unexpected token");
+  }
+
+  if (!tokens.length) return 0;
+  const result = parseExpr();
+  if (pos !== tokens.length) throw new Error("trailing tokens");
+  return result;
+}
+
+window.calcEquals = function(){
+  if (!calcExpr){ return; }
+  const lastChar = calcExpr.slice(-1);
+  if (CALC_OPS.includes(lastChar) || lastChar === "(" || lastChar === "√"){
+    document.getElementById("calcResultLine").innerText = "خطأ";
+    return;
+  }
+  try{
+    const result = calcParse(calcTokenize(calcExpr));
+    if (!isFinite(result)) throw new Error("invalid");
+    const rounded = Math.round(result * 1e9) / 1e9;
+    document.getElementById("calcResultLine").innerText = rounded.toLocaleString("en-US", { maximumFractionDigits: 9, useGrouping: false });
+  }catch(e){
+    document.getElementById("calcResultLine").innerText = "خطأ";
+  }
+};
 </script>
 </body>
 </html>
