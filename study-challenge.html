@@ -223,6 +223,11 @@
     box-shadow:0 4px 14px rgba(0,0,0,.35);
   }
   .calc-fab:active{transform:scale(0.94);}
+  .calc-overlay{
+    position:fixed; inset:0; background:rgba(3,8,14,.75); display:none; align-items:center;
+    justify-content:center; padding:20px; z-index:30;
+  }
+  .calc-overlay.show{display:flex;}
   .calc-modal{
     width:100%; max-width:340px; max-height:88vh; overflow-y:auto; background:var(--panel); border:1px solid var(--border);
     border-radius:20px; padding:16px; text-align:center;
