@@ -198,11 +198,16 @@
   /* ================= الحاسبة العلمية العائمة ================= */
   .calc-fab{
     position:fixed; bottom:18px; inset-inline-end:18px; width:50px; height:50px; border-radius:50%;
-    background:var(--panel); border:1px solid var(--border); color:var(--accent); font-size:20px;
+    background:var(--panel); border:1px solid var(--border); color:var(--amber); font-size:20px;
     display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:20;
     box-shadow:0 4px 14px rgba(0,0,0,.35);
   }
   .calc-fab:active{transform:scale(0.94);}
+  .calc-overlay{
+    position:fixed; inset:0; background:rgba(3,8,14,.75); display:none; align-items:center;
+    justify-content:center; padding:20px; z-index:30;
+  }
+  .calc-overlay.show{display:flex;}
   .calc-modal{
     width:100%; max-width:340px; max-height:88vh; overflow-y:auto; background:var(--panel); border:1px solid var(--border);
     border-radius:20px; padding:16px; text-align:center;
@@ -217,7 +222,7 @@
   .calc-expr{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--muted); min-height:15px; word-break:break-all;}
   .calc-result{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:900; word-break:break-all;}
   .calc-status{display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:8px; padding:0 2px;}
-  .calc-status span.on{color:var(--accent); font-weight:900;}
+  .calc-status span.on{color:var(--amber); font-weight:900;}
   .calc-sci-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:8px;}
   .calc-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
   .calc-btn{
@@ -226,11 +231,11 @@
   }
   .calc-grid .calc-btn{padding:14px 0; font-size:15px;}
   .calc-btn:active{transform:scale(0.95);}
-  .calc-btn.op{color:var(--accent); border-color:var(--accent);}
+  .calc-btn.op{color:var(--amber); border-color:var(--amber);}
   .calc-btn.fn{color:var(--muted); font-size:12.5px;}
   .calc-sci-grid .calc-btn.fn{font-size:11.5px; padding:9px 0;}
-  .calc-btn.mode{color:#06222d; background:var(--accent); border-color:var(--accent); font-size:11px;}
-  .calc-btn.eq{background:var(--accent); color:#06222d; border-color:var(--accent);}
+  .calc-btn.mode{color:#06222d; background:var(--amber); border-color:var(--amber); font-size:11px;}
+  .calc-btn.eq{background:var(--amber); color:#06222d; border-color:var(--amber);}
   .calc-btn.zero{grid-column:span 2;}
 </style>
 </head>
