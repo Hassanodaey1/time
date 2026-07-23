@@ -152,13 +152,115 @@
     100%{ transform:rotateX(0deg); opacity:1; }
   }
   body[data-style="flipclock"] .controls button.secondary{ border-color:#1c232b; color:#8aa0b8; }
+
+  /* ================= هَب الاختيار ================= */
+  .wrap{width:100%; max-width:420px;}
+  .hub-item{
+    display:flex; align-items:center; gap:14px; background:var(--panel); border:1px solid var(--border);
+    border-radius:16px; padding:16px 18px; margin-bottom:12px; cursor:pointer; text-align:start;
+    transition:border-color .2s ease, transform .15s ease; width:100%;
+  }
+  .hub-item:active{transform:scale(0.98);}
+  .hub-item .icon{
+    width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:20px; flex-shrink:0; background:rgba(255,180,0,.12); color:var(--accent);
+  }
+  .hub-item .txt{flex:1; min-width:0;}
+  .hub-item .title{font-weight:900; font-size:15px; margin:0 0 3px;}
+  .hub-item .desc{font-size:11.5px; color:var(--muted); margin:0;}
+  .hub-item.disabled{opacity:.5; cursor:default;}
+  .hub-item .soon{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; padding:3px 8px; border-radius:20px; background:rgba(125,134,152,.15); color:var(--muted); flex-shrink:0;}
+  .hub-item .count{font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:900; padding:3px 9px; border-radius:20px; background:var(--accent); color:#06222d; flex-shrink:0;}
+
+  .back-btn{background:none; border:none; color:var(--muted); font-size:13px; cursor:pointer; padding:0; margin-bottom:14px; font-family:'Tajawal',sans-serif;}
+
+  /* ================= لائحة المهام ================= */
+  .task-add-btn{
+    width:100%; padding:12px; border:1px dashed var(--border); border-radius:10px; background:transparent;
+    color:var(--accent); font-weight:700; font-size:13.5px; cursor:pointer; margin-bottom:14px; font-family:'Tajawal',sans-serif;
+  }
+  .task-list{display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; padding-inline-end:2px;}
+  .task-row{
+    display:flex; align-items:flex-start; gap:10px; background:#0f2032; border:1px solid var(--border);
+    border-radius:12px; padding:12px; text-align:start;
+  }
+  .task-check{width:20px; height:20px; border-radius:6px; border:2px solid var(--border); background:transparent; flex-shrink:0; cursor:pointer; margin-top:2px;}
+  .task-check.done{background:var(--green); border-color:var(--green); display:flex; align-items:center; justify-content:center; color:#06222d; font-size:12px;}
+  .task-body{flex:1; min-width:0; cursor:pointer;}
+  .task-title{font-size:13.5px; font-weight:700; margin:0 0 3px; word-break:break-word;}
+  .task-row.done .task-title{text-decoration:line-through; color:var(--muted);}
+  .task-note{font-size:11.5px; color:var(--muted); margin:0 0 4px; word-break:break-word;}
+  .task-remind{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--accent);}
+  .task-del{background:none; border:none; color:var(--muted); font-size:15px; cursor:pointer; flex-shrink:0; padding:2px 4px;}
+  .empty-note{font-size:12px; color:var(--muted); text-align:center; padding:14px 0;}
+
+  /* ================= شاشة إضافة/تعديل مهمة ================= */
+  .overlay{
+    position:fixed; inset:0; background:rgba(3,8,14,.75); display:none; align-items:center;
+    justify-content:center; padding:20px; z-index:30;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    width:100%; max-width:400px; background:var(--panel); border:1px solid var(--border);
+    border-radius:18px; padding:24px 22px; text-align:start;
+  }
+  .modal h2{margin:0 0 16px; font-size:16px; font-weight:900; text-align:center;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
+  .field input, .field textarea{
+    width:100%; padding:11px; border-radius:10px; border:1px solid var(--border); background:#0f2032;
+    color:#fff; font-family:'Tajawal',sans-serif; font-size:13.5px;
+  }
+  .field textarea{resize:vertical; min-height:60px;}
+  .modal .controls{margin-top:6px;}
+
+  /* ================= تنبيه المنبه عند حلول الوقت ================= */
+  .reminder-alert{
+    width:100%; max-width:360px; background:var(--panel); border:2px solid var(--accent);
+    border-radius:18px; padding:26px 22px; text-align:center;
+  }
+  .reminder-alert .bell{font-size:36px; margin-bottom:10px;}
+  .reminder-alert h2{margin:0 0 6px; font-size:16px;}
+  .reminder-alert p{margin:0 0 20px; font-size:13px; color:var(--muted);}
 </style>
 </head>
 <body>
 
 <a href="index.html" class="back-link">‹ الرئيسية</a>
 
-<div class="card">
+<div class="wrap" id="hubView">
+  <p class="eyebrow" style="text-align:center;">📚 مؤقت الطالب</p>
+  <h1 style="text-align:center;">شنو تحب تسوي؟</h1>
+
+  <button class="hub-item" onclick="showView('timer')">
+    <span class="icon">⏱️</span>
+    <span class="txt">
+      <p class="title">مؤقت عادي</p>
+      <p class="desc">اضبط وقت دراسة وابدأ العد التنازلي</p>
+    </span>
+  </button>
+
+  <button class="hub-item disabled" onclick="alert('🍅 مؤقت البومودورو قريبًا إن شاء الله')">
+    <span class="icon">🍅</span>
+    <span class="txt">
+      <p class="title">مؤقت بومودورو</p>
+      <p class="desc">دورات عمل واستراحة تلقائية</p>
+    </span>
+    <span class="soon">قريبًا</span>
+  </button>
+
+  <button class="hub-item" onclick="showView('tasks')">
+    <span class="icon">✅</span>
+    <span class="txt">
+      <p class="title">لائحة المهام</p>
+      <p class="desc">وجباتك ومهامك مع تذكير بوقتها</p>
+    </span>
+    <span class="count hidden" id="taskCountBadge">0</span>
+  </button>
+</div>
+
+<div class="card hidden" id="timerCard">
+  <button class="back-btn" onclick="showView('hub')">‹ رجوع</button>
   <p class="eyebrow">📚 مؤقت الطالب</p>
   <h1>اضبط وقت دراستك</h1>
 
@@ -186,6 +288,51 @@
     <div class="controls">
       <button class="secondary" id="pauseBtn" onclick="togglePause()">⏸️ إيقاف مؤقت</button>
       <button class="secondary" onclick="resetTimer()">🔄 إعادة ضبط</button>
+    </div>
+  </div>
+</div>
+
+<div class="card hidden" id="tasksCard">
+  <button class="back-btn" onclick="showView('hub')">‹ رجوع</button>
+  <p class="eyebrow">✅ لائحة المهام</p>
+  <h1>مهامك وواجباتك</h1>
+
+  <button class="task-add-btn" onclick="openTaskModal()">+ إضافة مهمة جديدة</button>
+  <div class="task-list" id="taskList">
+    <p class="empty-note">ماكو مهام بعد — أضف أول مهمة لك!</p>
+  </div>
+</div>
+
+<div class="overlay" id="taskOverlay">
+  <div class="modal">
+    <h2 id="taskModalTitle">📝 مهمة جديدة</h2>
+    <div class="field">
+      <label>عنوان المهمة</label>
+      <input type="text" id="taskTitleInput" placeholder="مثال: حل واجب الرياضيات">
+    </div>
+    <div class="field">
+      <label>ملاحظة (اختياري)</label>
+      <textarea id="taskNoteInput" placeholder="تفاصيل إضافية..."></textarea>
+    </div>
+    <div class="field">
+      <label>تذكير بوقت معيّن (اختياري)</label>
+      <input type="datetime-local" id="taskRemindInput">
+    </div>
+    <div class="controls">
+      <button class="secondary" onclick="closeTaskModal()">إلغاء</button>
+      <button class="primary" onclick="saveTaskFromModal()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="reminderOverlay">
+  <div class="reminder-alert">
+    <div class="bell">⏰</div>
+    <h2 id="reminderTaskTitle">وقت المهمة!</h2>
+    <p id="reminderTaskNote"></p>
+    <div class="controls">
+      <button class="secondary" onclick="snoozeReminder()">😴 تأجيل ٥ د</button>
+      <button class="primary" onclick="dismissReminder()">✅ تم</button>
     </div>
   </div>
 </div>
@@ -347,6 +494,213 @@ window.resetTimer = function(){
   document.title = baseTitle;
   if (wakeLock){ wakeLock.release().catch(()=>{}); wakeLock = null; }
 };
+
+/* ================= التنقل بين الشاشات ================= */
+window.showView = function(name){
+  document.getElementById("hubView").classList.add("hidden");
+  document.getElementById("timerCard").classList.add("hidden");
+  document.getElementById("tasksCard").classList.add("hidden");
+  if (name === "timer") document.getElementById("timerCard").classList.remove("hidden");
+  else if (name === "tasks") document.getElementById("tasksCard").classList.remove("hidden");
+  else document.getElementById("hubView").classList.remove("hidden");
+};
+
+/* ================= لائحة المهام ================= */
+const TASKS_KEY = "studentTasksList";
+let editingTaskId = null;
+
+function getTasks(){
+  try{
+    const raw = localStorage.getItem(TASKS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function saveTasks(tasks){
+  localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+}
+function taskUid(){
+  return "t_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function formatRemindTime(ms){
+  const d = new Date(ms);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const timeStr = d.toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" });
+  if (sameDay) return "اليوم " + timeStr;
+  return d.toLocaleDateString("ar", { day: "numeric", month: "short" }) + " - " + timeStr;
+}
+
+function renderTasks(){
+  const tasks = getTasks();
+  const listEl = document.getElementById("taskList");
+  const badge = document.getElementById("taskCountBadge");
+
+  const pendingCount = tasks.filter(t => !t.done).length;
+  if (pendingCount > 0){
+    badge.innerText = pendingCount;
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+
+  if (tasks.length === 0){
+    listEl.innerHTML = '<p class="empty-note">ماكو مهام بعد — أضف أول مهمة لك!</p>';
+    return;
+  }
+
+  const sorted = [...tasks].sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    if (a.remindAt && b.remindAt) return a.remindAt - b.remindAt;
+    if (a.remindAt) return -1;
+    if (b.remindAt) return 1;
+    return b.createdAt - a.createdAt;
+  });
+
+  listEl.innerHTML = sorted.map(t => `
+    <div class="task-row ${t.done ? 'done' : ''}">
+      <button class="task-check ${t.done ? 'done' : ''}" onclick="toggleTaskDone('${t.id}')">${t.done ? '✓' : ''}</button>
+      <div class="task-body" onclick="openTaskModal('${t.id}')">
+        <p class="task-title">${escapeHtml(t.title)}</p>
+        ${t.note ? `<p class="task-note">${escapeHtml(t.note)}</p>` : ""}
+        ${t.remindAt ? `<p class="task-remind">⏰ ${formatRemindTime(t.remindAt)}</p>` : ""}
+      </div>
+      <button class="task-del" onclick="deleteTask('${t.id}')">🗑️</button>
+    </div>
+  `).join("");
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+window.toggleTaskDone = function(id){
+  const tasks = getTasks();
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  saveTasks(tasks);
+  renderTasks();
+};
+
+window.deleteTask = function(id){
+  if (!confirm("تحذف هذي المهمة؟")) return;
+  saveTasks(getTasks().filter(x => x.id !== id));
+  renderTasks();
+};
+
+window.openTaskModal = function(id){
+  editingTaskId = id || null;
+  const overlay = document.getElementById("taskOverlay");
+  const titleEl = document.getElementById("taskModalTitle");
+  const titleInput = document.getElementById("taskTitleInput");
+  const noteInput = document.getElementById("taskNoteInput");
+  const remindInput = document.getElementById("taskRemindInput");
+
+  if (id){
+    const t = getTasks().find(x => x.id === id);
+    if (!t) return;
+    titleEl.innerText = "✏️ تعديل المهمة";
+    titleInput.value = t.title || "";
+    noteInput.value = t.note || "";
+    remindInput.value = t.remindAt ? toLocalInputValue(t.remindAt) : "";
+  } else {
+    titleEl.innerText = "📝 مهمة جديدة";
+    titleInput.value = "";
+    noteInput.value = "";
+    remindInput.value = "";
+  }
+  overlay.classList.add("show");
+  titleInput.focus();
+};
+
+window.closeTaskModal = function(){
+  document.getElementById("taskOverlay").classList.remove("show");
+  editingTaskId = null;
+};
+
+function toLocalInputValue(ms){
+  const d = new Date(ms);
+  const pad2 = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+window.saveTaskFromModal = function(){
+  const title = document.getElementById("taskTitleInput").value.trim();
+  const note = document.getElementById("taskNoteInput").value.trim();
+  const remindVal = document.getElementById("taskRemindInput").value;
+  if (!title){ alert("اكتب عنوان المهمة أولاً"); return; }
+
+  const remindAt = remindVal ? new Date(remindVal).getTime() : null;
+
+  if (remindAt && "Notification" in window && Notification.permission === "default"){
+    Notification.requestPermission();
+  }
+
+  const tasks = getTasks();
+  if (editingTaskId){
+    const t = tasks.find(x => x.id === editingTaskId);
+    if (t){
+      t.title = title;
+      t.note = note;
+      t.remindAt = remindAt;
+      t.notified = false;
+    }
+  } else {
+    tasks.push({ id: taskUid(), title, note, remindAt, done: false, notified: false, createdAt: Date.now() });
+  }
+  saveTasks(tasks);
+  closeTaskModal();
+  renderTasks();
+};
+
+/* ================= فحص التذكيرات ================= */
+let activeReminderId = null;
+
+function checkReminders(){
+  if (activeReminderId) return; // تنبيه ظاهر أصلاً، ننتظر رد الطالب
+  const tasks = getTasks();
+  const due = tasks.find(t => !t.done && t.remindAt && !t.notified && t.remindAt <= Date.now());
+  if (!due) return;
+  fireReminder(due);
+}
+
+function fireReminder(task){
+  activeReminderId = task.id;
+  document.getElementById("reminderTaskTitle").innerText = task.title;
+  document.getElementById("reminderTaskNote").innerText = task.note || "";
+  document.getElementById("reminderOverlay").classList.add("show");
+
+  if (typeof window.playTimerAlert === "function") window.playTimerAlert("finish");
+
+  if ("Notification" in window && Notification.permission === "granted" && document.hidden){
+    try{ new Notification("⏰ " + task.title, { body: task.note || "حان وقت هذي المهمة", icon: "favicon.svg" }); }catch(e){}
+  }
+}
+
+window.dismissReminder = function(){
+  const tasks = getTasks();
+  const t = tasks.find(x => x.id === activeReminderId);
+  if (t) t.notified = true;
+  saveTasks(tasks);
+  document.getElementById("reminderOverlay").classList.remove("show");
+  activeReminderId = null;
+  renderTasks();
+};
+
+window.snoozeReminder = function(){
+  const tasks = getTasks();
+  const t = tasks.find(x => x.id === activeReminderId);
+  if (t){ t.remindAt = Date.now() + (5 * 60 * 1000); t.notified = false; }
+  saveTasks(tasks);
+  document.getElementById("reminderOverlay").classList.remove("show");
+  activeReminderId = null;
+  renderTasks();
+};
+
+setInterval(checkReminders, 15000);
+renderTasks();
+checkReminders();
 </script>
 </body>
 </html>
