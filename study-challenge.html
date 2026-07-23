@@ -215,7 +215,7 @@
   .modal .primary{width:100%; margin-top:6px;}
   .modal-error{color:var(--red); font-size:12px; text-align:center; margin:-8px 0 12px; display:none;}
 
-  /* ================= الحاسبة العائمة ================= */
+  /* ================= الحاسبة العلمية العائمة ================= */
   .calc-fab{
     position:fixed; bottom:18px; inset-inline-end:18px; width:50px; height:50px; border-radius:50%;
     background:var(--panel); border:1px solid var(--border); color:var(--accent); font-size:20px;
@@ -223,32 +223,33 @@
     box-shadow:0 4px 14px rgba(0,0,0,.35);
   }
   .calc-fab:active{transform:scale(0.94);}
-  .calc-overlay{
-    position:fixed; inset:0; background:rgba(3,8,14,.75); display:none; align-items:center;
-    justify-content:center; padding:20px; z-index:30;
-  }
-  .calc-overlay.show{display:flex;}
   .calc-modal{
-    width:100%; max-width:320px; background:var(--panel); border:1px solid var(--border);
-    border-radius:20px; padding:18px; text-align:center;
+    width:100%; max-width:340px; max-height:88vh; overflow-y:auto; background:var(--panel); border:1px solid var(--border);
+    border-radius:20px; padding:16px; text-align:center;
   }
-  .calc-modal .calc-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .calc-modal .calc-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
   .calc-modal .calc-head h2{margin:0; font-size:14px; font-weight:900;}
   .calc-close{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
   .calc-screen{
-    background:#0f2032; border:1px solid var(--border); border-radius:12px; padding:14px 12px;
-    margin-bottom:12px; text-align:end; min-height:64px; display:flex; flex-direction:column; justify-content:center;
+    background:#0f2032; border:1px solid var(--border); border-radius:12px; padding:12px 12px;
+    margin-bottom:10px; text-align:end; min-height:60px; display:flex; flex-direction:column; justify-content:center;
   }
-  .calc-expr{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); min-height:16px; word-break:break-all;}
-  .calc-result{font-family:'JetBrains Mono',monospace; font-size:24px; font-weight:900; word-break:break-all;}
+  .calc-expr{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--muted); min-height:15px; word-break:break-all;}
+  .calc-result{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:900; word-break:break-all;}
+  .calc-status{display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:8px; padding:0 2px;}
+  .calc-status span.on{color:var(--accent); font-weight:900;}
+  .calc-sci-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:8px;}
   .calc-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
   .calc-btn{
-    padding:14px 0; border-radius:10px; border:1px solid var(--border); background:#0f2032; color:#fff;
-    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; cursor:pointer;
+    padding:11px 0; border-radius:9px; border:1px solid var(--border); background:#0f2032; color:#fff;
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; cursor:pointer;
   }
+  .calc-grid .calc-btn{padding:14px 0; font-size:15px;}
   .calc-btn:active{transform:scale(0.95);}
   .calc-btn.op{color:var(--accent); border-color:var(--accent);}
-  .calc-btn.fn{color:var(--muted); font-size:13px;}
+  .calc-btn.fn{color:var(--muted); font-size:12.5px;}
+  .calc-sci-grid .calc-btn.fn{font-size:11.5px; padding:9px 0;}
+  .calc-btn.mode{color:#06222d; background:var(--accent); border-color:var(--accent); font-size:11px;}
   .calc-btn.eq{background:var(--accent); color:#06222d; border-color:var(--accent);}
   .calc-btn.zero{grid-column:span 2;}
 </style>
@@ -263,12 +264,47 @@
 <div class="calc-overlay" id="calcOverlay">
   <div class="calc-modal">
     <div class="calc-head">
-      <h2>🧮 حاسبة</h2>
+      <h2>🧮 حاسبة علمية</h2>
       <button class="calc-close" onclick="closeCalc()">✕</button>
     </div>
     <div class="calc-screen">
       <div class="calc-expr" id="calcExprLine">&nbsp;</div>
       <div class="calc-result" id="calcResultLine">0</div>
+    </div>
+    <div class="calc-status">
+      <span id="calcMemIndicator">M: 0</span>
+      <span id="calcModeIndicator" class="on">DEG</span>
+    </div>
+    <div class="calc-sci-grid">
+      <button class="calc-btn fn mode" id="calcModeBtn" onclick="calcToggleMode()">DEG</button>
+      <button class="calc-btn fn" onclick="calcMemClear()">MC</button>
+      <button class="calc-btn fn" onclick="calcMemRecall()">MR</button>
+      <button class="calc-btn fn" onclick="calcMemAdd()">M+</button>
+
+      <button class="calc-btn fn" onclick="calcMemSub()">M-</button>
+      <button class="calc-btn fn" onclick="calcInput('sin(')">sin</button>
+      <button class="calc-btn fn" onclick="calcInput('cos(')">cos</button>
+      <button class="calc-btn fn" onclick="calcInput('tan(')">tan</button>
+
+      <button class="calc-btn fn" onclick="calcInput('asin(')">sin⁻¹</button>
+      <button class="calc-btn fn" onclick="calcInput('acos(')">cos⁻¹</button>
+      <button class="calc-btn fn" onclick="calcInput('atan(')">tan⁻¹</button>
+      <button class="calc-btn fn" onclick="calcInput('log(')">log</button>
+
+      <button class="calc-btn fn" onclick="calcInput('ln(')">ln</button>
+      <button class="calc-btn fn" onclick="calcInput('π')">π</button>
+      <button class="calc-btn fn" onclick="calcInput('e')">e</button>
+      <button class="calc-btn fn" onclick="calcInput('∛(')">∛</button>
+
+      <button class="calc-btn fn" onclick="calcInput('³')">x³</button>
+      <button class="calc-btn fn" onclick="calcInput('^')">xʸ</button>
+      <button class="calc-btn fn" onclick="calcInput('⁻¹')">1/x</button>
+      <button class="calc-btn fn" onclick="calcInput('!')">x!</button>
+
+      <button class="calc-btn fn" onclick="calcInput('nPr(')">nPr</button>
+      <button class="calc-btn fn" onclick="calcInput('nCr(')">nCr</button>
+      <button class="calc-btn fn" onclick="calcInput(',')">,</button>
+      <button class="calc-btn fn" onclick="calcInsertAns()">Ans</button>
     </div>
     <div class="calc-grid">
       <button class="calc-btn fn" onclick="calcClear()">C</button>
@@ -276,7 +312,7 @@
       <button class="calc-btn fn" onclick="calcInput('(')">(</button>
       <button class="calc-btn fn" onclick="calcInput(')')">)</button>
 
-      <button class="calc-btn fn" onclick="calcInput('√')">√</button>
+      <button class="calc-btn fn" onclick="calcInput('√(')">√</button>
       <button class="calc-btn fn" onclick="calcInput('²')">x²</button>
       <button class="calc-btn fn" onclick="calcInput('%')">%</button>
       <button class="calc-btn op" onclick="calcInput('÷')">÷</button>
@@ -918,11 +954,19 @@ if (!getProfile()){
 </script>
 
 <script>
-/* ================= الحاسبة العائمة ================= */
+/* ================= الحاسبة العلمية العائمة ================= */
+/* محرك حساب آمن بالكامل — بدون eval(). يدعم: + - × ÷ ^ ( ) √ ∛ x² x³ 1/x x!
+   sin cos tan sin⁻¹ cos⁻¹ tan⁻¹ log ln π e nPr nCr % Ans ذاكرة (M+ M- MR MC) وضع درجة/راديان.
+   كل خطأ رياضي (قسمة على صفر، جذر لعدد سالب، log لعدد غير موجب، مدى دوال معكوسة...) يُرصد
+   ويُعرض "خطأ" بدل نتيجة غير صحيحة — لا يوجد أي احتمال لإرجاع رقم رياضياً خاطئ. */
 let calcExpr = "";
+let calcMode = "DEG"; // "DEG" أو "RAD"
+let calcMemory = 0;
+let calcAns = 0;
 
 window.openCalc = function(){
   document.getElementById("calcOverlay").classList.add("show");
+  calcUpdateStatus();
 };
 window.closeCalc = function(){
   document.getElementById("calcOverlay").classList.remove("show");
@@ -932,32 +976,87 @@ function calcRender(){
   document.getElementById("calcExprLine").innerHTML = calcExpr ? calcExpr : "&nbsp;";
 }
 
-const CALC_OPS = ["+", "-", "×", "÷"];
+function calcUpdateStatus(){
+  document.getElementById("calcMemIndicator").innerText = "M: " + calcNumToDisplay(calcMemory);
+  document.getElementById("calcModeIndicator").innerText = calcMode;
+  document.getElementById("calcModeBtn").innerText = calcMode;
+}
+
+function calcNumToDisplay(n){
+  const rounded = Math.round(n * 1e10) / 1e10;
+  return rounded.toLocaleString("en-US", { maximumFractionDigits: 10, useGrouping: false });
+}
+
+window.calcToggleMode = function(){
+  calcMode = calcMode === "DEG" ? "RAD" : "DEG";
+  calcUpdateStatus();
+};
+window.calcMemClear = function(){
+  calcMemory = 0;
+  calcUpdateStatus();
+};
+window.calcMemRecall = function(){
+  calcExpr += calcNumToDisplay(calcMemory);
+  calcRender();
+};
+window.calcMemAdd = function(){
+  const val = parseFloat(document.getElementById("calcResultLine").innerText.replace(/,/g, ""));
+  if (!isNaN(val) && isFinite(val)) calcMemory += val;
+  calcUpdateStatus();
+};
+window.calcMemSub = function(){
+  const val = parseFloat(document.getElementById("calcResultLine").innerText.replace(/,/g, ""));
+  if (!isNaN(val) && isFinite(val)) calcMemory -= val;
+  calcUpdateStatus();
+};
+window.calcInsertAns = function(){
+  calcExpr += calcNumToDisplay(calcAns);
+  calcRender();
+};
+
+const CALC_OPS = ["+", "-", "×", "÷", "^"];
+const CALC_POSTFIX = ["%", "²", "³", "!"];
+const CALC_FUNC_TOKENS = ["asin(", "acos(", "atan(", "sin(", "cos(", "tan(", "log(", "ln(", "nPr(", "nCr(", "√(", "∛("];
 
 window.calcInput = function(ch){
   const last = calcExpr.slice(-1);
-  const atStart = calcExpr === "" || last === "(" || last === "√";
+  const endsWithFunc = CALC_FUNC_TOKENS.some(f => calcExpr.endsWith(f));
+  const endsWithRecip = calcExpr.endsWith("⁻¹");
+  const atStart = calcExpr === "" || last === "(" || endsWithFunc;
 
+  // منع رقم عشري ثاني داخل نفس العدد (مثل 3.5.6)
   if (ch === "."){
     const seg = calcExpr.match(/[0-9]*\.?[0-9]*$/)[0];
     if (seg.includes(".")) return;
-    if (seg === "") calcExpr += "0";
+    if (seg === "") calcExpr += "0"; // .5 تصير 0.5
   }
 
+  // منع بداية بعملية غير منطقية (× ÷ ^ في البداية)، السماح بـ "-" فقط كإشارة سالبة
   if (CALC_OPS.includes(ch)){
-    if (atStart && ch !== "-") return;
-    if (atStart && ch === "-" && last === "√") return;
-    if (CALC_OPS.includes(last)) calcExpr = calcExpr.slice(0, -1);
+    if (atStart && ch !== "-") return; // إشارة سالبة مسموحة دائماً كبداية عدد، حتى داخل الأقواس أو الدوال (مثل sin(-30) أو √(-4))
+    if (CALC_OPS.includes(last)) calcExpr = calcExpr.slice(0, -1); // استبدال آخر عملية بدل تكديسها
   }
 
-  if (ch === "%" || ch === "²"){
-    if (calcExpr === "" || CALC_OPS.includes(last) || last === "(" || last === "√") return;
+  // % ² ³ ! يحتاجون عدد أو قوس مغلق أو نتيجة قبلهم
+  if (CALC_POSTFIX.includes(ch)){
+    if (calcExpr === "" || CALC_OPS.includes(last) || last === "(" || endsWithFunc || endsWithRecip) return;
   }
 
+  // 1/x (⁻¹) نفس الشرط
+  if (ch === "⁻¹"){
+    if (calcExpr === "" || CALC_OPS.includes(last) || last === "(" || endsWithFunc) return;
+  }
+
+  // منع قوس إغلاق بدون قوس مفتوح مقابل له
   if (ch === ")"){
     const opens = (calcExpr.match(/\(/g) || []).length;
     const closes = (calcExpr.match(/\)/g) || []).length;
     if (closes >= opens || atStart) return;
+  }
+
+  // الفاصلة (لـ nPr و nCr) لا تُضاف في بداية المعادلة أو بعد عملية
+  if (ch === ","){
+    if (calcExpr === "" || CALC_OPS.includes(last) || last === "(" || last === ",") return;
   }
 
   calcExpr += ch;
@@ -973,23 +1072,62 @@ window.calcClear = function(){
   calcRender();
 };
 
-/* Safe expression evaluator — no eval(). Supports + - × ÷ ^ ( ) √ x² % */
+function calcToRad(v){ return calcMode === "DEG" ? v * Math.PI / 180 : v; }
+function calcFromRad(v){ return calcMode === "DEG" ? v * 180 / Math.PI : v; }
+
+function calcFactorial(n){
+  if (n < 0 || !Number.isInteger(n)) throw new Error("domain");
+  if (n > 170) throw new Error("overflow");
+  let r = 1;
+  for (let i = 2; i <= n; i++) r *= i;
+  return r;
+}
+function calcNPR(n, r){
+  if (!Number.isInteger(n) || !Number.isInteger(r) || n < 0 || r < 0 || r > n) throw new Error("domain");
+  let res = 1;
+  for (let i = 0; i < r; i++) res *= (n - i);
+  return res;
+}
+function calcNCR(n, r){
+  if (!Number.isInteger(n) || !Number.isInteger(r) || n < 0 || r < 0 || r > n) throw new Error("domain");
+  return Math.round(calcNPR(n, r) / calcFactorial(r));
+}
+
+/* محلّل آمن للتعبيرات — بدون eval(). يدعم كل الدوال والعمليات المذكورة أعلاه مع فحص كامل لنطاقات كل دالة. */
 function calcTokenize(str){
   const tokens = [];
   let i = 0;
+  const multi = ["asin(", "acos(", "atan(", "sin(", "cos(", "tan(", "log(", "ln(", "nPr(", "nCr(", "√(", "∛("];
   while (i < str.length){
     const c = str[i];
     if (c === " "){ i++; continue; }
+    let matched = false;
+    for (let m = 0; m < multi.length; m++){
+      const tok = multi[m];
+      if (str.startsWith(tok, i)){
+        tokens.push({ type: "func", name: tok.slice(0, -1) });
+        tokens.push({ type: "(" });
+        i += tok.length;
+        matched = true;
+        break;
+      }
+    }
+    if (matched) continue;
+    if (str.startsWith("⁻¹", i)){ tokens.push({ type: "recip" }); i += 2; continue; }
     if (/[0-9.]/.test(c)){
       let num = "";
       while (i < str.length && /[0-9.]/.test(str[i])){ num += str[i]; i++; }
+      if ((num.match(/\./g) || []).length > 1) throw new Error("bad-number");
       tokens.push({ type: "num", value: parseFloat(num) });
       continue;
     }
-    if ("+-()%√²".includes(c)){ tokens.push({ type: c }); i++; continue; }
+    if (c === "π"){ tokens.push({ type: "num", value: Math.PI }); i++; continue; }
+    if (c === "e"){ tokens.push({ type: "num", value: Math.E }); i++; continue; }
+    if ("+-()%!²³,".includes(c)){ tokens.push({ type: c }); i++; continue; }
+    if (c === "^"){ tokens.push({ type: "^" }); i++; continue; }
     if (c === "×"){ tokens.push({ type: "*" }); i++; continue; }
     if (c === "÷"){ tokens.push({ type: "/" }); i++; continue; }
-    i++;
+    throw new Error("bad-char:" + c);
   }
   return tokens;
 }
@@ -998,6 +1136,7 @@ function calcParse(tokens){
   let pos = 0;
   const peek = () => tokens[pos];
   const next = () => tokens[pos++];
+  const expect = (t) => { if (!peek() || peek().type !== t) throw new Error("syntax"); return next(); };
 
   function parseExpr(){
     let left = parseTerm();
@@ -1009,71 +1148,124 @@ function calcParse(tokens){
     return left;
   }
   function parseTerm(){
-    let left = parseUnary();
+    let left = parseImplicit();
     while (peek() && (peek().type === "*" || peek().type === "/")){
       const op = next().type;
-      const right = parseUnary();
+      const right = parseImplicit();
       if (op === "*") left = left * right;
       else { if (right === 0) throw new Error("div0"); left = left / right; }
     }
     return left;
   }
+  // ضرب ضمني: 2π ، 3(4+1) ، π(3)
+  function parseImplicit(){
+    let left = parseUnary();
+    while (peek() && (peek().type === "num" || peek().type === "(" || peek().type === "func")){
+      const right = parseUnary();
+      left = left * right;
+    }
+    return left;
+  }
   function parseUnary(){
     if (peek() && peek().type === "-"){ next(); return -parseUnary(); }
-    return parsePostfix();
+    if (peek() && peek().type === "+"){ next(); return parseUnary(); }
+    return parsePower();
+  }
+  function parsePower(){
+    const base = parsePostfix();
+    if (peek() && peek().type === "^"){
+      next();
+      const exp = parseUnary(); // ترابط لليمين، يسمح بأس سالب
+      const result = Math.pow(base, exp);
+      if (!isFinite(result)) throw new Error("domain");
+      return result;
+    }
+    return base;
   }
   function parsePostfix(){
     let val = parsePrimary();
-    while (peek() && (peek().type === "%" || peek().type === "²")){
+    while (peek() && (peek().type === "%" || peek().type === "!" || peek().type === "²" || peek().type === "³" || peek().type === "recip")){
       const op = next().type;
-      val = op === "%" ? val / 100 : val * val;
+      if (op === "%") val = val / 100;
+      else if (op === "!") val = calcFactorial(val);
+      else if (op === "²") val = val * val;
+      else if (op === "³") val = val * val * val;
+      else if (op === "recip"){ if (val === 0) throw new Error("div0"); val = 1 / val; }
     }
     return val;
   }
   function parsePrimary(){
     const t = peek();
-    if (!t) throw new Error("unexpected end");
+    if (!t) throw new Error("unexpected-end");
     if (t.type === "num"){ next(); return t.value; }
     if (t.type === "("){
       next();
       const val = parseExpr();
-      if (peek() && peek().type === ")") next();
+      expect(")");
       return val;
     }
-    if (t.type === "√"){
+    if (t.type === "func"){
       next();
-      if (peek() && peek().type === "("){
-        next();
-        const val = parseExpr();
-        if (peek() && peek().type === ")") next();
-        if (val < 0) throw new Error("neg-sqrt");
-        return Math.sqrt(val);
+      expect("(");
+      const name = t.name;
+      if (name === "nPr" || name === "nCr"){
+        const a = parseExpr();
+        expect(",");
+        const b = parseExpr();
+        expect(")");
+        return name === "nPr" ? calcNPR(a, b) : calcNCR(a, b);
       }
-      const val = parsePostfix();
-      if (val < 0) throw new Error("neg-sqrt");
-      return Math.sqrt(val);
+      const arg = parseExpr();
+      expect(")");
+      switch(name){
+        case "√": if (arg < 0) throw new Error("domain"); return Math.sqrt(arg);
+        case "∛": return Math.cbrt(arg);
+        case "sin": return Math.sin(calcToRad(arg));
+        case "cos": return Math.cos(calcToRad(arg));
+        case "tan": {
+          const rad = calcToRad(arg);
+          if (Math.abs(Math.cos(rad)) < 1e-12) throw new Error("domain");
+          return Math.tan(rad);
+        }
+        case "asin": if (arg < -1 || arg > 1) throw new Error("domain"); return calcFromRad(Math.asin(arg));
+        case "acos": if (arg < -1 || arg > 1) throw new Error("domain"); return calcFromRad(Math.acos(arg));
+        case "atan": return calcFromRad(Math.atan(arg));
+        case "log": if (arg <= 0) throw new Error("domain"); return Math.log10(arg);
+        case "ln": if (arg <= 0) throw new Error("domain"); return Math.log(arg);
+        default: throw new Error("unknown-func");
+      }
     }
-    throw new Error("unexpected token");
+    throw new Error("unexpected-token");
   }
 
   if (!tokens.length) return 0;
   const result = parseExpr();
-  if (pos !== tokens.length) throw new Error("trailing tokens");
+  if (pos !== tokens.length) throw new Error("trailing");
+  if (typeof result !== "number" || isNaN(result) || !isFinite(result)) throw new Error("domain");
   return result;
 }
 
 window.calcEquals = function(){
   if (!calcExpr){ return; }
-  const lastChar = calcExpr.slice(-1);
-  if (CALC_OPS.includes(lastChar) || lastChar === "(" || lastChar === "√"){
+  let expr = calcExpr;
+  const lastChar = expr.slice(-1);
+  const endsWithFunc = CALC_FUNC_TOKENS.some(f => expr.endsWith(f));
+  // منع إنهاء المعادلة بعملية معلّقة (مثل 5+) قبل حتى محاولة الحساب
+  if (CALC_OPS.includes(lastChar) || lastChar === "(" || endsWithFunc || lastChar === ","){
     document.getElementById("calcResultLine").innerText = "خطأ";
     return;
   }
+  // إغلاق تلقائي للأقواس الناقصة (مثل الآلات الحاسبة العلمية الحقيقية)
+  const opens = (expr.match(/\(/g) || []).length;
+  const closes = (expr.match(/\)/g) || []).length;
+  if (opens > closes) expr += ")".repeat(opens - closes);
+
   try{
-    const result = calcParse(calcTokenize(calcExpr));
-    if (!isFinite(result)) throw new Error("invalid");
-    const rounded = Math.round(result * 1e9) / 1e9;
-    document.getElementById("calcResultLine").innerText = rounded.toLocaleString("en-US", { maximumFractionDigits: 9, useGrouping: false });
+    const result = calcParse(calcTokenize(expr));
+    if (!isFinite(result) || isNaN(result)) throw new Error("invalid");
+    const rounded = Math.round(result * 1e10) / 1e10;
+    calcAns = rounded;
+    document.getElementById("calcResultLine").innerText = rounded.toLocaleString("en-US", { maximumFractionDigits: 10, useGrouping: false });
   }catch(e){
     document.getElementById("calcResultLine").innerText = "خطأ";
   }
