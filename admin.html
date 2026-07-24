@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b0e14">
+<meta name="theme-color" content="#000000">
 <title>لوحة التحكم بالمؤقت</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0b0e14; --panel:#131722; --panel-2:#171c29;
-    --amber:#ffb400; --red:#ff3b30; --muted:#7d8698; --border:#232838; --green:#2ecc71;
+    --bg:#000000; --panel:#131316; --panel-2:#1a1a1f;
+    --amber:#ffb400; --red:#ff3b30; --muted:#8b8d99; --border:#26262d; --green:#2ecc71;
   }
   *{box-sizing:border-box;}
   body{
@@ -421,7 +421,7 @@ window.setSharedTheme = function(theme, save){
 
 function saveSharedTheme(){
   const msg = document.getElementById("sharedThemeSaveStatus");
-  msg.style.color = "#7d8698";
+  msg.style.color = "#8b8d99";
   msg.innerText = "جارٍ الحفظ...";
   db.ref('themeSettings').update({ theme: currentTheme })
     .then(() => {
@@ -446,7 +446,7 @@ window.setStyle = function(style, save){
 
 function saveMainStyle(){
   const msg = document.getElementById("themeSaveStatus");
-  msg.style.color = "#7d8698";
+  msg.style.color = "#8b8d99";
   msg.innerText = "جارٍ الحفظ...";
   db.ref('countdown').update({ style: currentStyle })
     .then(() => {
@@ -476,7 +476,7 @@ window.setChallengeStyle = function(style, save){
 
 function saveChallengeStyle(){
   const msg = document.getElementById("challengeStyleSaveStatus");
-  msg.style.color = "#7d8698";
+  msg.style.color = "#8b8d99";
   msg.innerText = "جارٍ الحفظ...";
   db.ref('challenge').update({ style: currentChallengeStyle })
     .then(() => {
@@ -500,7 +500,7 @@ window.setStudentStyle = function(style, save){
 
 function saveStudentStyle(){
   const msg = document.getElementById("studentStyleSaveStatus");
-  msg.style.color = "#7d8698";
+  msg.style.color = "#8b8d99";
   msg.innerText = "جارٍ الحفظ...";
   db.ref('studentSettings').update({ style: currentStudentStyle })
     .then(() => {
@@ -534,7 +534,7 @@ window.setStudyChallengeStyle = function(style, save){
 
 function saveStudyChallengeStyle(){
   const msg = document.getElementById("studyChallengeStyleSaveStatus");
-  msg.style.color = "#7d8698";
+  msg.style.color = "#8b8d99";
   msg.innerText = "جارٍ الحفظ...";
   db.ref('studyChallengeSettings').update({ style: currentStudyChallengeStyle })
     .then(() => {
@@ -568,7 +568,7 @@ window.doLogin = function(){
   const email = document.getElementById("loginEmail").value;
   const pass = document.getElementById("loginPass").value;
   const loginStatus = document.getElementById("loginStatus");
-  loginStatus.style.color = "#7d8698";
+  loginStatus.style.color = "#8b8d99";
   loginStatus.innerText = "جارٍ تسجيل الدخول...";
   auth.signInWithEmailAndPassword(email, pass)
     .catch((error) => {
@@ -651,7 +651,7 @@ function loadChallengeState(){
     .then((snapshot) => {
       const data = snapshot.val();
       if (!data){
-        msg.style.color = "#7d8698";
+        msg.style.color = "#8b8d99";
         msg.innerText = "لا يوجد تحدي محفوظ بعد.";
         return;
       }
@@ -674,7 +674,7 @@ function loadChallengeState(){
         msg.style.color = "#2ecc71";
         msg.innerText = `التحدي مفعّل الآن — باقي حوالي ${remainingMin} دقيقة.`;
       } else {
-        msg.style.color = "#7d8698";
+        msg.style.color = "#8b8d99";
         msg.innerText = "التحدي غير مفعّل حاليًا.";
       }
     })
@@ -730,7 +730,7 @@ window.stopChallenge = function(){
   const msg = document.getElementById("challengeStatusMsg");
   db.ref('challenge/active').set(false)
     .then(() => {
-      msg.style.color = "#7d8698";
+      msg.style.color = "#8b8d99";
       msg.innerText = "تم إيقاف التحدي.";
       loadChallengeState();
     })
@@ -745,7 +745,7 @@ function loadStudyChallengeState(){
   db.ref('studyChallengeSettings/active').once('value')
     .then((snapshot) => {
       const active = !!snapshot.val();
-      msg.style.color = active ? "#2ecc71" : "#7d8698";
+      msg.style.color = active ? "#2ecc71" : "#8b8d99";
       msg.innerText = active
         ? "تحدي الدراسة مفعّل الآن — الزر ظاهر في الصفحة الرئيسية."
         : "تحدي الدراسة معطّل حاليًا — الزر مخفي عن الصفحة الرئيسية.";
@@ -774,7 +774,7 @@ window.stopStudyChallenge = function(){
   const msg = document.getElementById("studyChallengeStatusMsg");
   db.ref('studyChallengeSettings/active').set(false)
     .then(() => {
-      msg.style.color = "#7d8698";
+      msg.style.color = "#8b8d99";
       msg.innerText = "تم تعطيل تحدي الدراسة.";
       loadStudyChallengeState();
     })
@@ -788,7 +788,7 @@ window.resetWeeklyLeaderboard = function(){
   const msg = document.getElementById("weeklyResetStatusMsg");
   if (!confirm("تصفير رصيد \"هذا الأسبوع\" لجميع الطلاب؟ رصيدهم الكلي (الإجمالي) ما راح يتأثر إطلاقًا.")) return;
 
-  msg.style.color = "#7d8698";
+  msg.style.color = "#8b8d99";
   msg.innerText = "جارٍ التصفير...";
 
   const currentWeekIndex = Math.floor(Date.now() / 604800000);
