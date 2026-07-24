@@ -239,6 +239,45 @@
   .calc-btn.mode{color:#06222d; background:var(--amber); border-color:var(--amber); font-size:11px;}
   .calc-btn.eq{background:var(--amber); color:#06222d; border-color:var(--amber);}
   .calc-btn.zero{grid-column:span 2;}
+  /* ================= السبورة العائمة ================= */
+  .board-fab{
+    position:fixed; bottom:84px; inset-inline-end:18px; width:50px; height:50px; border-radius:50%;
+    background:var(--panel); border:1px solid var(--border); color:var(--amber); font-size:20px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:20;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);
+  }
+  .board-fab:active{transform:scale(0.94);}
+  .board-overlay{
+    position:fixed; inset:0; background:rgba(3,8,14,.85); display:none; align-items:center;
+    justify-content:center; padding:14px; z-index:40;
+  }
+  .board-overlay.show{display:flex;}
+  .board-modal{
+    width:100%; max-width:640px; max-height:92vh; background:var(--panel); border:1px solid var(--border);
+    border-radius:20px; padding:14px; display:flex; flex-direction:column; gap:10px;
+  }
+  .board-head{display:flex; align-items:center; justify-content:space-between;}
+  .board-head h2{margin:0; font-size:14px; font-weight:900; color:#fff;}
+  .board-close{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
+  .board-canvas-wrap{background:#fff; border-radius:12px; overflow:hidden; touch-action:none;}
+  #boardCanvas{display:block; width:100%; height:auto; touch-action:none; cursor:crosshair;}
+  .board-toolbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .board-colors{display:flex; gap:6px;}
+  .board-color{width:26px; height:26px; border-radius:50%; border:2px solid var(--border); cursor:pointer; padding:0;}
+  .board-color.active{border-color:var(--amber); box-shadow:0 0 0 2px rgba(255,180,0,.35);}
+  .board-sizes{display:flex; gap:6px;}
+  .board-size-btn{
+    width:32px; height:32px; border-radius:8px; border:1px solid var(--border); background:var(--panel);
+    color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .board-size-btn.active{border-color:var(--amber); color:var(--amber);}
+  .board-size-btn .dot{border-radius:50%; background:currentColor; display:block;}
+  .board-actions{display:flex; gap:6px; margin-inline-start:auto; flex-wrap:wrap;}
+  .board-action-btn{
+    padding:8px 11px; border-radius:10px; border:1px solid var(--border); background:var(--panel);
+    color:var(--muted); font-family:'Tajawal',sans-serif; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap;
+  }
+  .board-action-btn.active{border-color:var(--amber); color:var(--amber);}
 </style>
 </head>
 <body data-theme="broadcast" data-style="default">
@@ -246,6 +285,39 @@
 <button type="button" id="fullscreenBtn" class="fs-btn" onclick="toggleFullscreen()" title="ملء الشاشة">⛶</button>
 
 <button class="calc-fab" onclick="openCalc()" aria-label="حاسبة">🧮</button>
+
+<button class="board-fab" onclick="openBoard()" aria-label="سبورة">📝</button>
+
+<div class="board-overlay" id="boardOverlay">
+  <div class="board-modal">
+    <div class="board-head">
+      <h2>📝 سبورة</h2>
+      <button class="board-close" onclick="closeBoard()">✕</button>
+    </div>
+    <div class="board-canvas-wrap">
+      <canvas id="boardCanvas"></canvas>
+    </div>
+    <div class="board-toolbar">
+      <div class="board-colors">
+        <button class="board-color active" style="background:#000000" onclick="boardSetColor('#000000', this)" aria-label="أسود"></button>
+        <button class="board-color" style="background:#e53935" onclick="boardSetColor('#e53935', this)" aria-label="أحمر"></button>
+        <button class="board-color" style="background:#1e88e5" onclick="boardSetColor('#1e88e5', this)" aria-label="أزرق"></button>
+        <button class="board-color" style="background:#43a047" onclick="boardSetColor('#43a047', this)" aria-label="أخضر"></button>
+        <button class="board-color" style="background:#ffb400" onclick="boardSetColor('#ffb400', this)" aria-label="ذهبي"></button>
+      </div>
+      <div class="board-sizes">
+        <button class="board-size-btn" onclick="boardSetSize(3, this)" aria-label="خط رفيع"><span class="dot" style="width:5px;height:5px;"></span></button>
+        <button class="board-size-btn active" onclick="boardSetSize(6, this)" aria-label="خط متوسط"><span class="dot" style="width:9px;height:9px;"></span></button>
+        <button class="board-size-btn" onclick="boardSetSize(12, this)" aria-label="خط سميك"><span class="dot" style="width:14px;height:14px;"></span></button>
+      </div>
+      <div class="board-actions">
+        <button class="board-action-btn" id="boardEraserBtn" onclick="boardToggleEraser()">🧹 ممحاة</button>
+        <button class="board-action-btn" onclick="boardUndo()">↩️ تراجع</button>
+        <button class="board-action-btn" onclick="boardClear()">🗑️ مسح الكل</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="calc-overlay" id="calcOverlay">
   <div class="calc-modal">
@@ -852,6 +924,126 @@ window.calcEquals = function(){
   }catch(e){
     document.getElementById("calcResultLine").innerText = "خطأ";
   }
+};
+
+/* ================= السبورة العائمة ================= */
+/* مستقلة تماماً عن منطق المؤقت: فتحها أو إغلاقها لا يوقف أو يبطئ أي مؤقت شغّال بالخلفية. */
+let boardCtx = null;
+let boardDrawing = false;
+let boardColor = "#000000";
+let boardSize = 6;
+let boardEraser = false;
+let boardUndoStack = [];
+let boardLastX = 0, boardLastY = 0;
+let boardEventsBound = false;
+
+window.openBoard = function(){
+  document.getElementById("boardOverlay").classList.add("show");
+  requestAnimationFrame(boardSetupCanvas);
+};
+window.closeBoard = function(){
+  document.getElementById("boardOverlay").classList.remove("show");
+};
+
+function boardSetupCanvas(){
+  const canvas = document.getElementById("boardCanvas");
+  const wrap = canvas.parentElement;
+  const w = Math.round(wrap.clientWidth);
+  const h = Math.round(w * 0.72);
+  if (canvas.width === w && canvas.height === h && boardCtx) return; // نفس المقاس، ما نمسح الرسمة الحالية
+  const prevDrawing = (canvas.width && canvas.height && boardCtx) ? boardCtx.getImageData(0, 0, canvas.width, canvas.height) : null;
+  canvas.width = w;
+  canvas.height = h;
+  boardCtx = canvas.getContext("2d");
+  boardCtx.fillStyle = "#ffffff";
+  boardCtx.fillRect(0, 0, w, h);
+  boardCtx.lineCap = "round";
+  boardCtx.lineJoin = "round";
+  if (prevDrawing){ try{ boardCtx.putImageData(prevDrawing, 0, 0); }catch(e){} }
+  boardBindEvents(canvas);
+}
+
+function boardBindEvents(canvas){
+  if (boardEventsBound) return;
+  boardEventsBound = true;
+  canvas.addEventListener("pointerdown", boardStart);
+  canvas.addEventListener("pointermove", boardMove);
+  window.addEventListener("pointerup", boardEnd);
+  window.addEventListener("pointercancel", boardEnd);
+}
+
+function boardGetPos(e, canvas){
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+}
+
+function boardPushUndo(){
+  if (!boardCtx) return;
+  const canvas = document.getElementById("boardCanvas");
+  try{
+    boardUndoStack.push(boardCtx.getImageData(0, 0, canvas.width, canvas.height));
+    if (boardUndoStack.length > 25) boardUndoStack.shift();
+  }catch(e){}
+}
+
+function boardStart(e){
+  if (!boardCtx) return;
+  const canvas = document.getElementById("boardCanvas");
+  boardPushUndo();
+  boardDrawing = true;
+  const pos = boardGetPos(e, canvas);
+  boardLastX = pos.x; boardLastY = pos.y;
+  try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+  boardCtx.beginPath();
+  boardCtx.arc(pos.x, pos.y, (boardEraser ? boardSize * 2 : boardSize) / 2, 0, Math.PI * 2);
+  boardCtx.fillStyle = boardEraser ? "#ffffff" : boardColor;
+  boardCtx.fill();
+}
+function boardMove(e){
+  if (!boardDrawing || !boardCtx) return;
+  const canvas = document.getElementById("boardCanvas");
+  const pos = boardGetPos(e, canvas);
+  boardCtx.strokeStyle = boardEraser ? "#ffffff" : boardColor;
+  boardCtx.lineWidth = boardEraser ? boardSize * 2 : boardSize;
+  boardCtx.beginPath();
+  boardCtx.moveTo(boardLastX, boardLastY);
+  boardCtx.lineTo(pos.x, pos.y);
+  boardCtx.stroke();
+  boardLastX = pos.x; boardLastY = pos.y;
+}
+function boardEnd(){
+  boardDrawing = false;
+}
+
+window.boardSetColor = function(color, btn){
+  boardColor = color;
+  boardEraser = false;
+  document.querySelectorAll(".board-color").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("boardEraserBtn").classList.remove("active");
+};
+window.boardSetSize = function(size, btn){
+  boardSize = size;
+  document.querySelectorAll(".board-size-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+};
+window.boardToggleEraser = function(){
+  boardEraser = !boardEraser;
+  document.getElementById("boardEraserBtn").classList.toggle("active", boardEraser);
+};
+window.boardUndo = function(){
+  if (!boardUndoStack.length || !boardCtx) return;
+  const imgData = boardUndoStack.pop();
+  boardCtx.putImageData(imgData, 0, 0);
+};
+window.boardClear = function(){
+  if (!boardCtx) return;
+  boardPushUndo();
+  const canvas = document.getElementById("boardCanvas");
+  boardCtx.fillStyle = "#ffffff";
+  boardCtx.fillRect(0, 0, canvas.width, canvas.height);
 };
 </script>
 </body>
