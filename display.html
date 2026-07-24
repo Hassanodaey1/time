@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b0e14">
+<meta name="theme-color" content="#000000">
 <title>المؤقت</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0b0e14; --panel:#12161f; --amber:#ffb400; --red:#ff3b30; --muted:#7d8698; --border:#232838;
+    --bg:#000000; --panel:#131316; --amber:#ffb400; --red:#ff3b30; --muted:#8b8d99; --border:#26262d;
   }
   body[data-theme="aurora"]{ --amber:#00d4aa; }
   body[data-theme="ember"]{ --amber:#ff6b35; }
@@ -48,7 +48,7 @@
   .digits{display:flex; justify-content:center; gap:10px; flex-wrap:wrap;}
   .unit{display:flex; flex-direction:column; align-items:center; gap:8px;}
   .flip{
-    background:#0e1119; border:1px solid var(--border); border-radius:10px;
+    background:#101014; border:1px solid var(--border); border-radius:10px;
     padding:14px 6px; min-width:78px; font-family:'JetBrains Mono',monospace;
     font-size:38px; font-weight:700; color:var(--amber);
     text-shadow:0 0 18px rgba(255,180,0,.35);
@@ -61,7 +61,7 @@
   body[data-style="circular"] .flip{
     border-radius:50%; width:88px; height:88px; min-width:88px;
     display:flex; align-items:center; justify-content:center; padding:0;
-    border:2px solid var(--amber); background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.06), #0e1119 70%);
+    border:2px solid var(--amber); background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.06), #101014 70%);
     font-size:26px;
   }
   body[data-style="circular"] .unit label{margin-top:2px;}
@@ -216,7 +216,7 @@
   .calc-modal .calc-head h2{margin:0; font-size:14px; font-weight:900;}
   .calc-close{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
   .calc-screen{
-    background:#0f2032; border:1px solid var(--border); border-radius:12px; padding:12px 12px;
+    background:#16161c; border:1px solid var(--border); border-radius:12px; padding:12px 12px;
     margin-bottom:10px; text-align:end; min-height:60px; display:flex; flex-direction:column; justify-content:center;
   }
   .calc-expr{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--muted); min-height:15px; word-break:break-all;}
@@ -226,7 +226,7 @@
   .calc-sci-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:8px;}
   .calc-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
   .calc-btn{
-    padding:11px 0; border-radius:9px; border:1px solid var(--border); background:#0f2032; color:#fff;
+    padding:11px 0; border-radius:9px; border:1px solid var(--border); background:#16161c; color:#fff;
     font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; cursor:pointer;
   }
   .calc-grid .calc-btn{padding:14px 0; font-size:15px;}
