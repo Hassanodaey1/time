@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b0e14">
+<meta name="theme-color" content="#000000">
 <title>مؤقت الطالب</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#0d1b2a; --panel:#122438; --accent:#ffb400; --muted:#5f8aa6; --border:#1c344a; --green:#2ecc71; }
+  :root{ --bg:#000000; --panel:#131316; --accent:#ffb400; --muted:#8b8d99; --border:#26262d; --green:#2ecc71; }
   body[data-theme="aurora"]{ --accent:#00d4aa; }
   body[data-theme="ember"]{ --accent:#ff6b35; }
   body[data-theme="arctic"]{ --accent:#48cae4; }
@@ -20,6 +20,9 @@
   body{
     margin:0; background:var(--bg); color:#f2f4f8; font-family:'Tajawal',sans-serif;
     display:flex; align-items:center; justify-content:center; padding:24px;
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(255,180,0,0.05), transparent 42%),
+      radial-gradient(circle at 85% 85%, rgba(255,59,48,0.05), transparent 42%);
   }
   .back-link{
     position:fixed; top:18px; inset-inline-start:18px; font-size:13px; color:var(--muted);
@@ -27,7 +30,7 @@
   }
   .card{
     width:100%; max-width:420px; background:var(--panel); border:1px solid var(--border);
-    border-radius:20px; padding:30px 26px; text-align:center;
+    border-radius:20px; padding:30px 26px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.5);
   }
   .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--accent);
     text-transform:uppercase; margin:0 0 8px; }
@@ -35,23 +38,24 @@
 
   .presets{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px;}
   .preset-btn{
-    padding:12px 4px; border-radius:10px; border:1px solid var(--border); background:#0f2032;
+    padding:12px 4px; border-radius:10px; border:1px solid var(--border); background:#16161c;
     color:#fff; font-family:'JetBrains Mono',monospace; font-weight:700; cursor:pointer; font-size:14px;
   }
   .preset-btn.active{border-color:var(--accent); color:var(--accent); background:rgba(72,202,228,.1);}
 
   .custom-row{display:flex; gap:8px; margin-bottom:20px;}
   .custom-row input{
-    flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:#0f2032;
+    flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:#16161c;
     color:#fff; font-family:'Tajawal',sans-serif; font-size:14.5px;
   }
 
   .digits{display:flex; justify-content:center; gap:10px; margin-bottom:22px; display:none;}
   .unit{display:flex; flex-direction:column; align-items:center; gap:6px;}
   .flip{
-    background:#0a1826; border:1px solid var(--border); border-radius:10px;
+    background:#101014; border:1px solid var(--border); border-radius:10px;
     padding:14px 8px; min-width:82px; font-family:'JetBrains Mono',monospace;
     font-size:38px; font-weight:700; color:var(--accent);
+    text-shadow:0 0 18px rgba(255,180,0,.35);
   }
   .unit label{font-size:11px; color:var(--muted); letter-spacing:2px;}
 
@@ -73,7 +77,7 @@
   body[data-style="circular"] .flip{
     border-radius:50%; width:78px; height:78px; min-width:78px;
     display:flex; align-items:center; justify-content:center; padding:0;
-    border:2px solid var(--accent); background:#0a1826; font-size:22px;
+    border:2px solid var(--accent); background:#101014; font-size:22px;
   }
 
   body[data-style="pixel"] .eyebrow, body[data-style="pixel"] h1, body[data-style="pixel"] .unit label{font-family:'Press Start 2P', monospace;}
@@ -96,7 +100,7 @@
   body[data-style="ring"] .digits{
     position:relative; width:220px; height:220px; border-radius:50%; margin:0 auto 22px;
     align-items:center; padding:24px; gap:2px; display:flex;
-    background: conic-gradient(var(--accent) var(--ring-pct), #0a1826 0);
+    background: conic-gradient(var(--accent) var(--ring-pct), #101014 0);
   }
   body[data-style="ring"] .digits::before{
     content:""; position:absolute; inset:10px; border-radius:50%; background:var(--panel);
@@ -181,7 +185,7 @@
   }
   .task-list{display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; padding-inline-end:2px;}
   .task-row{
-    display:flex; align-items:flex-start; gap:10px; background:#0f2032; border:1px solid var(--border);
+    display:flex; align-items:flex-start; gap:10px; background:#16161c; border:1px solid var(--border);
     border-radius:12px; padding:12px; text-align:start;
   }
   .task-check{width:20px; height:20px; border-radius:6px; border:2px solid var(--border); background:transparent; flex-shrink:0; cursor:pointer; margin-top:2px;}
@@ -208,7 +212,7 @@
   .field{margin-bottom:14px;}
   .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
   .field input, .field textarea{
-    width:100%; padding:11px; border-radius:10px; border:1px solid var(--border); background:#0f2032;
+    width:100%; padding:11px; border-radius:10px; border:1px solid var(--border); background:#16161c;
     color:#fff; font-family:'Tajawal',sans-serif; font-size:13.5px;
   }
   .field textarea{resize:vertical; min-height:60px;}
@@ -230,7 +234,7 @@
   .calc-modal .calc-head h2{margin:0; font-size:14px; font-weight:900;}
   .calc-close{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
   .calc-screen{
-    background:#0f2032; border:1px solid var(--border); border-radius:12px; padding:12px 12px;
+    background:#16161c; border:1px solid var(--border); border-radius:12px; padding:12px 12px;
     margin-bottom:10px; text-align:end; min-height:60px; display:flex; flex-direction:column; justify-content:center;
   }
   .calc-expr{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--muted); min-height:15px; word-break:break-all;}
@@ -240,7 +244,7 @@
   .calc-sci-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:8px;}
   .calc-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
   .calc-btn{
-    padding:11px 0; border-radius:9px; border:1px solid var(--border); background:#0f2032; color:#fff;
+    padding:11px 0; border-radius:9px; border:1px solid var(--border); background:#16161c; color:#fff;
     font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; cursor:pointer;
   }
   .calc-grid .calc-btn{padding:14px 0; font-size:15px;}
