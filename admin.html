@@ -122,9 +122,10 @@
 
   /* ===== زر الرجوع داخل كل لوحة فرعية ===== */
   .back-btn{
-    display:inline-flex; align-items:center; gap:6px; background:transparent; border:none;
-    color:var(--muted); font-family:'Tajawal',sans-serif; font-size:13px; cursor:pointer;
-    padding:0; margin-bottom:18px;
+    position:fixed; top:16px; right:16px; z-index:15;
+    display:inline-flex; align-items:center; gap:5px; background:var(--panel); border:1px solid var(--border);
+    color:var(--amber); font-family:'Tajawal',sans-serif; font-weight:800; font-size:13px; cursor:pointer;
+    padding:9px 16px; border-radius:20px; box-shadow:0 6px 18px rgba(0,0,0,.45);
   }
   .back-btn:hover{color:#fff;}
 </style>
@@ -628,7 +629,7 @@ function loadCurrentState(){
         document.getElementById("datetimePicker").value = toLocalDatetimeInputValue(data.targetTime);
       }
       const modeText = data.mode === "up" ? "تصاعدي" : "تنازلي";
-      const timeText = data.targetTime ? new Date(data.targetTime).toLocaleString("ar") : "—";
+      const timeText = data.targetTime ? new Date(data.targetTime).toLocaleString("ar-u-nu-latn") : "—";
       hint.innerText = `الحالة المحفوظة حاليًا: ${modeText} — ${timeText}`;
     })
     .catch(() => {
