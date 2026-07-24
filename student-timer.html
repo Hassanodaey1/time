@@ -24,9 +24,11 @@
       radial-gradient(circle at 15% 15%, rgba(255,180,0,0.05), transparent 42%),
       radial-gradient(circle at 85% 85%, rgba(255,59,48,0.05), transparent 42%);
   }
-  .back-link{
-    position:fixed; top:18px; inset-inline-start:18px; font-size:13px; color:var(--muted);
-    text-decoration:none;
+  .back-link, .back-btn{
+    position:fixed; top:16px; right:16px; z-index:15;
+    display:inline-flex; align-items:center; gap:5px; background:var(--panel); border:1px solid var(--border);
+    color:var(--accent); font-family:'Tajawal',sans-serif; font-weight:800; font-size:13px; cursor:pointer;
+    padding:9px 16px; border-radius:20px; text-decoration:none; box-shadow:0 6px 18px rgba(0,0,0,.45);
   }
   .card{
     width:100%; max-width:420px; background:var(--panel); border:1px solid var(--border);
@@ -170,13 +172,11 @@
     font-size:20px; flex-shrink:0; background:rgba(255,180,0,.12); color:var(--accent);
   }
   .hub-item .txt{flex:1; min-width:0;}
-  .hub-item .title{font-weight:900; font-size:15px; margin:0 0 3px;}
+  .hub-item .title{font-weight:900; font-size:15px; margin:0 0 3px; color:#fff;}
   .hub-item .desc{font-size:11.5px; color:var(--muted); margin:0;}
   .hub-item.disabled{opacity:.5; cursor:default;}
   .hub-item .soon{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; padding:3px 8px; border-radius:20px; background:rgba(125,134,152,.15); color:var(--muted); flex-shrink:0;}
   .hub-item .count{font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:900; padding:3px 9px; border-radius:20px; background:var(--accent); color:#06222d; flex-shrink:0;}
-
-  .back-btn{background:none; border:none; color:var(--muted); font-size:13px; cursor:pointer; padding:0; margin-bottom:14px; font-family:'Tajawal',sans-serif;}
 
   /* ================= لائحة المهام ================= */
   .task-add-btn{
@@ -191,7 +191,7 @@
   .task-check{width:20px; height:20px; border-radius:6px; border:2px solid var(--border); background:transparent; flex-shrink:0; cursor:pointer; margin-top:2px;}
   .task-check.done{background:var(--green); border-color:var(--green); display:flex; align-items:center; justify-content:center; color:#06222d; font-size:12px;}
   .task-body{flex:1; min-width:0; cursor:pointer;}
-  .task-title{font-size:13.5px; font-weight:700; margin:0 0 3px; word-break:break-word;}
+  .task-title{font-size:13.5px; font-weight:700; margin:0 0 3px; word-break:break-word; color:#fff;}
   .task-row.done .task-title{text-decoration:line-through; color:var(--muted);}
   .task-note{font-size:11.5px; color:var(--muted); margin:0 0 4px; word-break:break-word;}
   .task-remind{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--accent);}
@@ -208,7 +208,7 @@
     width:100%; max-width:400px; background:var(--panel); border:1px solid var(--border);
     border-radius:18px; padding:24px 22px; text-align:start;
   }
-  .modal h2{margin:0 0 16px; font-size:16px; font-weight:900; text-align:center;}
+  .modal h2{margin:0 0 16px; font-size:16px; font-weight:900; text-align:center; color:#fff;}
   .field{margin-bottom:14px;}
   .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
   .field input, .field textarea{
@@ -231,7 +231,7 @@
     border-radius:20px; padding:16px; text-align:center;
   }
   .calc-modal .calc-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
-  .calc-modal .calc-head h2{margin:0; font-size:14px; font-weight:900;}
+  .calc-modal .calc-head h2{margin:0; font-size:14px; font-weight:900; color:#fff;}
   .calc-close{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
   .calc-screen{
     background:#16161c; border:1px solid var(--border); border-radius:12px; padding:12px 12px;
@@ -262,7 +262,7 @@
     border-radius:18px; padding:26px 22px; text-align:center;
   }
   .reminder-alert .bell{font-size:36px; margin-bottom:10px;}
-  .reminder-alert h2{margin:0 0 6px; font-size:16px;}
+  .reminder-alert h2{margin:0 0 6px; font-size:16px; color:#fff;}
   .reminder-alert p{margin:0 0 20px; font-size:13px; color:var(--muted);}
 
   /* ================= بومودورو ================= */
@@ -426,9 +426,9 @@
   <div id="pomoSetupView">
     <p style="font-size:12px; color:var(--muted); margin:-10px 0 10px; text-align:start;">مدة التركيز</p>
     <div class="presets">
-      <button class="preset-btn" onclick="pickPomoWork(15, this)">١٥ د</button>
-      <button class="preset-btn active" onclick="pickPomoWork(25, this)">٢٥ د</button>
-      <button class="preset-btn" onclick="pickPomoWork(35, this)">٣٥ د</button>
+      <button class="preset-btn" onclick="pickPomoWork(15, this)">15 د</button>
+      <button class="preset-btn active" onclick="pickPomoWork(25, this)">25 د</button>
+      <button class="preset-btn" onclick="pickPomoWork(35, this)">35 د</button>
       <button class="preset-btn" onclick="pickPomoWorkOpen(this)">مفتوح</button>
     </div>
     <div class="custom-row hidden" id="pomoWorkCustomRow">
@@ -436,11 +436,11 @@
     </div>
     <p style="font-size:12px; color:var(--muted); margin:0 0 10px; text-align:start;">مدة الاستراحة القصيرة</p>
     <div class="presets">
-      <button class="preset-btn" onclick="pickPomoBreak(5, this)">٥ د</button>
-      <button class="preset-btn active" onclick="pickPomoBreak(10, this)">١٠ د</button>
-      <button class="preset-btn" onclick="pickPomoBreak(15, this)">١٥ د</button>
+      <button class="preset-btn" onclick="pickPomoBreak(5, this)">5 د</button>
+      <button class="preset-btn active" onclick="pickPomoBreak(10, this)">10 د</button>
+      <button class="preset-btn" onclick="pickPomoBreak(15, this)">15 د</button>
     </div>
-    <p style="font-size:11.5px; color:var(--muted); margin:0 0 20px;">بعد كل ٤ دورات عمل، استراحة طويلة ١٥ دقيقة تلقائيًا</p>
+    <p style="font-size:11.5px; color:var(--muted); margin:0 0 20px;">بعد كل 4 دورات عمل، استراحة طويلة 15 دقيقة تلقائيًا</p>
     <button class="primary" onclick="startPomodoro()">▶️ ابدأ البومودورو</button>
   </div>
 
@@ -499,7 +499,7 @@
     <h2 id="reminderTaskTitle">وقت المهمة!</h2>
     <p id="reminderTaskNote"></p>
     <div class="controls">
-      <button class="secondary" onclick="snoozeReminder()">😴 تأجيل ٥ د</button>
+      <button class="secondary" onclick="snoozeReminder()">😴 تأجيل 5 د</button>
       <button class="primary" onclick="dismissReminder()">✅ تم</button>
     </div>
   </div>
@@ -691,9 +691,9 @@ function formatRemindTime(ms){
   const d = new Date(ms);
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
-  const timeStr = d.toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" });
+  const timeStr = d.toLocaleTimeString("ar-u-nu-latn", { hour: "2-digit", minute: "2-digit" });
   if (sameDay) return "اليوم " + timeStr;
-  return d.toLocaleDateString("ar", { day: "numeric", month: "short" }) + " - " + timeStr;
+  return d.toLocaleDateString("ar-u-nu-latn", { day: "numeric", month: "short" }) + " - " + timeStr;
 }
 
 function renderTasks(){
