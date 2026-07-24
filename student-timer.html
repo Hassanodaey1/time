@@ -216,6 +216,10 @@
     border-radius:18px; padding:24px 22px; text-align:start;
   }
   .modal h2{margin:0 0 16px; font-size:16px; font-weight:900; text-align:center; color:#fff;}
+
+  /* ================= نافذة تنبيه/تأكيد بتصميم العبة ================= */
+  .app-dialog-actions{display:flex; gap:10px; margin-top:6px;}
+  .app-dialog-actions button{flex:1;}
   .field{margin-bottom:14px;}
   .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
   .field input, .field textarea{
@@ -590,6 +594,16 @@
   </div>
 </div>
 
+<div class="overlay" id="appDialogOverlay">
+  <div class="modal" style="max-width:340px; text-align:center;">
+    <p id="appDialogText" style="margin:0 0 20px; font-size:14.5px; line-height:1.7; color:#fff;"></p>
+    <div class="app-dialog-actions">
+      <button class="secondary hidden" id="appDialogCancelBtn">إلغاء</button>
+      <button class="primary" id="appDialogOkBtn">حسنًا</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="reminderOverlay">
   <div class="reminder-alert">
     <div class="bell">⏰</div>
@@ -612,6 +626,31 @@ let paused = false;
 let timerHandle = null;
 let midAlerted = false, lastMinuteAlerted = false;
 const baseTitle = document.title;
+
+/* ================= نافذة تنبيه/تأكيد بتصميم العبة (بديل alert/confirm) ================= */
+let appDialogResolver = null;
+function appAlert(message){
+  showAppDialog(message, false);
+}
+function appConfirm(message, onConfirmed){
+  showAppDialog(message, true).then(ok => { if (ok) onConfirmed(); });
+}
+function showAppDialog(message, isConfirm){
+  return new Promise(resolve => {
+    document.getElementById("appDialogText").innerText = message;
+    document.getElementById("appDialogCancelBtn").classList.toggle("hidden", !isConfirm);
+    document.getElementById("appDialogOverlay").classList.add("show");
+    appDialogResolver = resolve;
+  });
+}
+document.getElementById("appDialogOkBtn").addEventListener("click", () => {
+  document.getElementById("appDialogOverlay").classList.remove("show");
+  if (appDialogResolver){ const r = appDialogResolver; appDialogResolver = null; r(true); }
+});
+document.getElementById("appDialogCancelBtn").addEventListener("click", () => {
+  document.getElementById("appDialogOverlay").classList.remove("show");
+  if (appDialogResolver){ const r = appDialogResolver; appDialogResolver = null; r(false); }
+});
 
 const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
 
@@ -665,10 +704,10 @@ function setRingProgress(pct){
 
 window.startTimer = function(){
   const customVal = document.getElementById("customTime").value; // "HH:MM"
-  if (!customVal){ alert("حدد وقت الدراسة أولاً"); return; }
+  if (!customVal){ appAlert("حدد وقت الدراسة أولاً"); return; }
   const [hh, mm] = customVal.split(":").map(Number);
   const minutes = (hh * 60) + mm;
-  if (minutes <= 0){ alert("حدد وقتًا أكبر من صفر"); return; }
+  if (minutes <= 0){ appAlert("حدد وقتًا أكبر من صفر"); return; }
 
   totalMs = minutes * 60 * 1000;
   remainingMs = totalMs;
@@ -847,9 +886,10 @@ window.toggleTaskDone = function(id){
 };
 
 window.deleteTask = function(id){
-  if (!confirm("تحذف هذي المهمة؟")) return;
-  saveTasks(getTasks().filter(x => x.id !== id));
-  renderTasks();
+  appConfirm("تحذف هذي المهمة؟", () => {
+    saveTasks(getTasks().filter(x => x.id !== id));
+    renderTasks();
+  });
 };
 
 window.openTaskModal = function(id){
@@ -892,7 +932,7 @@ window.saveTaskFromModal = function(){
   const title = document.getElementById("taskTitleInput").value.trim();
   const note = document.getElementById("taskNoteInput").value.trim();
   const remindVal = document.getElementById("taskRemindInput").value;
-  if (!title){ alert("اكتب عنوان المهمة أولاً"); return; }
+  if (!title){ appAlert("اكتب عنوان المهمة أولاً"); return; }
 
   const remindAt = remindVal ? new Date(remindVal).getTime() : null;
 
@@ -1037,10 +1077,10 @@ function pomoPhaseMinutes(){
 window.startPomodoro = function(){
   if (pomoWorkIsCustom){
     const val = document.getElementById("pomoWorkCustomTime").value;
-    if (!val){ alert("حدد وقت التركيز المفتوح أولاً"); return; }
+    if (!val){ appAlert("حدد وقت التركيز المفتوح أولاً"); return; }
     const [hh, mm] = val.split(":").map(Number);
     const mins = (hh * 60) + mm;
-    if (mins <= 0){ alert("حدد وقتًا أكبر من صفر"); return; }
+    if (mins <= 0){ appAlert("حدد وقتًا أكبر من صفر"); return; }
     pomoWorkMinutes = mins;
   }
   pomoPhase = "work";
