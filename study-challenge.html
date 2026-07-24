@@ -26,8 +26,10 @@
       radial-gradient(circle at 85% 85%, rgba(255,59,48,0.05), transparent 42%);
   }
   .back-link{
-    position:fixed; top:18px; inset-inline-start:18px; font-size:13px; color:var(--muted);
-    text-decoration:none; z-index:5;
+    position:fixed; top:16px; right:16px; z-index:15;
+    display:inline-flex; align-items:center; gap:5px; background:var(--panel); border:1px solid var(--border);
+    color:var(--accent); font-family:'Tajawal',sans-serif; font-weight:800; font-size:13px;
+    padding:9px 16px; border-radius:20px; text-decoration:none; box-shadow:0 6px 18px rgba(0,0,0,.45);
   }
   .profile-btn{
     position:fixed; top:14px; inset-inline-end:18px; z-index:5;
@@ -181,7 +183,7 @@
   .rank-row:nth-child(2) .rank-num{background:#3a3a3a; color:#c8c8c8;}
   .rank-row:nth-child(3) .rank-num{background:#3a2a1a; color:#cd7f32;}
   .rank-info{flex:1; text-align:start; overflow:hidden;}
-  .rank-name{font-size:13.5px; font-weight:700; margin:0 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rank-name{font-size:13.5px; font-weight:700; margin:0 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;}
   .rank-loc{font-size:10.5px; color:var(--muted); margin:0;}
   .rank-time{font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:var(--accent); flex-shrink:0;}
   .empty-note{font-size:12px; color:var(--muted); text-align:center; padding:14px 0;}
@@ -209,7 +211,7 @@
     width:100%; max-width:400px; background:var(--panel); border:1px solid var(--border);
     border-radius:18px; padding:26px 22px; text-align:start;
   }
-  .modal h2{margin:0 0 16px; font-size:17px; font-weight:900; text-align:center;}
+  .modal h2{margin:0 0 16px; font-size:17px; font-weight:900; text-align:center; color:#fff;}
   .field{margin-bottom:14px;}
   .field label{display:block; font-size:12.5px; color:var(--muted); margin-bottom:6px;}
   .field input, .field select{
@@ -237,7 +239,7 @@
     border-radius:20px; padding:16px; text-align:center;
   }
   .calc-modal .calc-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
-  .calc-modal .calc-head h2{margin:0; font-size:14px; font-weight:900;}
+  .calc-modal .calc-head h2{margin:0; font-size:14px; font-weight:900; color:#fff;}
   .calc-close{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
   .calc-screen{
     background:#16161c; border:1px solid var(--border); border-radius:12px; padding:12px 12px;
@@ -356,10 +358,10 @@
 
     <div id="setupView">
       <div class="presets">
-        <button class="preset-btn" onclick="pickPreset(5, this)">٥ د</button>
-        <button class="preset-btn active" onclick="pickPreset(15, this)">١٥ د</button>
-        <button class="preset-btn" onclick="pickPreset(25, this)">٢٥ د</button>
-        <button class="preset-btn" onclick="pickPreset(45, this)">٤٥ د</button>
+        <button class="preset-btn" onclick="pickPreset(5, this)">5 د</button>
+        <button class="preset-btn active" onclick="pickPreset(15, this)">15 د</button>
+        <button class="preset-btn" onclick="pickPreset(25, this)">25 د</button>
+        <button class="preset-btn" onclick="pickPreset(45, this)">45 د</button>
       </div>
       <div class="custom-row">
         <input type="time" id="customTime" step="60">
@@ -509,7 +511,7 @@ async function requestWakeLock(){
 let serverTimeOffset = 0;
 function serverNow(){ return Date.now() + serverTimeOffset; }
 
-const DAILY_CAP_SECONDS = 6 * 60 * 60; // الحد الأقصى المحسوب يوميًا لكل طالب: ٦ ساعات
+const DAILY_CAP_SECONDS = 6 * 60 * 60; // الحد الأقصى المحسوب يوميًا لكل طالب: 6 ساعات
 
 /* ================= إيقاف تلقائي عند مغادرة الصفحة ================= */
 const AUTO_RESUME_GRACE_MS = 8000; // غيبة أقصر من هذا تُستأنف تلقائيًا وبصمت
@@ -640,7 +642,7 @@ function step(){
   remainingMs -= 1000;
   secondsSinceBank++;
 
-  /* تحديث حي لرصيد الطالب في الترتيب كل ٦٠ ثانية أثناء الجلسة نفسها، بدون انتظار انتهاء المؤقت */
+  /* تحديث حي لرصيد الطالب في الترتيب كل 60 ثانية أثناء الجلسة نفسها، بدون انتظار انتهاء المؤقت */
   if (secondsSinceBank >= 60){
     bankStudyTime(secondsSinceBank);
     bankedSeconds += secondsSinceBank;
@@ -696,7 +698,7 @@ function renderTime(){
 
 window.togglePause = function(){
   if (dailyCapReached && paused){
-    showSessionNotice("🚫 وصلت للحد الأقصى اليومي (٦ ساعات). رجعلك باچر 💪");
+    showSessionNotice("🚫 وصلت للحد الأقصى اليومي (6 ساعات). رجعلك باچر 💪");
     return;
   }
   paused = !paused;
@@ -812,7 +814,7 @@ function bankStudyTime(seconds){
     const todayIndex = Math.floor(nowServer / 86400000);
     const thisWeekIndex = Math.floor(nowServer / 604800000);
 
-    /* ---- الحد اليومي (٦ ساعات) ---- */
+    /* ---- الحد اليومي (6 ساعات) ---- */
     let dayIndex = cur.dayIndex;
     let daySeconds = cur.daySeconds || 0;
     if (dayIndex !== todayIndex){ dayIndex = todayIndex; daySeconds = 0; }
@@ -822,7 +824,7 @@ function bankStudyTime(seconds){
       paused = true;
       dailyCapReached = true;
       document.getElementById("pauseBtn").innerText = "▶️ استئناف";
-      showSessionNotice("🚫 وصلت للحد الأقصى اليومي (٦ ساعات). رجعلك باچر 💪");
+      showSessionNotice("🚫 وصلت للحد الأقصى اليومي (6 ساعات). رجعلك باچر 💪");
       return;
     }
 
@@ -832,7 +834,7 @@ function bankStudyTime(seconds){
       paused = true;
       dailyCapReached = true;
       document.getElementById("pauseBtn").innerText = "▶️ استئناف";
-      showSessionNotice("🚫 وصلت للحد الأقصى اليومي (٦ ساعات). رجعلك باچر 💪");
+      showSessionNotice("🚫 وصلت للحد الأقصى اليومي (6 ساعات). رجعلك باچر 💪");
     }
 
     /* ---- سلسلة الأيام المتتالية ---- */
