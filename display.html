@@ -176,8 +176,10 @@
   #finishedMsg{display:none; font-size:22px; font-weight:900; color:var(--red); margin-top:10px;}
   #loadingMsg{color:var(--muted); font-size:14px; font-family:'JetBrains Mono',monospace;}
   .back-link{
-    position:fixed; top:18px; inset-inline-start:18px; font-family:'Tajawal',sans-serif;
-    font-size:13px; color:var(--muted); text-decoration:none; opacity:.7;
+    position:fixed; top:16px; right:16px; z-index:15; font-family:'Tajawal',sans-serif;
+    display:inline-flex; align-items:center; gap:5px; background:var(--panel); border:1px solid var(--border);
+    font-weight:800; font-size:13px; color:var(--amber); text-decoration:none;
+    padding:9px 16px; border-radius:20px; box-shadow:0 6px 18px rgba(0,0,0,.45);
   }
   .back-link:hover{opacity:1;}
   .fs-btn{
@@ -213,7 +215,7 @@
     border-radius:20px; padding:16px; text-align:center;
   }
   .calc-modal .calc-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
-  .calc-modal .calc-head h2{margin:0; font-size:14px; font-weight:900;}
+  .calc-modal .calc-head h2{margin:0; font-size:14px; font-weight:900; color:#fff;}
   .calc-close{background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; line-height:1;}
   .calc-screen{
     background:#16161c; border:1px solid var(--border); border-radius:12px; padding:12px 12px;
