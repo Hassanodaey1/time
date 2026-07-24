@@ -45,6 +45,13 @@
   }
   .preset-btn.active{border-color:var(--accent); color:var(--accent); background:rgba(72,202,228,.1);}
 
+  .preset-btn-open{
+    display:block; width:100%; padding:12px 4px; border-radius:24px; border:1px solid var(--border);
+    background:#16161c; color:#fff; font-family:'JetBrains Mono',monospace; font-weight:700;
+    cursor:pointer; font-size:14px; margin-bottom:14px;
+  }
+  .preset-btn-open.active{border-color:var(--accent); color:var(--accent); background:rgba(72,202,228,.1);}
+
   .custom-row{display:flex; gap:8px; margin-bottom:20px;}
   .custom-row input{
     flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:#16161c;
@@ -128,8 +135,8 @@
   body[data-style="flipclock"]{ background:#000; }
   body[data-style="flipclock"] .card{ background:#000; border:none; }
   body[data-style="flipclock"] .eyebrow{ color:#4aa8ff; }
-  body[data-style="flipclock"] .preset-btn{ background:#101418; border-color:#1c232b; color:#8aa0b8; }
-  body[data-style="flipclock"] .preset-btn.active{ border-color:#4aa8ff; color:#4aa8ff; background:rgba(74,168,255,.1); }
+  body[data-style="flipclock"] .preset-btn, body[data-style="flipclock"] .preset-btn-open{ background:#101418; border-color:#1c232b; color:#8aa0b8; }
+  body[data-style="flipclock"] .preset-btn.active, body[data-style="flipclock"] .preset-btn-open.active{ border-color:#4aa8ff; color:#4aa8ff; background:rgba(74,168,255,.1); }
   body[data-style="flipclock"] .custom-row input{ background:#101418; border-color:#1c232b; color:#fff; }
   body[data-style="flipclock"] .digits{ gap:8px; }
   body[data-style="flipclock"] .unit{ perspective:300px; }
@@ -514,12 +521,13 @@
 
   <div id="pomoSetupView">
     <p style="font-size:12px; color:var(--muted); margin:-10px 0 10px; text-align:start;">مدة التركيز</p>
-    <div class="presets">
+    <div class="presets" id="pomoWorkPresets">
       <button class="preset-btn" onclick="pickPomoWork(15, this)">15 د</button>
       <button class="preset-btn active" onclick="pickPomoWork(25, this)">25 د</button>
       <button class="preset-btn" onclick="pickPomoWork(35, this)">35 د</button>
-      <button class="preset-btn" onclick="pickPomoWorkOpen(this)">مفتوح</button>
+      <button class="preset-btn" onclick="pickPomoWork(45, this)">45 د</button>
     </div>
+    <button class="preset-btn-open" id="pomoWorkOpenBtn" onclick="pickPomoWorkOpen(this)">مفتوح</button>
     <div class="custom-row hidden" id="pomoWorkCustomRow">
       <input type="time" id="pomoWorkCustomTime" step="60">
     </div>
@@ -972,17 +980,21 @@ let pomoHandle = null;
 let pomoWakeLock = null;
 let pomoWorkIsCustom = false;
 
+function clearPomoWorkActive(){
+  document.getElementById("pomoWorkPresets").querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
+  document.getElementById("pomoWorkOpenBtn").classList.remove("active");
+}
 window.pickPomoWork = function(minutes, el){
   pomoWorkMinutes = minutes;
   pomoWorkIsCustom = false;
   document.getElementById("pomoWorkCustomRow").classList.add("hidden");
-  el.parentElement.querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
+  clearPomoWorkActive();
   el.classList.add("active");
 };
 window.pickPomoWorkOpen = function(el){
   pomoWorkIsCustom = true;
   document.getElementById("pomoWorkCustomRow").classList.remove("hidden");
-  el.parentElement.querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
+  clearPomoWorkActive();
   el.classList.add("active");
 };
 window.pickPomoBreak = function(minutes, el){
