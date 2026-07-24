@@ -91,6 +91,25 @@
   button.primary:hover{background:#ffc633;}
   button.primary:disabled{opacity:.5; cursor:not-allowed;}
 
+  button.secondary{
+    width:100%; padding:13px; border:1px solid var(--border); border-radius:10px;
+    background:var(--panel-2); color:var(--muted); font-weight:900; font-size:14px; cursor:pointer;
+    font-family:'Tajawal',sans-serif;
+  }
+
+  /* ================= نافذة تنبيه/تأكيد بتصميم العبة ================= */
+  .overlay{
+    position:fixed; inset:0; background:rgba(3,8,14,.75); display:none; align-items:center;
+    justify-content:center; padding:20px; z-index:30;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    width:100%; max-width:340px; background:var(--panel); border:1px solid var(--border);
+    border-radius:18px; padding:24px 22px; text-align:center;
+  }
+  .app-dialog-actions{display:flex; gap:10px; margin-top:6px;}
+  .app-dialog-actions button{flex:1;}
+
   #status, #challengeStatusMsg, #themeSaveStatus{margin-top:14px; font-size:13.5px; min-height:18px;}
   .divider{border-top:1px dashed var(--border); margin:22px 0;}
   .hint{font-size:12px; color:var(--muted); line-height:1.7;}
@@ -352,7 +371,16 @@
   </div>
 
   <div class="divider"></div>
-  <p class="hint">أي اختيار هنا يُحفظ ويُطبّق فورًا — لا حاجة لأي زر إضافي.</p>
+  <p class="hint">أي اختيار هنا يُحفظ ويُطبّق فورًا — لا حاجة لأي زر إضافي.</p></div>
+
+<div class="overlay" id="appDialogOverlay">
+  <div class="modal">
+    <p id="appDialogText" style="margin:0 0 20px; font-size:14.5px; line-height:1.7; color:#fff;"></p>
+    <div class="app-dialog-actions">
+      <button class="secondary hidden" id="appDialogCancelBtn">إلغاء</button>
+      <button class="primary" style="margin-top:0;" id="appDialogOkBtn">حسنًا</button>
+    </div>
+  </div>
 </div>
 
 </div><!-- /.page -->
@@ -374,6 +402,31 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+/* ================= نافذة تنبيه/تأكيد بتصميم العبة (بديل alert/confirm) ================= */
+let appDialogResolver = null;
+function appAlert(message){
+  showAppDialog(message, false);
+}
+function appConfirm(message, onConfirmed){
+  showAppDialog(message, true).then(ok => { if (ok) onConfirmed(); });
+}
+function showAppDialog(message, isConfirm){
+  return new Promise(resolve => {
+    document.getElementById("appDialogText").innerText = message;
+    document.getElementById("appDialogCancelBtn").classList.toggle("hidden", !isConfirm);
+    document.getElementById("appDialogOverlay").classList.add("show");
+    appDialogResolver = resolve;
+  });
+}
+document.getElementById("appDialogOkBtn").addEventListener("click", () => {
+  document.getElementById("appDialogOverlay").classList.remove("show");
+  if (appDialogResolver){ const r = appDialogResolver; appDialogResolver = null; r(true); }
+});
+document.getElementById("appDialogCancelBtn").addEventListener("click", () => {
+  document.getElementById("appDialogOverlay").classList.remove("show");
+  if (appDialogResolver){ const r = appDialogResolver; appDialogResolver = null; r(false); }
+});
 const auth = firebase.auth();
 
 let currentMode = "down";
@@ -727,18 +780,19 @@ window.startChallenge = function(){
 };
 
 window.stopChallenge = function(){
-  if (!confirm("متأكد إنك تبي توقف التحدي الحالي؟")) return;
-  const msg = document.getElementById("challengeStatusMsg");
-  db.ref('challenge/active').set(false)
-    .then(() => {
-      msg.style.color = "#8b8d99";
-      msg.innerText = "تم إيقاف التحدي.";
-      loadChallengeState();
-    })
-    .catch((error) => {
-      msg.style.color = "#ff3b30";
-      msg.innerText = "فشل الإيقاف: " + error.message;
-    });
+  appConfirm("متأكد إنك تبي توقف التحدي الحالي؟", () => {
+    const msg = document.getElementById("challengeStatusMsg");
+    db.ref('challenge/active').set(false)
+      .then(() => {
+        msg.style.color = "#8b8d99";
+        msg.innerText = "تم إيقاف التحدي.";
+        loadChallengeState();
+      })
+      .catch((error) => {
+        msg.style.color = "#ff3b30";
+        msg.innerText = "فشل الإيقاف: " + error.message;
+      });
+  });
 };
 
 function loadStudyChallengeState(){
@@ -787,26 +841,26 @@ window.stopStudyChallenge = function(){
 
 window.resetWeeklyLeaderboard = function(){
   const msg = document.getElementById("weeklyResetStatusMsg");
-  if (!confirm("تصفير رصيد \"هذا الأسبوع\" لجميع الطلاب؟ رصيدهم الكلي (الإجمالي) ما راح يتأثر إطلاقًا.")) return;
+  appConfirm("تصفير رصيد \"هذا الأسبوع\" لجميع الطلاب؟ رصيدهم الكلي (الإجمالي) ما راح يتأثر إطلاقًا.", () => {
+    msg.style.color = "#8b8d99";
+    msg.innerText = "جارٍ التصفير...";
 
-  msg.style.color = "#8b8d99";
-  msg.innerText = "جارٍ التصفير...";
+    const currentWeekIndex = Math.floor(Date.now() / 604800000);
 
-  const currentWeekIndex = Math.floor(Date.now() / 604800000);
-
-  db.ref('studyLeaderboard').once('value').then(snapshot => {
-    const updates = {};
-    snapshot.forEach(child => {
-      updates[child.key + '/weekIndex'] = currentWeekIndex;
-      updates[child.key + '/weeklySeconds'] = 0;
+    db.ref('studyLeaderboard').once('value').then(snapshot => {
+      const updates = {};
+      snapshot.forEach(child => {
+        updates[child.key + '/weekIndex'] = currentWeekIndex;
+        updates[child.key + '/weeklySeconds'] = 0;
+      });
+      return db.ref('studyLeaderboard').update(updates);
+    }).then(() => {
+      msg.style.color = "#2ecc71";
+      msg.innerText = "تم تصفير الترتيب الأسبوعي لجميع الطلاب بنجاح.";
+    }).catch((error) => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "فشل التصفير: " + error.message;
     });
-    return db.ref('studyLeaderboard').update(updates);
-  }).then(() => {
-    msg.style.color = "#2ecc71";
-    msg.innerText = "تم تصفير الترتيب الأسبوعي لجميع الطلاب بنجاح.";
-  }).catch((error) => {
-    msg.style.color = "#ff3b30";
-    msg.innerText = "فشل التصفير: " + error.message;
   });
 };
 
