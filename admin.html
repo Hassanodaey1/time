@@ -119,18 +119,30 @@
 
   /* ===== لوحة رئيسية (Hub) ===== */
   .hub-btn{
-    display:flex; align-items:center; gap:14px; width:100%; padding:18px 16px; margin-top:12px;
-    border-radius:14px; border:1px solid var(--border); background:var(--panel-2); color:#fff;
+    display:flex; align-items:center; gap:15px; width:100%; padding:17px 16px; margin-top:12px;
+    border-radius:16px; border:1px solid var(--border); background:var(--panel-2); color:#fff;
     font-family:'Tajawal',sans-serif; cursor:pointer; text-align:start;
-    transition:border-color .2s, transform .1s;
+    transition:border-color .2s, transform .1s, box-shadow .2s;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
   }
   .hub-btn:first-of-type{margin-top:6px;}
   .hub-btn:hover{border-color:var(--amber);}
-  .hub-btn:active{transform:scale(.98);}
-  .hub-btn .icon{font-size:26px; flex-shrink:0; line-height:1;}
+  .hub-btn:active{transform:scale(.97);}
+  .hub-btn .icon{
+    width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    font-size:22px; flex-shrink:0; line-height:1; background:rgba(255,180,0,.12); color:var(--amber);
+    box-shadow:inset 0 0 0 1px rgba(255,180,0,.15);
+  }
+  .hub-btn.challenge .icon{background:rgba(255,59,48,.14); color:var(--red); box-shadow:inset 0 0 0 1px rgba(255,59,48,.18);}
+  .hub-btn.challenge:hover{border-color:var(--red);}
+  .hub-btn.study .icon{background:rgba(72,202,228,.14); color:#48cae4; box-shadow:inset 0 0 0 1px rgba(72,202,228,.18);}
+  .hub-btn.study:hover{border-color:#48cae4;}
+  .hub-btn.themes .icon{background:rgba(167,139,250,.14); color:#a78bfa; box-shadow:inset 0 0 0 1px rgba(167,139,250,.18);}
+  .hub-btn.themes:hover{border-color:#a78bfa;}
   .hub-btn .txt{flex:1;}
   .hub-btn .txt b{display:block; font-size:15.5px; font-weight:900;}
   .hub-btn .txt small{display:block; font-size:12px; color:var(--muted); margin-top:3px; font-weight:400;}
+  .hub-btn .arrow{font-size:17px; color:var(--muted); flex-shrink:0; opacity:.6;}
 
   #logoutBtnHub{
     display:block; width:100%; margin-top:28px; padding:14px; border-radius:10px;
@@ -177,21 +189,25 @@
   <button type="button" class="hub-btn" onclick="showPanel('main')">
     <span class="icon">⏱️</span>
     <span class="txt"><b>المؤقت الرئيسي</b><small>ضبط وقت العد التنازلي/التصاعدي وعنوان الحدث</small></span>
+    <span class="arrow">‹</span>
   </button>
 
-  <button type="button" class="hub-btn" onclick="showPanel('challenge')">
+  <button type="button" class="hub-btn challenge" onclick="showPanel('challenge')">
     <span class="icon">🔥</span>
     <span class="txt"><b>تحدي الأستاذ</b><small>بدء أو إيقاف مؤقت التحدي</small></span>
+    <span class="arrow">‹</span>
   </button>
 
-  <button type="button" class="hub-btn" onclick="showPanel('studyChallenge')">
+  <button type="button" class="hub-btn study" onclick="showPanel('studyChallenge')">
     <span class="icon">📚</span>
     <span class="txt"><b>تحدي الدراسة</b><small>تفعيل أو تعطيل زر تحدي الدراسة في الصفحة الرئيسية</small></span>
+    <span class="arrow">‹</span>
   </button>
 
-  <button type="button" class="hub-btn" onclick="showPanel('themesPatterns')">
+  <button type="button" class="hub-btn themes" onclick="showPanel('themesPatterns')">
     <span class="icon">🎨</span>
     <span class="txt"><b>الثيمات والأنماط</b><small>لون الأرقام لكل المؤقتات + شكل كل مؤقت على حدة</small></span>
+    <span class="arrow">‹</span>
   </button>
 
   <button id="logoutBtnHub" onclick="doLogout()">تسجيل الخروج</button>
