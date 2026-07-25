@@ -17,7 +17,7 @@
     margin:0; background:var(--bg); color:#f2f4f8; font-family:'Tajawal',sans-serif;
     display:flex; align-items:center; justify-content:center; padding:24px;
     background-image:
-      radial-gradient(circle at 15% 15%, rgba(255,180,0,0.05), transparent 42%),
+      radial-gradient(circle at 15% 15%, rgba(255,180,0,0.06), transparent 42%),
       radial-gradient(circle at 85% 85%, rgba(255,59,48,0.05), transparent 42%);
   }
   .wrap{width:100%; max-width:460px;}
@@ -25,59 +25,67 @@
     text-transform:uppercase; text-align:center; margin:0 0 6px; }
   h1{text-align:center; margin:0 0 28px; font-size:22px; font-weight:900;}
 
-  .item{
-    display:flex; align-items:center; gap:14px; background:var(--panel); border:1px solid var(--border);
-    border-radius:16px; padding:18px 18px; margin-bottom:14px; text-decoration:none; color:#fff;
-    transition:border-color .2s ease, transform .15s ease;
+  /* ================= شبكة البينتو (Bento Grid) ================= */
+  .bento{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;}
+  .bento-card{
+    position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:9px; background:var(--panel); border:1px solid var(--border); border-radius:22px;
+    padding:22px 12px; text-decoration:none; color:#fff; text-align:center; cursor:pointer;
+    transition:border-color .2s ease, transform .15s ease, box-shadow .2s ease;
   }
-  .item:active{transform:scale(0.98);}
-  .item .icon{
-    width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center;
-    font-size:22px; flex-shrink:0;
+  .bento-card:active{transform:scale(0.97);}
+  .bento-card.hidden-card{display:none !important;}
+
+  .bento-icon{
+    width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+    font-size:26px; flex-shrink:0;
   }
-  .item .txt{flex:1;}
-  .item .title{font-weight:900; font-size:16px; margin:0 0 3px; color:#fff;}
-  .item .desc{font-size:12.5px; color:var(--muted); margin:0;}
-  .item .status{font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1px; padding:4px 9px; border-radius:20px; flex-shrink:0;}
+  .bento-title{font-weight:900; font-size:14.5px; margin:0; line-height:1.3;}
+  .bento-desc{font-size:11px; color:var(--muted); margin:0; line-height:1.5;}
+  .bento-badge{
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.5px; padding:3px 10px;
+    border-radius:20px;
+  }
 
-  .item.annual .icon{background:rgba(255,180,0,.12); color:var(--amber);}
-  .item.annual:hover{border-color:var(--amber);}
+  /* البطاقة الرئيسية (Hero) — عريضة وأفقية */
+  .bento-card.hero{
+    grid-column:1 / -1; flex-direction:row; justify-content:flex-start; text-align:start; padding:20px 20px;
+  }
+  .bento-card.hero .bento-icon{width:56px; height:56px; font-size:28px;}
+  .bento-card.hero .bento-txt{flex:1; display:flex; flex-direction:column; gap:3px;}
+  .bento-card.hero .bento-title{font-size:16.5px;}
+  .bento-card.hero .bento-desc{font-size:12px;}
+  .bento-card.hero .bento-arrow{font-size:18px; color:var(--muted); flex-shrink:0;}
 
-  .item.challenge .icon{background:rgba(255,59,48,.12); color:var(--red);}
-  .item.challenge.active{border-color:var(--green);}
-  .item.challenge.active .status{background:rgba(46,204,113,.15); color:var(--green);}
-  .item.challenge.inactive{opacity:.55; pointer-events:none;}
-  .item.challenge.inactive .status{background:rgba(125,134,152,.15); color:var(--muted);}
+  .bento-card.annual .bento-icon{background:rgba(255,180,0,.12); color:var(--amber);}
+  .bento-card.annual:hover{border-color:var(--amber);}
 
-  .item.student .icon{background:rgba(72,202,228,.12); color:#48cae4;}
-  .item.student:hover{border-color:#48cae4;}
+  .bento-card.challenge .bento-icon{background:rgba(255,59,48,.12); color:var(--red);}
+  .bento-card.challenge.active{border-color:var(--green);}
+  .bento-card.challenge.active .bento-badge{background:rgba(46,204,113,.15); color:var(--green);}
+  .bento-card.challenge.inactive{opacity:.5; pointer-events:none;}
+  .bento-card.challenge.inactive .bento-badge{background:rgba(125,134,152,.15); color:var(--muted);}
 
-  .item.study .icon{background:rgba(255,180,0,.12); color:var(--amber);}
-  .item.study:hover{border-color:var(--amber);}
+  .bento-card.student .bento-icon{background:rgba(72,202,228,.14); color:#48cae4;}
+  .bento-card.student:hover{border-color:#48cae4;}
 
-  .item.water{cursor:pointer;}
-  .item.water .icon{background:rgba(72,202,228,.12); color:#48cae4;}
+  .bento-card.study .bento-icon{background:rgba(255,180,0,.12); color:var(--amber);}
+  .bento-card.study:hover{border-color:var(--amber);}
 
-  .loading{text-align:center; color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace; margin-bottom:14px;}
+  .bento-card.water .bento-icon{background:rgba(72,202,228,.12); color:#48cae4;}
+  .bento-card.water.on{border-color:#48cae4;}
+  .bento-card.water .bento-badge{background:rgba(125,134,152,.15); color:var(--muted);}
+  .bento-card.water.on .bento-badge{background:rgba(72,202,228,.15); color:#48cae4;}
+
+  .loading{text-align:center; color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace; margin-bottom:10px;}
 
   /* ================= تذكير شرب الماء ================= */
   .info-btn{
-    width:26px; height:26px; border-radius:50%; border:1px solid var(--border); background:#0d1420;
-    color:var(--muted); font-size:13px; font-weight:900; display:flex; align-items:center; justify-content:center;
-    cursor:pointer; flex-shrink:0; font-family:'Tajawal',sans-serif;
+    position:absolute; top:10px; inset-inline-start:10px; width:24px; height:24px; border-radius:50%;
+    border:1px solid var(--border); background:#0d1420; color:var(--muted); font-size:12px; font-weight:900;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-family:'Tajawal',sans-serif;
   }
   .info-btn:active{transform:scale(0.92);}
-
-  .water-toggle{
-    width:42px; height:24px; border-radius:20px; background:#0d1420; border:1px solid var(--border);
-    position:relative; flex-shrink:0; cursor:pointer; transition:background .2s ease;
-  }
-  .water-toggle::after{
-    content:""; position:absolute; top:2px; inset-inline-start:2px; width:18px; height:18px;
-    border-radius:50%; background:var(--muted); transition:inset-inline-start .2s ease, background .2s ease;
-  }
-  .water-toggle.on{background:rgba(72,202,228,.18); border-color:#48cae4;}
-  .water-toggle.on::after{background:#48cae4; inset-inline-start:20px;}
 
   .overlay{
     position:fixed; inset:0; background:rgba(3,8,14,.75); display:none; align-items:center;
@@ -128,49 +136,41 @@
   <p class="eyebrow">مركز المؤقتات</p>
   <h1>اختر المؤقت</h1>
 
-  <a href="display.html" class="item annual">
-    <span class="icon">📅</span>
-    <span class="txt">
-      <p class="title">المؤقت الرئيسي</p>
-      <p class="desc">العد السنوي للقناة</p>
-    </span>
-  </a>
-
   <p class="loading" id="challengeLoading">جارٍ التحقق من حالة التحدي...</p>
-  <a href="challenge-timer.html" class="item challenge hidden" id="challengeItem" style="display:none;">
-    <span class="icon">🔥</span>
-    <span class="txt">
-      <p class="title">تحدي الأستاذ</p>
-      <p class="desc" id="challengeDesc">تحدٍ خاص من الأستاذ</p>
-    </span>
-    <span class="status" id="challengeStatus">—</span>
-  </a>
 
-  <a href="student-timer.html" class="item student">
-    <span class="icon">📚</span>
-    <span class="txt">
-      <p class="title">مؤقت الطالب</p>
-      <p class="desc">اضبط وقتك الخاص وابدأ الدراسة</p>
-    </span>
-  </a>
+  <div class="bento">
+    <a href="student-timer.html" class="bento-card hero student">
+      <span class="bento-icon">📚</span>
+      <span class="bento-txt">
+        <span class="bento-title">مؤقت الطالب</span>
+        <span class="bento-desc">اضبط وقتك الخاص وابدأ الدراسة</span>
+      </span>
+      <span class="bento-arrow">‹</span>
+    </a>
 
-  <div class="item water" onclick="toggleWaterReminder()">
-    <span class="icon">💧</span>
-    <span class="txt">
-      <p class="title">تذكير شرب الماء</p>
-      <p class="desc" id="waterDesc">تنبيه دوري يذكرك تشرب موية — متوقف</p>
-    </span>
-    <button class="info-btn" onclick="openWaterInfo(event)" aria-label="فوائد شرب الماء">!</button>
-    <span class="water-toggle" id="waterToggleSwitch"></span>
+    <a href="display.html" class="bento-card annual">
+      <span class="bento-icon">📅</span>
+      <span class="bento-title">المؤقت الرئيسي</span>
+    </a>
+
+    <a href="challenge-timer.html" class="bento-card challenge hidden-card" id="challengeItem">
+      <span class="bento-icon">🔥</span>
+      <span class="bento-title">تحدي الأستاذ</span>
+      <span class="bento-badge" id="challengeStatus">—</span>
+    </a>
+
+    <a href="study-challenge.html" class="bento-card study hidden-card" id="studyItem">
+      <span class="bento-icon">🏆</span>
+      <span class="bento-title">تحدي الدراسة</span>
+    </a>
+
+    <div class="bento-card water" id="waterCard" onclick="toggleWaterReminder()">
+      <button class="info-btn" onclick="openWaterInfo(event)" aria-label="فوائد شرب الماء">!</button>
+      <span class="bento-icon">💧</span>
+      <span class="bento-title">تذكير الماء</span>
+      <span class="bento-badge" id="waterToggleSwitch">متوقف</span>
+    </div>
   </div>
-
-  <a href="study-challenge.html" class="item study" id="studyItem" style="display:none;">
-    <span class="icon">🏆</span>
-    <span class="txt">
-      <p class="title">تحدي الدراسة</p>
-      <p class="desc">سجّل بياناتك وتنافس على أطول مدة دراسة</p>
-    </span>
-  </a>
 
   <p class="footer-credit">© <span>Hassan Odaey</span> — جميع الحقوق محفوظة</p>
 </div>
@@ -227,9 +227,8 @@ db.ref('challenge').on('value', (snapshot) => {
   const item = document.getElementById("challengeItem");
   const loading = document.getElementById("challengeLoading");
   const statusEl = document.getElementById("challengeStatus");
-  const descEl = document.getElementById("challengeDesc");
   loading.style.display = "none";
-  item.style.display = "flex";
+  item.classList.remove("hidden-card");
 
   const now = Date.now();
   const isRunning = data && data.active && data.startTime && data.durationMs &&
@@ -239,17 +238,15 @@ db.ref('challenge').on('value', (snapshot) => {
     item.classList.add("active");
     item.classList.remove("inactive");
     statusEl.innerText = "مفعّل";
-    descEl.innerText = "التحدي شغّال الآن — اضغط للدخول";
   } else {
     item.classList.add("inactive");
     item.classList.remove("active");
     statusEl.innerText = "غير مفعّل";
-    descEl.innerText = "لا يوجد تحدي حاليًا";
   }
 });
 
 db.ref('studyChallengeSettings/active').on('value', (snapshot) => {
-  document.getElementById("studyItem").style.display = snapshot.val() ? "flex" : "none";
+  document.getElementById("studyItem").classList.toggle("hidden-card", !snapshot.val());
 });
 </script>
 
@@ -261,14 +258,14 @@ let waterEnabled = localStorage.getItem(WATER_KEY) === "1";
 let waterHandle = null;
 
 function updateWaterUI(){
-  const desc = document.getElementById("waterDesc");
-  const sw = document.getElementById("waterToggleSwitch");
+  const badge = document.getElementById("waterToggleSwitch");
+  const card = document.getElementById("waterCard");
   if (waterEnabled){
-    desc.innerText = "تنبيه كل 45 دقيقة يذكرك تشرب موية — مفعّل";
-    sw.classList.add("on");
+    badge.innerText = "مفعّل • كل 45 د";
+    card.classList.add("on");
   } else {
-    desc.innerText = "تنبيه دوري يذكرك تشرب موية — متوقف";
-    sw.classList.remove("on");
+    badge.innerText = "متوقف";
+    card.classList.remove("on");
   }
 }
 
