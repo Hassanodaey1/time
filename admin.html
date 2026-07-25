@@ -431,10 +431,14 @@ const auth = firebase.auth();
 
 let currentMode = "down";
 let hasSavedTimer = false;
+let originalTargetTime = null;
+let originalUpdatedAt = null;
 let currentTheme = "broadcast";
 let currentStyle = "default";
 let currentChallengeMode = "down";
 let hasRunningChallenge = false;
+let originalDurationMs = null;
+let originalChallengeStartTime = null;
 let currentChallengeStyle = "default";
 let currentStudentStyle = "default";
 let currentStudyChallengeStyle = "default";
@@ -713,6 +717,8 @@ function loadCurrentState(){
       }
       setMode(data.mode === "up" ? "up" : "down");
       hasSavedTimer = !!data.targetTime;
+      originalTargetTime = data.targetTime || null;
+      originalUpdatedAt = data.updatedAt || null;
       setStyle(STYLE_IDS.includes(data.style) ? data.style : "default", false);
       document.getElementById("titleInput").value = data.title || "";
       if (data.targetTime){
@@ -761,6 +767,8 @@ function loadChallengeState(){
       const now = Date.now();
       const isRunning = data.active && data.startTime && data.durationMs && (now < data.startTime + data.durationMs);
       hasRunningChallenge = !!isRunning;
+      originalDurationMs = isRunning ? data.durationMs : null;
+      originalChallengeStartTime = isRunning ? data.startTime : null;
       if (isRunning){
         const remainingMin = Math.ceil((data.startTime + data.durationMs - now) / 60000);
         msg.style.color = "#2ecc71";
@@ -796,12 +804,19 @@ window.startChallenge = function(){
     return;
   }
 
+  // إذا نفس المدة المحفوظة والتحدي شغّال أصلاً (يعني بس بدّل النمط أو اللون وضغط
+  // "بدء التحدي" مرة ثانية)، نحافظ على وقت البداية القديم بدل ما نصفره — عشان
+  // الوقت المنقضي/المتبقي يضل صحيح بالضبط بدل ما يبدأ من جديد.
+  const durationMs = minutes * 60000;
+  const isSameDuration = hasRunningChallenge && (originalDurationMs === durationMs) && originalChallengeStartTime;
+  const newStartTime = isSameDuration ? originalChallengeStartTime : Date.now();
+
   db.ref('challenge').set({
     active: true,
     title: title,
     mode: currentChallengeMode,
-    startTime: Date.now(),
-    durationMs: minutes * 60000,
+    startTime: newStartTime,
+    durationMs: durationMs,
     colorStart: colorStart,
     colorEnd: colorEnd,
     style: currentChallengeStyle
@@ -921,11 +936,17 @@ window.updateTargetTime = function(){
     return;
   }
 
+  // إذا نفس الوقت المستهدف المحفوظ سابقًا (المستخدم بدّل النمط أو العنوان بس)،
+  // نحافظ على نفس نقطة البداية القديمة بدل ما نصفرها — عشان الوقت المنقضي/المتبقي
+  // يضل صحيح بالضبط بدل ما يبدأ من جديد.
+  const isSameTarget = (originalTargetTime !== null) && (targetTimestamp === originalTargetTime) && originalUpdatedAt;
+  const newUpdatedAt = isSameTarget ? originalUpdatedAt : Date.now();
+
   db.ref('countdown').update({
     mode: currentMode,
     targetTime: targetTimestamp,
     title: title,
-    updatedAt: Date.now()
+    updatedAt: newUpdatedAt
   })
     .then(() => {
       statusDiv.style.color = "#2ecc71";
