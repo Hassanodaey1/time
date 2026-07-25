@@ -208,8 +208,8 @@
 
   <label>نوع المؤقت</label>
   <div class="modes">
-    <button type="button" class="mode-btn active" id="btnDown" onclick="setMode('down')">⏳ تنازلي (حتى وقت)</button>
-    <button type="button" class="mode-btn" id="btnUp" onclick="setMode('up')">⏱️ تصاعدي (منذ وقت)</button>
+    <button type="button" class="mode-btn active" id="btnDown" onclick="setMode('down', true)">⏳ تنازلي (حتى وقت)</button>
+    <button type="button" class="mode-btn" id="btnUp" onclick="setMode('up', true)">⏱️ تصاعدي (منذ وقت)</button>
   </div>
 
   <label id="dtLabel">وقت انتهاء الحدث</label>
@@ -236,8 +236,8 @@
 
   <label>نوع العد</label>
   <div class="modes">
-    <button type="button" class="mode-btn active" id="chBtnDown" onclick="setChallengeMode('down')">⏳ تنازلي (يبدأ من المدة وينقص)</button>
-    <button type="button" class="mode-btn" id="chBtnUp" onclick="setChallengeMode('up')">⏱️ تصاعدي (يبدأ من صفر ويزيد)</button>
+    <button type="button" class="mode-btn active" id="chBtnDown" onclick="setChallengeMode('down', true)">⏳ تنازلي (يبدأ من المدة وينقص)</button>
+    <button type="button" class="mode-btn" id="chBtnUp" onclick="setChallengeMode('up', true)">⏱️ تصاعدي (يبدأ من صفر ويزيد)</button>
   </div>
 
   <label>تدرّج اللون خلال التحدي</label>
@@ -430,9 +430,11 @@ document.getElementById("appDialogCancelBtn").addEventListener("click", () => {
 const auth = firebase.auth();
 
 let currentMode = "down";
+let hasSavedTimer = false;
 let currentTheme = "broadcast";
 let currentStyle = "default";
 let currentChallengeMode = "down";
+let hasRunningChallenge = false;
 let currentChallengeStyle = "default";
 let currentStudentStyle = "default";
 let currentStudyChallengeStyle = "default";
@@ -513,10 +515,27 @@ function saveMainStyle(){
     });
 }
 
-window.setChallengeMode = function(mode){
+window.setChallengeMode = function(mode, isUserClick){
+  const changed = currentChallengeMode !== mode;
   currentChallengeMode = mode;
   document.getElementById("chBtnDown").classList.toggle("active", mode === "down");
   document.getElementById("chBtnUp").classList.toggle("active", mode === "up");
+
+  // نفس مبدأ المؤقت الرئيسي: تبديل النمط فقط بدون لمس startTime/durationMs
+  // يحافظ تلقائيًا على الوقت المنقضي/المتبقي بالضبط، لأن التنازلي والتصاعدي
+  // مبنيين على نفس نقطة البداية ونفس المدة.
+  if (isUserClick && changed && hasRunningChallenge){
+    const msg = document.getElementById("challengeStatusMsg");
+    db.ref('challenge').update({ mode: currentChallengeMode })
+      .then(() => {
+        msg.style.color = "#2ecc71";
+        msg.innerText = "تم تبديل نمط عرض التحدي فورًا مع الحفاظ الكامل على الوقت المنقضي/المتبقي.";
+      })
+      .catch((error) => {
+        msg.style.color = "#ff3b30";
+        msg.innerText = "فشل تبديل النمط: " + error.message;
+      });
+  }
 };
 
 window.setChallengeStyle = function(style, save){
@@ -611,11 +630,28 @@ function loadStudyChallengeStyleState(){
     .catch(() => {});
 }
 
-window.setMode = function(mode){
+window.setMode = function(mode, isUserClick){
+  const changed = currentMode !== mode;
   currentMode = mode;
   document.getElementById("btnDown").classList.toggle("active", mode === "down");
   document.getElementById("btnUp").classList.toggle("active", mode === "up");
   document.getElementById("dtLabel").innerText = mode === "down" ? "وقت انتهاء الحدث" : "الوقت الذي سيصل إليه العد التصاعدي";
+
+  // إذا فيه مؤقت شغّال فعليًا وضغط المستخدم زر التبديل: نبدّل نمط العرض فورًا
+  // بدون لمس targetTime أو وقت البداية إطلاقًا — هذا يحافظ تلقائيًا على الوقت
+  // المنقضي/المتبقي بالضبط زي ما هو، لأن العد التنازلي والتصاعدي مبنيين على نفس النقطتين.
+  if (isUserClick && changed && hasSavedTimer){
+    const statusDiv = document.getElementById("status");
+    db.ref('countdown').update({ mode: currentMode })
+      .then(() => {
+        statusDiv.style.color = "#2ecc71";
+        statusDiv.innerText = "تم تبديل نمط العرض فورًا مع الحفاظ الكامل على الوقت المنقضي/المتبقي.";
+      })
+      .catch((error) => {
+        statusDiv.style.color = "#ff3b30";
+        statusDiv.innerText = "فشل تبديل النمط: " + error.message;
+      });
+  }
 };
 
 window.doLogin = function(){
@@ -676,6 +712,7 @@ function loadCurrentState(){
         return;
       }
       setMode(data.mode === "up" ? "up" : "down");
+      hasSavedTimer = !!data.targetTime;
       setStyle(STYLE_IDS.includes(data.style) ? data.style : "default", false);
       document.getElementById("titleInput").value = data.title || "";
       if (data.targetTime){
@@ -723,6 +760,7 @@ function loadChallengeState(){
 
       const now = Date.now();
       const isRunning = data.active && data.startTime && data.durationMs && (now < data.startTime + data.durationMs);
+      hasRunningChallenge = !!isRunning;
       if (isRunning){
         const remainingMin = Math.ceil((data.startTime + data.durationMs - now) / 60000);
         msg.style.color = "#2ecc71";
