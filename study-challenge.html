@@ -60,6 +60,41 @@
     color:#fff; font-family:'Tajawal',sans-serif; font-size:14.5px;
   }
 
+  /* ================= نافذة تخصيص الوقت بتصميم اللعبة ================= */
+  .time-picker-btn{
+    display:flex; align-items:center; gap:14px; width:100%; background:#16161c; border:1px solid var(--border);
+    border-radius:16px; padding:15px 16px; cursor:pointer; text-align:start; margin-bottom:20px;
+    transition:border-color .2s ease, transform .15s ease;
+  }
+  .time-picker-btn:active{transform:scale(0.98);}
+  .time-picker-btn:hover{border-color:var(--accent);}
+  .time-picker-btn .tp-icon{
+    width:44px; height:44px; border-radius:13px; display:flex; align-items:center; justify-content:center;
+    font-size:20px; flex-shrink:0; background:rgba(255,180,0,.12); color:var(--accent);
+    box-shadow:inset 0 0 0 1px rgba(255,180,0,.15);
+  }
+  .time-picker-btn .tp-text{flex:1; min-width:0;}
+  .time-picker-btn .tp-label{display:block; font-weight:900; font-size:14px; color:#fff; margin-bottom:2px;}
+  .time-picker-btn .tp-value{display:block; font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+  .time-picker-btn .tp-value.set{color:var(--accent); font-weight:700;}
+  .time-picker-btn .arrow{font-size:17px; color:var(--muted); flex-shrink:0; opacity:.6;}
+
+  .tp-modal h2{margin:0 0 22px; font-size:16px; font-weight:900; text-align:center; color:#fff;}
+  .tp-steppers{display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:26px;}
+  .tp-stepper{display:flex; flex-direction:column; align-items:center; gap:10px;}
+  .tp-btn{
+    width:38px; height:38px; border-radius:50%; border:1px solid var(--border); background:#16161c;
+    color:var(--accent); font-size:20px; font-weight:900; cursor:pointer; display:flex; align-items:center;
+    justify-content:center; line-height:1; font-family:'Tajawal',sans-serif;
+  }
+  .tp-btn:active{transform:scale(0.9);}
+  .tp-num{
+    font-family:'JetBrains Mono',monospace; font-size:34px; font-weight:900; color:#fff; min-width:70px;
+    text-align:center; background:#16161c; border:1px solid var(--border); border-radius:12px; padding:8px 4px;
+  }
+  .tp-unit{font-size:11px; color:var(--muted);}
+  .tp-sep{font-family:'JetBrains Mono',monospace; font-size:30px; font-weight:900; color:var(--muted); margin-top:-24px;}
+
   .digits{display:flex; justify-content:center; gap:10px; margin-bottom:22px;}
   .unit{display:flex; flex-direction:column; align-items:center; gap:6px;}
   .flip{
@@ -452,10 +487,16 @@
         <button class="preset-btn" onclick="pickPreset(25, this)">25 د</button>
         <button class="preset-btn" onclick="pickPreset(45, this)">45 د</button>
       </div>
-      <div class="custom-row">
-        <input type="time" id="customTime" step="60">
-      </div>
-      <p style="font-size:11.5px; color:var(--muted); margin:-14px 0 20px;">أو حدد وقتًا مخصصًا (ساعة : دقيقة) — بحد أقصى 23:59</p>
+      <button type="button" class="time-picker-btn" onclick="openTimePicker('customTime','customTimeDisplay')">
+        <span class="tp-icon">⏰</span>
+        <span class="tp-text">
+          <span class="tp-label">تخصيص الوقت</span>
+          <span class="tp-value" id="customTimeDisplay">اضغط لتحديد الساعة والدقيقة</span>
+        </span>
+        <span class="arrow">‹</span>
+      </button>
+      <input type="hidden" id="customTime" value="">
+      <p style="font-size:11.5px; color:var(--muted); margin:-14px 0 20px;">أو اختر مدة جاهزة فوق</p>
       <button class="primary" onclick="startTimer()">▶️ ابدأ الدراسة</button>
     </div>
 
@@ -493,6 +534,31 @@
     <h1>غير مفعّل حاليًا</h1>
     <p class="greeting">لا يوجد تحدي دراسة مفعّل من الأستاذ في الوقت الحالي 🙂</p>
     <a href="index.html" style="display:inline-block; margin-top:10px; color:var(--accent); font-weight:700; text-decoration:none; font-size:13px;">‹ رجوع للصفحة الرئيسية</a>
+  </div>
+</div>
+
+<div class="overlay" id="timePickerOverlay">
+  <div class="modal tp-modal" style="max-width:340px;">
+    <h2>⏰ حدد وقت دراستك</h2>
+    <div class="tp-steppers">
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustPickerHour(1)">+</button>
+        <div class="tp-num" id="pickerHourNum">00</div>
+        <button type="button" class="tp-btn" onclick="adjustPickerHour(-1)">−</button>
+        <span class="tp-unit">ساعة</span>
+      </div>
+      <div class="tp-sep">:</div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustPickerMinute(1)">+</button>
+        <div class="tp-num" id="pickerMinuteNum">30</div>
+        <button type="button" class="tp-btn" onclick="adjustPickerMinute(-1)">−</button>
+        <span class="tp-unit">دقيقة</span>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="secondary" onclick="closeTimePicker()">إلغاء</button>
+      <button class="primary" style="margin-top:0;" onclick="confirmTimePicker()">تأكيد ✅</button>
+    </div>
   </div>
 </div>
 
@@ -622,6 +688,57 @@ function hideSessionNotice(){
   if (el) el.style.display = "none";
 }
 
+/* ================= نافذة تخصيص الوقت بتصميم اللعبة ================= */
+let pickerHour = 0, pickerMinute = 30;
+let pickerTargetId = "customTime";
+let pickerDisplayId = "customTimeDisplay";
+window.openTimePicker = function(targetId, displayId){
+  pickerTargetId = targetId || "customTime";
+  pickerDisplayId = displayId || "customTimeDisplay";
+  const existing = document.getElementById(pickerTargetId).value;
+  if (existing){
+    const parts = existing.split(":").map(Number);
+    if (!isNaN(parts[0]) && !isNaN(parts[1])){ pickerHour = parts[0]; pickerMinute = parts[1]; }
+  }
+  renderTimePicker();
+  document.getElementById("timePickerOverlay").classList.add("show");
+};
+window.closeTimePicker = function(){
+  document.getElementById("timePickerOverlay").classList.remove("show");
+};
+function renderTimePicker(){
+  document.getElementById("pickerHourNum").innerText = String(pickerHour).padStart(2, "0");
+  document.getElementById("pickerMinuteNum").innerText = String(pickerMinute).padStart(2, "0");
+}
+window.adjustPickerHour = function(delta){
+  pickerHour = Math.max(0, Math.min(23, pickerHour + delta));
+  renderTimePicker();
+};
+window.adjustPickerMinute = function(delta){
+  let total = pickerHour * 60 + pickerMinute + delta;
+  total = Math.max(0, Math.min(23 * 60 + 59, total));
+  pickerHour = Math.floor(total / 60);
+  pickerMinute = total % 60;
+  renderTimePicker();
+};
+window.confirmTimePicker = function(){
+  if (pickerHour === 0 && pickerMinute === 0){
+    if (typeof appAlert === "function") appAlert("حدد وقتًا أكبر من صفر");
+    else if (typeof showSessionNotice === "function") showSessionNotice("⚠️ حدد وقتًا أكبر من صفر");
+    else alert("حدد وقتًا أكبر من صفر");
+    return;
+  }
+  const hh = String(pickerHour).padStart(2, "0");
+  const mm = String(pickerMinute).padStart(2, "0");
+  const val = hh + ":" + mm;
+  document.getElementById(pickerTargetId).value = val;
+  const displayEl = document.getElementById(pickerDisplayId);
+  displayEl.innerText = val + " ساعة:دقيقة";
+  displayEl.classList.add("set");
+  document.querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
+  closeTimePicker();
+};
+
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden"){
     if (isSessionRunning() && !paused){
@@ -688,6 +805,11 @@ function setRingProgress(pct){
 window.pickPreset = function(minutes, el){
   selectedMinutes = minutes;
   document.getElementById("customTime").value = "";
+  const displayEl = document.getElementById("customTimeDisplay");
+  if (displayEl){
+    displayEl.innerText = "اضغط لتحديد الساعة والدقيقة";
+    displayEl.classList.remove("set");
+  }
   document.querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
   el.classList.add("active");
 };
