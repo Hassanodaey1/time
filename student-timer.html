@@ -709,6 +709,18 @@ let totalMs = 0;
 let paused = false;
 let timerHandle = null;
 let midAlerted = false, lastMinuteAlerted = false;
+
+/* ================= إشعارات الخلفية (تعمل حتى لو التطبيق مصغّر/الشاشة مقفلة) ================= */
+function requestNotifyPermission(){
+  if ("Notification" in window && Notification.permission === "default"){
+    Notification.requestPermission();
+  }
+}
+function notifyBackground(title, body){
+  if ("Notification" in window && Notification.permission === "granted" && document.hidden){
+    try{ new Notification(title, { body, icon: "favicon.svg" }); }catch(e){}
+  }
+}
 const baseTitle = document.title;
 
 /* ================= نافذة تنبيه/تأكيد بتصميم العبة (بديل alert/confirm) ================= */
@@ -856,6 +868,7 @@ window.startTimer = function(){
   document.getElementById("pauseBtn").innerText = "⏸️ إيقاف مؤقت";
 
   window.playTimerAlert("start");
+  requestNotifyPermission();
   setRingProgress(100);
   renderTime();
   requestWakeLock();
@@ -874,6 +887,7 @@ function step(){
     renderTime();
     setRingProgress(0);
     window.playTimerAlert("finish");
+    notifyBackground("🎉 انتهت جلسة الدراسة", "خلص وقت الدراسة اللي حددته — وقت الاستراحة!");
     document.getElementById("digitsWrap").style.display = "none";
     document.getElementById("doneMsg").style.display = "block";
     document.title = "🎉 انتهت الجلسة";
@@ -1109,10 +1123,7 @@ function fireReminder(task){
   document.getElementById("reminderOverlay").classList.add("show");
 
   if (typeof window.playTimerAlert === "function") window.playTimerAlert("finish");
-
-  if ("Notification" in window && Notification.permission === "granted" && document.hidden){
-    try{ new Notification("⏰ " + task.title, { body: task.note || "حان وقت هذي المهمة", icon: "favicon.svg" }); }catch(e){}
-  }
+  notifyBackground("⏰ " + task.title, task.note || "حان وقت هذي المهمة");
 }
 
 window.dismissReminder = function(){
@@ -1219,6 +1230,7 @@ window.startPomodoro = function(){
   }
   pomoPhase = "work";
   pomoCycleCount = 0;
+  requestNotifyPermission();
   document.getElementById("pomoSetupView").classList.add("hidden");
   document.getElementById("pomoRunningView").classList.remove("hidden");
   beginPomoPhase();
@@ -1258,6 +1270,12 @@ function advancePomoPhase(){
   } else {
     pomoPhase = "work";
   }
+  const phaseMsg = pomoPhase === "work"
+    ? ["🧠 وقت التركيز", "خلصت الاستراحة — رجعنا للتركيز!"]
+    : (pomoPhase === "longBreak"
+        ? ["🌿 استراحة طويلة", "أنهيت مجموعة دورات كاملة — قف وتمدد شوي"]
+        : ["☕ استراحة قصيرة", "خلص وقت التركيز — خذلك استراحة قصيرة"]);
+  notifyBackground(phaseMsg[0], phaseMsg[1]);
   beginPomoPhase();
 }
 
