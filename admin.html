@@ -110,6 +110,41 @@
   .app-dialog-actions{display:flex; gap:10px; margin-top:6px;}
   .app-dialog-actions button{flex:1;}
 
+  /* ================= نافذة تخصيص الوقت/المدة بتصميم اللعبة ================= */
+  .time-picker-btn{
+    display:flex; align-items:center; gap:14px; width:100%; background:var(--panel-2); border:1px solid var(--border);
+    border-radius:14px; padding:14px 15px; cursor:pointer; text-align:start; margin-top:6px;
+    transition:border-color .2s ease, transform .15s ease; font-family:'Tajawal',sans-serif;
+  }
+  .time-picker-btn:active{transform:scale(0.98);}
+  .time-picker-btn:hover{border-color:var(--amber);}
+  .time-picker-btn .tp-icon{
+    width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:19px; flex-shrink:0; background:rgba(255,180,0,.12); color:var(--amber);
+    box-shadow:inset 0 0 0 1px rgba(255,180,0,.15);
+  }
+  .time-picker-btn .tp-text{flex:1; min-width:0;}
+  .time-picker-btn .tp-label{display:block; font-weight:900; font-size:13.5px; color:#fff; margin-bottom:2px;}
+  .time-picker-btn .tp-value{display:block; font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+  .time-picker-btn .tp-value.set{color:var(--amber); font-weight:700;}
+  .time-picker-btn .arrow{font-size:16px; color:var(--muted); flex-shrink:0; opacity:.6;}
+
+  .tp-modal h2{margin:0 0 20px; font-size:16px; font-weight:900; text-align:center; color:#fff;}
+  .tp-steppers{display:flex; align-items:flex-start; justify-content:center; gap:10px; margin-bottom:24px; flex-wrap:wrap;}
+  .tp-stepper{display:flex; flex-direction:column; align-items:center; gap:8px;}
+  .tp-btn{
+    width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:var(--panel-2);
+    color:var(--amber); font-size:18px; font-weight:900; cursor:pointer; display:flex; align-items:center;
+    justify-content:center; line-height:1; font-family:'Tajawal',sans-serif;
+  }
+  .tp-btn:active{transform:scale(0.9);}
+  .tp-num{
+    font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:900; color:#fff; min-width:52px;
+    text-align:center; background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:7px 3px;
+  }
+  .tp-unit{font-size:10.5px; color:var(--muted);}
+  .tp-sep{font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:900; color:var(--muted); margin-top:8px;}
+
   #status, #challengeStatusMsg, #themeSaveStatus{margin-top:14px; font-size:13.5px; min-height:18px;}
   .divider{border-top:1px dashed var(--border); margin:22px 0;}
   .hint{font-size:12px; color:var(--muted); line-height:1.7;}
@@ -229,7 +264,16 @@
   </div>
 
   <label id="dtLabel">وقت انتهاء الحدث</label>
-  <input type="datetime-local" id="datetimePicker">
+  <button type="button" class="time-picker-btn" onclick="openDateTimePicker()">
+    <span class="tp-icon">📅</span>
+    <span class="tp-text">
+      <span class="tp-label">تخصيص التاريخ والوقت</span>
+      <span class="tp-value" id="datetimePickerDisplay">اضغط لتحديد السنة والشهر واليوم والوقت</span>
+    </span>
+    <span class="arrow">‹</span>
+  </button>
+  <input type="hidden" id="datetimePicker" value="">
+
 
   <button class="primary" onclick="updateTargetTime()">تحديث المؤقت الآن</button>
   <div id="status"></div>
@@ -247,8 +291,16 @@
   <label>عنوان التحدي</label>
   <input type="text" id="challengeTitle" placeholder="مثال: تحدي الساعة">
 
-  <label>مدة التحدي (ساعة : دقيقة، بحد أقصى 23:59)</label>
-  <input type="time" id="challengeDuration" value="01:00" step="60">
+  <label>مدة التحدي (يوم : ساعة : دقيقة)</label>
+  <button type="button" class="time-picker-btn" onclick="openDurationPicker()">
+    <span class="tp-icon">⏱️</span>
+    <span class="tp-text">
+      <span class="tp-label">تخصيص مدة التحدي</span>
+      <span class="tp-value" id="challengeDurationDisplay">اضغط لتحديد المدة</span>
+    </span>
+    <span class="arrow">‹</span>
+  </button>
+  <input type="hidden" id="challengeDuration" value="60">
 
   <label>نوع العد</label>
   <div class="modes">
@@ -395,6 +447,82 @@
     <div class="app-dialog-actions">
       <button class="secondary hidden" id="appDialogCancelBtn">إلغاء</button>
       <button class="primary" style="margin-top:0;" id="appDialogOkBtn">حسنًا</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة تخصيص مدة التحدي (يوم/ساعة/دقيقة) -->
+<div class="overlay" id="durationPickerOverlay">
+  <div class="modal tp-modal" style="max-width:360px;">
+    <h2>⏱️ حدد مدة التحدي</h2>
+    <div class="tp-steppers">
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDurDay(1)">+</button>
+        <div class="tp-num" id="durDayNum">00</div>
+        <button type="button" class="tp-btn" onclick="adjustDurDay(-1)">−</button>
+        <span class="tp-unit">يوم</span>
+      </div>
+      <div class="tp-sep">:</div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDurHour(1)">+</button>
+        <div class="tp-num" id="durHourNum">01</div>
+        <button type="button" class="tp-btn" onclick="adjustDurHour(-1)">−</button>
+        <span class="tp-unit">ساعة</span>
+      </div>
+      <div class="tp-sep">:</div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDurMinute(1)">+</button>
+        <div class="tp-num" id="durMinuteNum">00</div>
+        <button type="button" class="tp-btn" onclick="adjustDurMinute(-1)">−</button>
+        <span class="tp-unit">دقيقة</span>
+      </div>
+    </div>
+    <div class="controls" style="display:flex; gap:10px;">
+      <button class="secondary" style="flex:1;" onclick="closeDurationPicker()">إلغاء</button>
+      <button class="primary" style="flex:1; margin-top:0;" onclick="confirmDurationPicker()">تأكيد ✅</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة تخصيص التاريخ والوقت (سنة/شهر/يوم/ساعة/دقيقة) -->
+<div class="overlay" id="datetimePickerOverlay">
+  <div class="modal tp-modal" style="max-width:400px;">
+    <h2>📅 حدد التاريخ والوقت</h2>
+    <div class="tp-steppers">
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDTYear(1)">+</button>
+        <div class="tp-num" id="dtYearNum">2026</div>
+        <button type="button" class="tp-btn" onclick="adjustDTYear(-1)">−</button>
+        <span class="tp-unit">سنة</span>
+      </div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDTMonth(1)">+</button>
+        <div class="tp-num" id="dtMonthNum">01</div>
+        <button type="button" class="tp-btn" onclick="adjustDTMonth(-1)">−</button>
+        <span class="tp-unit">شهر</span>
+      </div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDTDay(1)">+</button>
+        <div class="tp-num" id="dtDayNum">01</div>
+        <button type="button" class="tp-btn" onclick="adjustDTDay(-1)">−</button>
+        <span class="tp-unit">يوم</span>
+      </div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDTHour(1)">+</button>
+        <div class="tp-num" id="dtHourNum">00</div>
+        <button type="button" class="tp-btn" onclick="adjustDTHour(-1)">−</button>
+        <span class="tp-unit">ساعة</span>
+      </div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDTMinute(1)">+</button>
+        <div class="tp-num" id="dtMinuteNum">00</div>
+        <button type="button" class="tp-btn" onclick="adjustDTMinute(-1)">−</button>
+        <span class="tp-unit">دقيقة</span>
+      </div>
+    </div>
+    <div class="controls" style="display:flex; gap:10px;">
+      <button class="secondary" style="flex:1;" onclick="closeDateTimePicker()">إلغاء</button>
+      <button class="primary" style="flex:1; margin-top:0;" onclick="confirmDateTimePicker()">تأكيد ✅</button>
     </div>
   </div>
 </div>
@@ -722,6 +850,139 @@ function setMinDatetime(){
   document.getElementById("datetimePicker").min = toLocalDatetimeInputValue(Date.now());
 }
 
+/* ================= نافذة تخصيص مدة التحدي (يوم/ساعة/دقيقة) ================= */
+let durTotalMinutes = 60;
+const DUR_MAX_MINUTES = 366 * 1440; // بحد أقصى حوالي سنة
+window.openDurationPicker = function(){
+  const existing = parseInt(document.getElementById("challengeDuration").value, 10);
+  durTotalMinutes = (!isNaN(existing) && existing > 0) ? existing : 60;
+  renderDurationPicker();
+  document.getElementById("durationPickerOverlay").classList.add("show");
+};
+window.closeDurationPicker = function(){
+  document.getElementById("durationPickerOverlay").classList.remove("show");
+};
+function renderDurationPicker(){
+  const days = Math.floor(durTotalMinutes / 1440);
+  const hours = Math.floor((durTotalMinutes % 1440) / 60);
+  const minutes = durTotalMinutes % 60;
+  document.getElementById("durDayNum").innerText = String(days).padStart(2, "0");
+  document.getElementById("durHourNum").innerText = String(hours).padStart(2, "0");
+  document.getElementById("durMinuteNum").innerText = String(minutes).padStart(2, "0");
+}
+window.adjustDurDay = function(delta){
+  durTotalMinutes = Math.max(0, Math.min(DUR_MAX_MINUTES, durTotalMinutes + delta * 1440));
+  renderDurationPicker();
+};
+window.adjustDurHour = function(delta){
+  durTotalMinutes = Math.max(0, Math.min(DUR_MAX_MINUTES, durTotalMinutes + delta * 60));
+  renderDurationPicker();
+};
+window.adjustDurMinute = function(delta){
+  durTotalMinutes = Math.max(0, Math.min(DUR_MAX_MINUTES, durTotalMinutes + delta));
+  renderDurationPicker();
+};
+window.confirmDurationPicker = function(){
+  if (durTotalMinutes <= 0){
+    appAlert("حدد مدة أكبر من صفر");
+    return;
+  }
+  document.getElementById("challengeDuration").value = String(durTotalMinutes);
+  const days = Math.floor(durTotalMinutes / 1440);
+  const hours = Math.floor((durTotalMinutes % 1440) / 60);
+  const minutes = durTotalMinutes % 60;
+  const parts = [];
+  if (days > 0) parts.push(`${days} يوم`);
+  if (hours > 0) parts.push(`${hours} ساعة`);
+  if (minutes > 0 || parts.length === 0) parts.push(`${minutes} دقيقة`);
+  const displayEl = document.getElementById("challengeDurationDisplay");
+  displayEl.innerText = parts.join(" و ");
+  displayEl.classList.add("set");
+  closeDurationPicker();
+};
+
+/* ================= نافذة تخصيص التاريخ والوقت (سنة/شهر/يوم/ساعة/دقيقة) ================= */
+let dtYear, dtMonth, dtDay, dtHour, dtMinute;
+function daysInMonth(year, month){
+  return new Date(year, month, 0).getDate();
+}
+function clampDTDay(){
+  const maxDay = daysInMonth(dtYear, dtMonth);
+  if (dtDay > maxDay) dtDay = maxDay;
+  if (dtDay < 1) dtDay = 1;
+}
+window.openDateTimePicker = function(){
+  const existing = document.getElementById("datetimePicker").value;
+  let base = new Date(Date.now() + 60 * 60000); // الافتراضي: بعد ساعة من الآن
+  if (existing){
+    const parsed = new Date(existing);
+    if (!isNaN(parsed.getTime())) base = parsed;
+  }
+  dtYear = base.getFullYear();
+  dtMonth = base.getMonth() + 1;
+  dtDay = base.getDate();
+  dtHour = base.getHours();
+  dtMinute = base.getMinutes();
+  renderDateTimePicker();
+  document.getElementById("datetimePickerOverlay").classList.add("show");
+};
+window.closeDateTimePicker = function(){
+  document.getElementById("datetimePickerOverlay").classList.remove("show");
+};
+function renderDateTimePicker(){
+  document.getElementById("dtYearNum").innerText = String(dtYear);
+  document.getElementById("dtMonthNum").innerText = String(dtMonth).padStart(2, "0");
+  document.getElementById("dtDayNum").innerText = String(dtDay).padStart(2, "0");
+  document.getElementById("dtHourNum").innerText = String(dtHour).padStart(2, "0");
+  document.getElementById("dtMinuteNum").innerText = String(dtMinute).padStart(2, "0");
+}
+window.adjustDTYear = function(delta){
+  const nowYear = new Date().getFullYear();
+  dtYear = Math.max(nowYear, Math.min(dtYear + delta, nowYear + 20));
+  clampDTDay();
+  renderDateTimePicker();
+};
+window.adjustDTMonth = function(delta){
+  dtMonth += delta;
+  if (dtMonth > 12){ dtMonth = 1; dtYear++; }
+  if (dtMonth < 1){ dtMonth = 12; dtYear--; }
+  clampDTDay();
+  renderDateTimePicker();
+};
+window.adjustDTDay = function(delta){
+  const maxDay = daysInMonth(dtYear, dtMonth);
+  dtDay += delta;
+  if (dtDay > maxDay){ dtDay = 1; window.adjustDTMonth(1); return; }
+  if (dtDay < 1){ window.adjustDTMonth(-1); dtDay = daysInMonth(dtYear, dtMonth); }
+  renderDateTimePicker();
+};
+window.adjustDTHour = function(delta){
+  dtHour += delta;
+  if (dtHour > 23){ dtHour = 0; window.adjustDTDay(1); return; }
+  if (dtHour < 0){ dtHour = 23; window.adjustDTDay(-1); return; }
+  renderDateTimePicker();
+};
+window.adjustDTMinute = function(delta){
+  dtMinute += delta;
+  if (dtMinute > 59){ dtMinute = 0; window.adjustDTHour(1); return; }
+  if (dtMinute < 0){ dtMinute = 59; window.adjustDTHour(-1); return; }
+  renderDateTimePicker();
+};
+window.confirmDateTimePicker = function(){
+  const pad = (n) => String(n).padStart(2, "0");
+  const val = `${dtYear}-${pad(dtMonth)}-${pad(dtDay)}T${pad(dtHour)}:${pad(dtMinute)}`;
+  const timestamp = new Date(val).getTime();
+  if (timestamp <= Date.now()){
+    appAlert("لا يمكن اختيار وقت في الماضي، يرجى اختيار وقت قادم.");
+    return;
+  }
+  document.getElementById("datetimePicker").value = val;
+  const displayEl = document.getElementById("datetimePickerDisplay");
+  displayEl.innerText = new Date(timestamp).toLocaleString("ar-u-nu-latn");
+  displayEl.classList.add("set");
+  closeDateTimePicker();
+};
+
 function loadCurrentState(){
   const hint = document.getElementById("currentStateHint");
   db.ref('countdown').once('value')
@@ -739,6 +1000,9 @@ function loadCurrentState(){
       document.getElementById("titleInput").value = data.title || "";
       if (data.targetTime){
         document.getElementById("datetimePicker").value = toLocalDatetimeInputValue(data.targetTime);
+        const dtDisplayEl = document.getElementById("datetimePickerDisplay");
+        dtDisplayEl.innerText = new Date(data.targetTime).toLocaleString("ar-u-nu-latn");
+        dtDisplayEl.classList.add("set");
       }
       const modeText = data.mode === "up" ? "تصاعدي" : "تنازلي";
       const timeText = data.targetTime ? new Date(data.targetTime).toLocaleString("ar-u-nu-latn") : "—";
@@ -771,9 +1035,17 @@ function loadChallengeState(){
       document.getElementById("challengeTitle").value = data.title || "";
       if (data.durationMs){
         const totalMin = Math.round(data.durationMs / 60000);
-        const hh = String(Math.floor(totalMin / 60)).padStart(2, "0");
-        const mm = String(totalMin % 60).padStart(2, "0");
-        document.getElementById("challengeDuration").value = `${hh}:${mm}`;
+        document.getElementById("challengeDuration").value = String(totalMin);
+        const days = Math.floor(totalMin / 1440);
+        const hours = Math.floor((totalMin % 1440) / 60);
+        const minutes = totalMin % 60;
+        const parts = [];
+        if (days > 0) parts.push(`${days} يوم`);
+        if (hours > 0) parts.push(`${hours} ساعة`);
+        if (minutes > 0 || parts.length === 0) parts.push(`${minutes} دقيقة`);
+        const displayEl = document.getElementById("challengeDurationDisplay");
+        displayEl.innerText = parts.join(" و ");
+        displayEl.classList.add("set");
       }
       setChallengeMode(data.mode === "up" ? "up" : "down");
       setChallengeStyle(STYLE_IDS.includes(data.style) ? data.style : "default", false);
@@ -802,7 +1074,7 @@ function loadChallengeState(){
 
 window.startChallenge = function(){
   const title = document.getElementById("challengeTitle").value || "تحدي الساعة";
-  const durationVal = document.getElementById("challengeDuration").value; // "HH:MM"
+  const durationVal = document.getElementById("challengeDuration").value; // إجمالي الدقائق
   const colorStart = document.getElementById("colorStart").value;
   const colorEnd = document.getElementById("colorEnd").value;
   const msg = document.getElementById("challengeStatusMsg");
@@ -812,8 +1084,7 @@ window.startChallenge = function(){
     msg.innerText = "يرجى تحديد مدة صحيحة.";
     return;
   }
-  const [hh, mm] = durationVal.split(":").map(Number);
-  const minutes = (hh * 60) + mm;
+  const minutes = parseInt(durationVal, 10);
   if (!minutes || minutes <= 0){
     msg.style.color = "#ff3b30";
     msg.innerText = "يرجى تحديد مدة أكبر من صفر.";
