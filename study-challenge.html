@@ -538,6 +538,17 @@
   </div>
 </div>
 
+<div class="wrap" id="offlineWrap" style="display:none;">
+  <div class="card">
+    <p class="eyebrow">🏆 تحدي الدراسة</p>
+    <h1>📡 لا يوجد اتصال بالإنترنت</h1>
+    <p class="greeting">هذا التحدي يعتمد على قائمة متصدرين تتزامن مباشرة عبر الإنترنت، فما يشتغل بدون اتصال. تأكد من اتصالك وحاول مرة ثانية.</p>
+    <button class="primary" style="margin-top:6px;" onclick="location.reload()">🔄 إعادة المحاولة</button>
+    <br>
+    <a href="index.html" style="display:inline-block; margin-top:10px; color:var(--accent); font-weight:700; text-decoration:none; font-size:13px;">‹ رجوع للصفحة الرئيسية</a>
+  </div>
+</div>
+
 <div class="overlay" id="timePickerOverlay">
   <div class="modal tp-modal" style="max-width:340px;">
     <h2>⏰ حدد وقت دراستك</h2>
@@ -778,25 +789,59 @@ const firebaseConfig = {
   messagingSenderId: "511397609426",
   appId: "1:511397609426:web:06ce68a87617922c68120b"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+/* تحدي الدراسة يعتمد على قائمة متصدرين تتزامن مباشرة، فيحتاج إنترنت بطبيعته.
+   نحمّل فايربيس بأمان، وإن تعذّر (لا يوجد إنترنت) نعرض شاشة واضحة بدل شاشة "التحدي غير مفعّل" المضلّلة. */
+let db = null;
+let firebaseOK = false;
+function makeOfflineDbStub(){
+  const chain = {
+    on(){ return chain; }, off(){ return chain; },
+    once(){ return Promise.resolve({ val: () => null }); },
+    update(){ return Promise.resolve(); }, set(){ return Promise.resolve(); },
+    orderByChild(){ return chain; }, limitToLast(){ return chain; }, startAt(){ return chain; }
+  };
+  return { ref(){ return chain; } };
+}
+function serverTimestampValue(){
+  try{
+    if (firebaseOK && typeof firebase !== "undefined" && firebase.database && firebase.database.ServerValue){
+      return firebase.database.ServerValue.TIMESTAMP;
+    }
+  }catch(e){}
+  return Date.now();
+}
+try{
+  if (typeof firebase === "undefined") throw new Error("firebase-not-loaded");
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  firebaseOK = true;
+}catch(e){
+  firebaseOK = false;
+  db = makeOfflineDbStub();
+}
 
-db.ref(".info/serverTimeOffset").on("value", (snap) => {
-  serverTimeOffset = snap.val() || 0;
-});
+if (!firebaseOK){
+  document.getElementById("mainWrap").style.display = "none";
+  document.getElementById("inactiveWrap").style.display = "none";
+  document.getElementById("offlineWrap").style.display = "flex";
+} else {
+  db.ref(".info/serverTimeOffset").on("value", (snap) => {
+    serverTimeOffset = snap.val() || 0;
+  });
 
-db.ref('studyChallengeSettings/style').on('value', (snapshot) => {
-  document.body.setAttribute("data-style", snapshot.val() || "default");
-});
-db.ref('themeSettings/theme').on('value', (snapshot) => {
-  document.body.setAttribute("data-theme", snapshot.val() || "broadcast");
-});
+  db.ref('studyChallengeSettings/style').on('value', (snapshot) => {
+    document.body.setAttribute("data-style", snapshot.val() || "default");
+  });
+  db.ref('themeSettings/theme').on('value', (snapshot) => {
+    document.body.setAttribute("data-theme", snapshot.val() || "broadcast");
+  });
 
-db.ref('studyChallengeSettings/active').once('value').then((snapshot) => {
-  const active = !!snapshot.val();
-  document.getElementById("mainWrap").style.display = active ? "flex" : "none";
-  document.getElementById("inactiveWrap").style.display = active ? "none" : "flex";
-});
+  db.ref('studyChallengeSettings/active').once('value').then((snapshot) => {
+    const active = !!snapshot.val();
+    document.getElementById("mainWrap").style.display = active ? "flex" : "none";
+    document.getElementById("inactiveWrap").style.display = active ? "none" : "flex";
+  });
+}
 
 function setRingProgress(pct){
   pct = Math.max(0, Math.min(100, pct));
@@ -994,7 +1039,7 @@ window.saveProfile = function(){
 
   const profileUpdate = {
     name: p.name, age: p.age, country: p.country, governorate: p.governorate,
-    updatedAt: firebase.database.ServerValue.TIMESTAMP
+    updatedAt: serverTimestampValue()
   };
   if (isNewProfile) profileUpdate.totalSeconds = 0; // مسموح فقط عند إنشاء السجل لأول مرة (تفرضه قاعدة الأمان)
   db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
@@ -1071,7 +1116,7 @@ function bankStudyTime(seconds){
       dayIndex, daySeconds,
       weekIndex, weeklySeconds,
       streak, lastStudyDayIndex,
-      updatedAt: firebase.database.ServerValue.TIMESTAMP
+      updatedAt: serverTimestampValue()
     });
   });
 }
@@ -1630,6 +1675,13 @@ function showEyeToast(){
   if (!el) return;
   el.classList.add("show");
   setTimeout(() => { el.classList.remove("show"); }, 20000);
+}
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
 }
 </script>
 </body>
