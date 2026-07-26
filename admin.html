@@ -257,26 +257,7 @@
   <label>عنوان الحدث (يظهر في صفحة العرض، اختياري)</label>
   <input type="text" id="titleInput" placeholder="مثال: انطلاق البث المباشر">
 
-  <label>طريقة تحديد الوقت</label>
-  <div class="modes">
-    <button type="button" class="mode-btn active" id="btnDateSingle" onclick="setDateSelectionType('single', true)">📅 تاريخ واحد</button>
-    <button type="button" class="mode-btn" id="btnDateRange" onclick="setDateSelectionType('range', true)">🗓️ من - إلى</button>
-  </div>
-
-  <div id="singleDateSection">
-    <label id="dtLabel">وقت انتهاء الحدث</label>
-    <button type="button" class="time-picker-btn" onclick="openDateTimePicker()">
-      <span class="tp-icon">📅</span>
-      <span class="tp-text">
-        <span class="tp-label">تخصيص التاريخ والوقت</span>
-        <span class="tp-value" id="datetimePickerDisplay">اضغط لتحديد السنة والشهر واليوم والوقت</span>
-      </span>
-      <span class="arrow">‹</span>
-    </button>
-    <input type="hidden" id="datetimePicker" value="">
-  </div>
-
-  <div id="rangeDateSection" class="hidden">
+  <div id="rangeDateSection">
     <label>الفترة (من - إلى)</label>
     <button type="button" class="time-picker-btn" onclick="openFromToPicker()">
       <span class="tp-icon">🗓️</span>
@@ -297,7 +278,6 @@
     <button type="button" class="mode-btn" id="btnUp" onclick="setMode('up', true)">⏱️ تصاعدي (منذ وقت)</button>
   </div>
 
-  <button class="primary" id="btnUpdateSingleDate" onclick="updateTargetTime()">تحديث المؤقت الآن</button>
   <div id="status"></div>
 
   <div class="divider"></div>
@@ -502,49 +482,6 @@
     <div class="controls" style="display:flex; gap:10px;">
       <button class="secondary" style="flex:1;" onclick="closeDurationPicker()">إلغاء</button>
       <button class="primary" style="flex:1; margin-top:0;" onclick="confirmDurationPicker()">تأكيد ✅</button>
-    </div>
-  </div>
-</div>
-
-<!-- نافذة تخصيص التاريخ والوقت (سنة/شهر/يوم/ساعة/دقيقة) -->
-<div class="overlay" id="datetimePickerOverlay">
-  <div class="modal tp-modal" style="max-width:400px;">
-    <h2>📅 حدد التاريخ والوقت</h2>
-    <div class="tp-steppers">
-      <div class="tp-stepper">
-        <button type="button" class="tp-btn" onclick="adjustDTYear(1)">+</button>
-        <div class="tp-num" id="dtYearNum">2026</div>
-        <button type="button" class="tp-btn" onclick="adjustDTYear(-1)">−</button>
-        <span class="tp-unit">سنة</span>
-      </div>
-      <div class="tp-stepper">
-        <button type="button" class="tp-btn" onclick="adjustDTMonth(1)">+</button>
-        <div class="tp-num" id="dtMonthNum">01</div>
-        <button type="button" class="tp-btn" onclick="adjustDTMonth(-1)">−</button>
-        <span class="tp-unit">شهر</span>
-      </div>
-      <div class="tp-stepper">
-        <button type="button" class="tp-btn" onclick="adjustDTDay(1)">+</button>
-        <div class="tp-num" id="dtDayNum">01</div>
-        <button type="button" class="tp-btn" onclick="adjustDTDay(-1)">−</button>
-        <span class="tp-unit">يوم</span>
-      </div>
-      <div class="tp-stepper">
-        <button type="button" class="tp-btn" onclick="adjustDTHour(1)">+</button>
-        <div class="tp-num" id="dtHourNum">00</div>
-        <button type="button" class="tp-btn" onclick="adjustDTHour(-1)">−</button>
-        <span class="tp-unit">ساعة</span>
-      </div>
-      <div class="tp-stepper">
-        <button type="button" class="tp-btn" onclick="adjustDTMinute(1)">+</button>
-        <div class="tp-num" id="dtMinuteNum">00</div>
-        <button type="button" class="tp-btn" onclick="adjustDTMinute(-1)">−</button>
-        <span class="tp-unit">دقيقة</span>
-      </div>
-    </div>
-    <div class="controls" style="display:flex; gap:10px;">
-      <button class="secondary" style="flex:1;" onclick="closeDateTimePicker()">إلغاء</button>
-      <button class="primary" style="flex:1; margin-top:0;" onclick="confirmDateTimePicker()">تأكيد ✅</button>
     </div>
   </div>
 </div>
@@ -860,7 +797,6 @@ window.setMode = function(mode, isUserClick){
   currentMode = mode;
   document.getElementById("btnDown").classList.toggle("active", mode === "down");
   document.getElementById("btnUp").classList.toggle("active", mode === "up");
-  document.getElementById("dtLabel").innerText = mode === "down" ? "وقت انتهاء الحدث" : "الوقت الذي سيصل إليه العد التصاعدي";
 
   // إذا فيه مؤقت شغّال فعليًا وضغط المستخدم زر التبديل: نبدّل نمط العرض فورًا
   // بدون لمس targetTime أو وقت البداية إطلاقًا — هذا يحافظ تلقائيًا على الوقت
@@ -877,17 +813,6 @@ window.setMode = function(mode, isUserClick){
         statusDiv.innerText = "فشل تبديل النمط: " + error.message;
       });
   }
-};
-
-/* ================= اختيار طريقة تحديد الوقت (تاريخ واحد / من - إلى) ================= */
-let dateSelectionType = "single";
-window.setDateSelectionType = function(type){
-  dateSelectionType = type;
-  document.getElementById("btnDateSingle").classList.toggle("active", type === "single");
-  document.getElementById("btnDateRange").classList.toggle("active", type === "range");
-  document.getElementById("singleDateSection").classList.toggle("hidden", type !== "single");
-  document.getElementById("rangeDateSection").classList.toggle("hidden", type !== "range");
-  document.getElementById("btnUpdateSingleDate").classList.toggle("hidden", type !== "single");
 };
 
 window.doLogin = function(){
@@ -919,7 +844,6 @@ auth.onAuthStateChanged((user) => {
     loadStudentStyleState();
     loadStudyChallengeStyleState();
     loadSharedThemeState();
-    setMinDatetime();
     showHub();
   } else {
     hideAllPanels();
@@ -927,16 +851,6 @@ auth.onAuthStateChanged((user) => {
     tally.classList.remove("live");
   }
 });
-
-function toLocalDatetimeInputValue(timestamp){
-  const d = new Date(timestamp);
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function setMinDatetime(){
-  document.getElementById("datetimePicker").min = toLocalDatetimeInputValue(Date.now());
-}
 
 /* ================= نافذة تخصيص مدة التحدي (يوم/ساعة/دقيقة) ================= */
 let durTotalMinutes = 60;
@@ -990,86 +904,9 @@ window.confirmDurationPicker = function(){
 };
 
 /* ================= نافذة تخصيص التاريخ والوقت (سنة/شهر/يوم/ساعة/دقيقة) ================= */
-let dtYear, dtMonth, dtDay, dtHour, dtMinute;
 function daysInMonth(year, month){
   return new Date(year, month, 0).getDate();
 }
-function clampDTDay(){
-  const maxDay = daysInMonth(dtYear, dtMonth);
-  if (dtDay > maxDay) dtDay = maxDay;
-  if (dtDay < 1) dtDay = 1;
-}
-window.openDateTimePicker = function(){
-  const existing = document.getElementById("datetimePicker").value;
-  let base = new Date(Date.now() + 60 * 60000); // الافتراضي: بعد ساعة من الآن
-  if (existing){
-    const parsed = new Date(existing);
-    if (!isNaN(parsed.getTime())) base = parsed;
-  }
-  dtYear = base.getFullYear();
-  dtMonth = base.getMonth() + 1;
-  dtDay = base.getDate();
-  dtHour = base.getHours();
-  dtMinute = base.getMinutes();
-  renderDateTimePicker();
-  document.getElementById("datetimePickerOverlay").classList.add("show");
-};
-window.closeDateTimePicker = function(){
-  document.getElementById("datetimePickerOverlay").classList.remove("show");
-};
-function renderDateTimePicker(){
-  document.getElementById("dtYearNum").innerText = String(dtYear);
-  document.getElementById("dtMonthNum").innerText = String(dtMonth).padStart(2, "0");
-  document.getElementById("dtDayNum").innerText = String(dtDay).padStart(2, "0");
-  document.getElementById("dtHourNum").innerText = String(dtHour).padStart(2, "0");
-  document.getElementById("dtMinuteNum").innerText = String(dtMinute).padStart(2, "0");
-}
-window.adjustDTYear = function(delta){
-  const nowYear = new Date().getFullYear();
-  dtYear = Math.max(nowYear, Math.min(dtYear + delta, nowYear + 20));
-  clampDTDay();
-  renderDateTimePicker();
-};
-window.adjustDTMonth = function(delta){
-  dtMonth += delta;
-  if (dtMonth > 12){ dtMonth = 1; dtYear++; }
-  if (dtMonth < 1){ dtMonth = 12; dtYear--; }
-  clampDTDay();
-  renderDateTimePicker();
-};
-window.adjustDTDay = function(delta){
-  const maxDay = daysInMonth(dtYear, dtMonth);
-  dtDay += delta;
-  if (dtDay > maxDay){ dtDay = 1; window.adjustDTMonth(1); return; }
-  if (dtDay < 1){ window.adjustDTMonth(-1); dtDay = daysInMonth(dtYear, dtMonth); }
-  renderDateTimePicker();
-};
-window.adjustDTHour = function(delta){
-  dtHour += delta;
-  if (dtHour > 23){ dtHour = 0; window.adjustDTDay(1); return; }
-  if (dtHour < 0){ dtHour = 23; window.adjustDTDay(-1); return; }
-  renderDateTimePicker();
-};
-window.adjustDTMinute = function(delta){
-  dtMinute += delta;
-  if (dtMinute > 59){ dtMinute = 0; window.adjustDTHour(1); return; }
-  if (dtMinute < 0){ dtMinute = 59; window.adjustDTHour(-1); return; }
-  renderDateTimePicker();
-};
-window.confirmDateTimePicker = function(){
-  const pad = (n) => String(n).padStart(2, "0");
-  const val = `${dtYear}-${pad(dtMonth)}-${pad(dtDay)}T${pad(dtHour)}:${pad(dtMinute)}`;
-  const timestamp = new Date(val).getTime();
-  if (timestamp <= Date.now()){
-    appAlert("لا يمكن اختيار وقت في الماضي، يرجى اختيار وقت قادم.");
-    return;
-  }
-  document.getElementById("datetimePicker").value = val;
-  const displayEl = document.getElementById("datetimePickerDisplay");
-  displayEl.innerText = new Date(timestamp).toLocaleString("ar-u-nu-latn");
-  displayEl.classList.add("set");
-  closeDateTimePicker();
-};
 
 /* ================= نافذة تحديد فترة كاملة (من - إلى) ================= */
 let fromYear, fromMonth, fromDay, toYear, toMonth, toDay;
@@ -1212,23 +1049,16 @@ function loadCurrentState(){
       originalUpdatedAt = data.updatedAt || null;
       setStyle(STYLE_IDS.includes(data.style) ? data.style : "default", false);
       document.getElementById("titleInput").value = data.title || "";
-      if (data.targetTime){
-        document.getElementById("datetimePicker").value = toLocalDatetimeInputValue(data.targetTime);
-        const dtDisplayEl = document.getElementById("datetimePickerDisplay");
-        dtDisplayEl.innerText = new Date(data.targetTime).toLocaleString("ar-u-nu-latn");
-        dtDisplayEl.classList.add("set");
-      }
       if (data.targetTime && data.updatedAt){
+        const fromText = new Date(data.updatedAt).toLocaleDateString("ar-u-nu-latn");
+        const toText = new Date(data.targetTime).toLocaleDateString("ar-u-nu-latn");
         const diffDays = Math.round((data.targetTime - data.updatedAt) / 86400000);
-        if (diffDays > 0){
-          const fromText = new Date(data.updatedAt).toLocaleDateString("ar-u-nu-latn");
-          const toText = new Date(data.targetTime).toLocaleDateString("ar-u-nu-latn");
-          const ftDisplayEl = document.getElementById("fromToDisplay");
-          ftDisplayEl.innerText = `من ${fromText} إلى ${toText} (${diffDays} يوم)`;
-          ftDisplayEl.classList.add("set");
-        }
+        const ftDisplayEl = document.getElementById("fromToDisplay");
+        ftDisplayEl.innerText = diffDays > 0
+          ? `من ${fromText} إلى ${toText} (${diffDays} يوم)`
+          : `حتى ${toText}`;
+        ftDisplayEl.classList.add("set");
       }
-      setDateSelectionType(data.usedRange ? "range" : "single");
       const modeText = data.mode === "up" ? "تصاعدي" : "تنازلي";
       const timeText = data.targetTime ? new Date(data.targetTime).toLocaleString("ar-u-nu-latn") : "—";
       hint.innerText = `الحالة المحفوظة حاليًا: ${modeText} — ${timeText}`;
@@ -1429,48 +1259,7 @@ window.resetWeeklyLeaderboard = function(){
   });
 };
 
-window.updateTargetTime = function(){
-  const val = document.getElementById("datetimePicker").value;
-  const title = document.getElementById("titleInput").value || "";
-  const statusDiv = document.getElementById("status");
 
-  if (!val){
-    statusDiv.style.color = "#ff3b30";
-    statusDiv.innerText = "يرجى اختيار الوقت أولاً!";
-    return;
-  }
-
-  const targetTimestamp = new Date(val).getTime();
-
-  if (targetTimestamp <= Date.now()){
-    statusDiv.style.color = "#ff3b30";
-    statusDiv.innerText = "لا يمكن اختيار وقت في الماضي، يرجى اختيار وقت قادم.";
-    return;
-  }
-
-  // إذا نفس الوقت المستهدف المحفوظ سابقًا (المستخدم بدّل النمط أو العنوان بس)،
-  // نحافظ على نفس نقطة البداية القديمة بدل ما نصفرها — عشان الوقت المنقضي/المتبقي
-  // يضل صحيح بالضبط بدل ما يبدأ من جديد.
-  const isSameTarget = (originalTargetTime !== null) && (targetTimestamp === originalTargetTime) && originalUpdatedAt;
-  const newUpdatedAt = isSameTarget ? originalUpdatedAt : Date.now();
-
-  db.ref('countdown').update({
-    mode: currentMode,
-    targetTime: targetTimestamp,
-    title: title,
-    updatedAt: newUpdatedAt,
-    usedRange: false
-  })
-    .then(() => {
-      statusDiv.style.color = "#2ecc71";
-      statusDiv.innerText = "تم تحديث المؤقت بنجاح، وسيظهر التغيير مباشرة في صفحة العرض.";
-      loadCurrentState();
-    })
-    .catch((error) => {
-      statusDiv.style.color = "#ff3b30";
-      statusDiv.innerText = "فشل التحديث: " + error.message;
-    });
-};
 </script>
 </body>
 </html>
