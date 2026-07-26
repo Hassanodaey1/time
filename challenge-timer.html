@@ -35,6 +35,12 @@
     display:none; font-size:11.5px; color:#ffb4ae; background:rgba(255,59,48,.15);
     border:1px solid rgba(255,59,48,.35); border-radius:8px; padding:6px 10px; margin:0 0 14px;
   }
+  .retry-btn{
+    display:none; margin-top:12px; padding:9px 20px; border-radius:20px; border:1px solid rgba(255,255,255,.25);
+    background:rgba(0,0,0,.35); color:#fff; font-family:'Tajawal',sans-serif; font-weight:700;
+    font-size:13px; cursor:pointer;
+  }
+  .retry-btn:active{transform:scale(0.96);}
   .stage{ width:100%; max-width:560px; text-align:center; }
   .eyebrow{
     font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:4px; text-transform:uppercase;
@@ -339,6 +345,7 @@
   <p id="offlineMsg" class="offline-msg">⚠️ الاتصال منقطع حاليًا — الوقت المعروض قد لا يكون محدثًا</p>
 
   <p id="loadingMsg">جارٍ التحقق من التحدي...</p>
+  <button class="retry-btn" id="retryBtn" onclick="location.reload()">🔄 إعادة المحاولة</button>
 
   <div id="runningView" style="display:none;">
     <div class="digits">
@@ -366,8 +373,35 @@ const firebaseConfig = {
   messagingSenderId: "511397609426",
   appId: "1:511397609426:web:06ce68a87617922c68120b"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+/* تحدي الأستاذ يتزامن مباشرة مع إعدادات يضبطها الأستاذ عبر السيرفر، فهو يحتاج إنترنت بطبيعته.
+   نحمّل فايربيس بأمان، وإن تعذّر (لا يوجد إنترنت) نعرض رسالة واضحة بدل صفحة عالقة. */
+let db = null;
+let firebaseOK = false;
+function makeOfflineDbStub(){
+  const chain = {
+    on(){ return chain; }, off(){ return chain; },
+    once(){ return Promise.resolve({ val: () => null }); },
+    update(){ return Promise.resolve(); }, set(){ return Promise.resolve(); },
+    orderByChild(){ return chain; }, limitToLast(){ return chain; }, startAt(){ return chain; }
+  };
+  return { ref(){ return chain; } };
+}
+try{
+  if (typeof firebase === "undefined") throw new Error("firebase-not-loaded");
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  firebaseOK = true;
+}catch(e){
+  firebaseOK = false;
+  db = makeOfflineDbStub();
+}
+
+if (!firebaseOK){
+  document.getElementById("loadingMsg").innerText = "📡 لا يوجد اتصال بالإنترنت — تحدي الأستاذ يحتاج اتصال لأنه يتزامن مباشرة مع السيرفر";
+  document.getElementById("retryBtn").style.display = "inline-block";
+  document.getElementById("offlineMsg").style.display = "block";
+  window.addEventListener("online", () => location.reload());
+}
 
 let startTime = null, durationMs = null, colorStart = "#000000", colorEnd = "#ff0000", challengeMode = "down";
 let timerHandle = null;
@@ -966,6 +1000,13 @@ window.boardClear = function(){
   boardCtx.fillStyle = "#ffffff";
   boardCtx.fillRect(0, 0, canvas.width, canvas.height);
 };
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
