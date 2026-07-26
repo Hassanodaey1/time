@@ -274,6 +274,15 @@
   </button>
   <input type="hidden" id="datetimePicker" value="">
 
+  <button type="button" class="time-picker-btn" onclick="openFromToPicker()" style="margin-top:10px;">
+    <span class="tp-icon">🗓️</span>
+    <span class="tp-text">
+      <span class="tp-label">من - إلى (تحديد فترة كاملة)</span>
+      <span class="tp-value" id="fromToDisplay">اضغط لتحديد تاريخ البداية والنهاية</span>
+    </span>
+    <span class="arrow">‹</span>
+  </button>
+  <p class="hint" style="margin:8px 0 0;">استخدم هذا الزر إذا تريد تحديد المدة عن طريق تاريخي بداية ونهاية بدل إدخال وقت واحد فقط. النمط (تصاعدي/تنازلي) يبقى بحسب اختيارك من الأزرار فوق.</p>
 
   <button class="primary" onclick="updateTargetTime()">تحديث المؤقت الآن</button>
   <div id="status"></div>
@@ -523,6 +532,61 @@
     <div class="controls" style="display:flex; gap:10px;">
       <button class="secondary" style="flex:1;" onclick="closeDateTimePicker()">إلغاء</button>
       <button class="primary" style="flex:1; margin-top:0;" onclick="confirmDateTimePicker()">تأكيد ✅</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة تحديد فترة كاملة (من - إلى) -->
+<div class="overlay" id="fromToPickerOverlay">
+  <div class="modal tp-modal" style="max-width:400px;">
+    <h2>🗓️ حدد فترة المؤقت</h2>
+    <p class="hint" style="text-align:center; margin:-8px 0 18px;">من</p>
+    <div class="tp-steppers">
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustFromYear(1)">+</button>
+        <div class="tp-num" id="fromYearNum">2026</div>
+        <button type="button" class="tp-btn" onclick="adjustFromYear(-1)">−</button>
+        <span class="tp-unit">سنة</span>
+      </div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustFromMonth(1)">+</button>
+        <div class="tp-num" id="fromMonthNum">01</div>
+        <button type="button" class="tp-btn" onclick="adjustFromMonth(-1)">−</button>
+        <span class="tp-unit">شهر</span>
+      </div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustFromDay(1)">+</button>
+        <div class="tp-num" id="fromDayNum">01</div>
+        <button type="button" class="tp-btn" onclick="adjustFromDay(-1)">−</button>
+        <span class="tp-unit">يوم</span>
+      </div>
+    </div>
+    <p class="hint" style="text-align:center; margin:0 0 18px;">إلى</p>
+    <div class="tp-steppers">
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustToYear(1)">+</button>
+        <div class="tp-num" id="toYearNum">2026</div>
+        <button type="button" class="tp-btn" onclick="adjustToYear(-1)">−</button>
+        <span class="tp-unit">سنة</span>
+      </div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustToMonth(1)">+</button>
+        <div class="tp-num" id="toMonthNum">01</div>
+        <button type="button" class="tp-btn" onclick="adjustToMonth(-1)">−</button>
+        <span class="tp-unit">شهر</span>
+      </div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustToDay(1)">+</button>
+        <div class="tp-num" id="toDayNum">01</div>
+        <button type="button" class="tp-btn" onclick="adjustToDay(-1)">−</button>
+        <span class="tp-unit">يوم</span>
+      </div>
+    </div>
+    <p class="hint" style="text-align:center; margin:0 0 16px; font-weight:700; color:var(--amber);" id="fromToDaysPreview">—</p>
+    <p class="hint" style="margin:0 0 14px;">سيُستخدم النمط المحدد فوق (تصاعدي ⏱️ أو تنازلي ⏳) كما هو — في النمط التصاعدي سيبدأ العد فعليًا من تاريخ "من"، وفي النمط التنازلي سيُحسب العد التنازلي حتى تاريخ "إلى".</p>
+    <div class="controls" style="display:flex; gap:10px;">
+      <button class="secondary" style="flex:1;" onclick="closeFromToPicker()">إلغاء</button>
+      <button class="primary" style="flex:1; margin-top:0;" onclick="confirmFromToPicker()">تأكيد ✅</button>
     </div>
   </div>
 </div>
@@ -983,6 +1047,131 @@ window.confirmDateTimePicker = function(){
   closeDateTimePicker();
 };
 
+/* ================= نافذة تحديد فترة كاملة (من - إلى) ================= */
+let fromYear, fromMonth, fromDay, toYear, toMonth, toDay;
+window.openFromToPicker = function(){
+  const now = new Date();
+  fromYear = now.getFullYear(); fromMonth = now.getMonth() + 1; fromDay = now.getDate();
+  const future = new Date(now.getTime() + 30 * 86400000);
+  toYear = future.getFullYear(); toMonth = future.getMonth() + 1; toDay = future.getDate();
+  renderFromToPicker();
+  document.getElementById("fromToPickerOverlay").classList.add("show");
+};
+window.closeFromToPicker = function(){
+  document.getElementById("fromToPickerOverlay").classList.remove("show");
+};
+function clampFromDay(){
+  const maxDay = daysInMonth(fromYear, fromMonth);
+  if (fromDay > maxDay) fromDay = maxDay;
+  if (fromDay < 1) fromDay = 1;
+}
+function clampToDay(){
+  const maxDay = daysInMonth(toYear, toMonth);
+  if (toDay > maxDay) toDay = maxDay;
+  if (toDay < 1) toDay = 1;
+}
+function renderFromToPicker(){
+  document.getElementById("fromYearNum").innerText = String(fromYear);
+  document.getElementById("fromMonthNum").innerText = String(fromMonth).padStart(2, "0");
+  document.getElementById("fromDayNum").innerText = String(fromDay).padStart(2, "0");
+  document.getElementById("toYearNum").innerText = String(toYear);
+  document.getElementById("toMonthNum").innerText = String(toMonth).padStart(2, "0");
+  document.getElementById("toDayNum").innerText = String(toDay).padStart(2, "0");
+
+  const fromTs = new Date(fromYear, fromMonth - 1, fromDay).getTime();
+  const toTs = new Date(toYear, toMonth - 1, toDay).getTime();
+  const diffDays = Math.round((toTs - fromTs) / 86400000);
+  const preview = document.getElementById("fromToDaysPreview");
+  preview.innerText = diffDays > 0
+    ? `عدد الأيام بين التاريخين: ${diffDays} يوم`
+    : 'يجب أن يكون تاريخ "إلى" بعد تاريخ "من"';
+}
+window.adjustFromYear = function(delta){
+  fromYear = Math.max(1970, fromYear + delta);
+  clampFromDay();
+  renderFromToPicker();
+};
+window.adjustFromMonth = function(delta){
+  fromMonth += delta;
+  if (fromMonth > 12){ fromMonth = 1; fromYear++; }
+  if (fromMonth < 1){ fromMonth = 12; fromYear--; }
+  clampFromDay();
+  renderFromToPicker();
+};
+window.adjustFromDay = function(delta){
+  const maxDay = daysInMonth(fromYear, fromMonth);
+  fromDay += delta;
+  if (fromDay > maxDay){ fromDay = 1; window.adjustFromMonth(1); return; }
+  if (fromDay < 1){ window.adjustFromMonth(-1); fromDay = daysInMonth(fromYear, fromMonth); }
+  renderFromToPicker();
+};
+window.adjustToYear = function(delta){
+  toYear = Math.max(1970, toYear + delta);
+  clampToDay();
+  renderFromToPicker();
+};
+window.adjustToMonth = function(delta){
+  toMonth += delta;
+  if (toMonth > 12){ toMonth = 1; toYear++; }
+  if (toMonth < 1){ toMonth = 12; toYear--; }
+  clampToDay();
+  renderFromToPicker();
+};
+window.adjustToDay = function(delta){
+  const maxDay = daysInMonth(toYear, toMonth);
+  toDay += delta;
+  if (toDay > maxDay){ toDay = 1; window.adjustToMonth(1); return; }
+  if (toDay < 1){ window.adjustToMonth(-1); toDay = daysInMonth(toYear, toMonth); }
+  renderFromToPicker();
+};
+window.confirmFromToPicker = function(){
+  const fromTs = new Date(fromYear, fromMonth - 1, fromDay, 0, 0, 0).getTime();
+  const toTs = new Date(toYear, toMonth - 1, toDay, 0, 0, 0).getTime();
+  const diffDays = Math.round((toTs - fromTs) / 86400000);
+
+  if (diffDays <= 0){
+    appAlert('يجب أن يكون تاريخ "إلى" بعد تاريخ "من".');
+    return;
+  }
+  if (toTs <= Date.now()){
+    appAlert('تاريخ "إلى" يجب أن يكون في المستقبل.');
+    return;
+  }
+
+  const title = document.getElementById("titleInput").value || "";
+  const statusDiv = document.getElementById("status");
+
+  // نحترم النمط (تصاعدي/تنازلي) المحدد مسبقًا من الأزرار الموجودة فوق:
+  // - تصاعدي: يبدأ العد من تاريخ "من" فعليًا حتى تاريخ "إلى".
+  // - تنازلي: يعد تنازليًا من الآن حتى تاريخ "إلى" (تاريخ "من" هنا فقط لحساب عدد الأيام الإجمالي في المعاينة).
+  const isSameTarget = (originalTargetTime !== null) && (toTs === originalTargetTime) && originalUpdatedAt;
+  const newUpdatedAt = currentMode === "up"
+    ? fromTs
+    : (isSameTarget ? originalUpdatedAt : Date.now());
+
+  db.ref('countdown').update({
+    mode: currentMode,
+    targetTime: toTs,
+    updatedAt: newUpdatedAt,
+    title: title
+  })
+    .then(() => {
+      const displayEl = document.getElementById("fromToDisplay");
+      const fromText = new Date(fromTs).toLocaleDateString("ar-u-nu-latn");
+      const toText = new Date(toTs).toLocaleDateString("ar-u-nu-latn");
+      displayEl.innerText = `من ${fromText} إلى ${toText} (${diffDays} يوم)`;
+      displayEl.classList.add("set");
+      statusDiv.style.color = "#2ecc71";
+      statusDiv.innerText = "تم ضبط المؤقت بنجاح على الفترة المحددة، وسيظهر التغيير مباشرة في صفحة العرض.";
+      closeFromToPicker();
+      loadCurrentState();
+    })
+    .catch((error) => {
+      statusDiv.style.color = "#ff3b30";
+      statusDiv.innerText = "فشل التحديث: " + error.message;
+    });
+};
+
 function loadCurrentState(){
   const hint = document.getElementById("currentStateHint");
   db.ref('countdown').once('value')
@@ -1003,6 +1192,16 @@ function loadCurrentState(){
         const dtDisplayEl = document.getElementById("datetimePickerDisplay");
         dtDisplayEl.innerText = new Date(data.targetTime).toLocaleString("ar-u-nu-latn");
         dtDisplayEl.classList.add("set");
+      }
+      if (data.mode === "up" && data.targetTime && data.updatedAt){
+        const diffDays = Math.round((data.targetTime - data.updatedAt) / 86400000);
+        if (diffDays > 0){
+          const fromText = new Date(data.updatedAt).toLocaleDateString("ar-u-nu-latn");
+          const toText = new Date(data.targetTime).toLocaleDateString("ar-u-nu-latn");
+          const ftDisplayEl = document.getElementById("fromToDisplay");
+          ftDisplayEl.innerText = `من ${fromText} إلى ${toText} (${diffDays} يوم)`;
+          ftDisplayEl.classList.add("set");
+        }
       }
       const modeText = data.mode === "up" ? "تصاعدي" : "تنازلي";
       const timeText = data.targetTime ? new Date(data.targetTime).toLocaleString("ar-u-nu-latn") : "—";
