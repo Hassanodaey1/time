@@ -216,6 +216,14 @@
   <p class="hint">هذه الصفحة محمية بحساب Firebase Authentication. فقط الحساب الذي تنشئه أنت في مشروعك يمكنه تسجيل الدخول والتحكم بالمؤقت.</p>
 </div>
 
+<!-- شاشة عدم الاتصال بالإنترنت -->
+<div class="card hidden" id="adminOfflineView">
+  <p class="eyebrow">لوحة التحكم</p>
+  <h1>📡 لا يوجد اتصال بالإنترنت</h1>
+  <p class="hint">لوحة التحكم بالكامل تحتاج اتصال إنترنت لأنها تتصل مباشرة بحساب فايربيس وتتحكم بالمؤقتات عن بُعد. تأكد من اتصالك بالإنترنت ثم حاول مرة ثانية.</p>
+  <button class="primary" onclick="location.reload()">🔄 إعادة المحاولة</button>
+</div>
+
 <!-- اللوحة الرئيسية بعد تسجيل الدخول -->
 <div class="card hidden" id="hubView">
   <p class="eyebrow">لوحة التحكم</p>
@@ -558,8 +566,42 @@ const firebaseConfig = {
   appId: "1:511397609426:web:06ce68a87617922c68120b"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+/* لوحة التحكم بالكامل تعتمد على فايربيس (تسجيل دخول + تحكم مباشر بالمؤقتات)، فهي تحتاج إنترنت بطبيعتها.
+   نحمّلها بأمان: إذا تعذّر الاتصال (لا يوجد إنترنت) نعرض شاشة واضحة بدل ما تنكسر الصفحة بالكامل. */
+let db = null;
+let auth = null;
+let firebaseOK = false;
+function makeOfflineDbStub(){
+  const chain = {
+    on(){ return chain; }, off(){ return chain; },
+    once(){ return Promise.resolve({ val: () => null }); },
+    update(){ return Promise.resolve(); }, set(){ return Promise.resolve(); },
+    orderByChild(){ return chain; }, limitToLast(){ return chain; }, startAt(){ return chain; }
+  };
+  return { ref(){ return chain; } };
+}
+function makeOfflineAuthStub(){
+  return {
+    onAuthStateChanged(){ /* لا نستدعي أي شيء — نبقى على شاشة "لا يوجد اتصال" */ },
+    signInWithEmailAndPassword(){ return Promise.reject(new Error("لا يوجد اتصال بالإنترنت")); },
+    signOut(){ return Promise.resolve(); }
+  };
+}
+try{
+  if (typeof firebase === "undefined") throw new Error("firebase-not-loaded");
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  firebaseOK = true;
+}catch(e){
+  firebaseOK = false;
+  db = makeOfflineDbStub();
+}
+
+if (!firebaseOK){
+  document.getElementById("loginView").classList.add("hidden");
+  document.getElementById("adminOfflineView").classList.remove("hidden");
+  window.addEventListener("online", () => location.reload());
+}
 
 /* ================= نافذة تنبيه/تأكيد بتصميم العبة (بديل alert/confirm) ================= */
 let appDialogResolver = null;
@@ -585,7 +627,18 @@ document.getElementById("appDialogCancelBtn").addEventListener("click", () => {
   document.getElementById("appDialogOverlay").classList.remove("show");
   if (appDialogResolver){ const r = appDialogResolver; appDialogResolver = null; r(false); }
 });
-const auth = firebase.auth();
+if (firebaseOK){
+  try{
+    auth = firebase.auth();
+  }catch(e){
+    firebaseOK = false;
+    db = makeOfflineDbStub();
+    document.getElementById("loginView").classList.add("hidden");
+    document.getElementById("adminOfflineView").classList.remove("hidden");
+    window.addEventListener("online", () => location.reload());
+  }
+}
+if (!auth) auth = makeOfflineAuthStub();
 
 let currentMode = "down";
 let hasSavedTimer = false;
@@ -1259,6 +1312,13 @@ window.resetWeeklyLeaderboard = function(){
 };
 
 
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
