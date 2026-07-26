@@ -832,16 +832,48 @@ const firebaseConfig = {
   messagingSenderId: "511397609426",
   appId: "1:511397609426:web:06ce68a87617922c68120b"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+/* هذه الصفحة (مؤقت الطالب) يفترض أنها تشتغل بالكامل بدون إنترنت.
+   فايربيس هنا يُستخدم فقط لمزامنة "الشكل/الثيم" اللي يضبطه الأستاذ من لوحة التحكم — وهو أمر تجميلي ثانوي.
+   لذلك نغلّفه بمحاولة/التقاط، وإذا ما توفر (بسبب انقطاع الإنترنت) نكمل بالإعدادات الافتراضية
+   بدل ما نكسر بقية سكربت الصفحة (المؤقت، البومودورو، المهام، الحاسبة، السبورة). */
+let db = null;
+let firebaseOK = false;
+try{
+  if (typeof firebase === "undefined") throw new Error("firebase-not-loaded");
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  firebaseOK = true;
+}catch(e){
+  firebaseOK = false;
+}
 
-db.ref('studentSettings/style').on('value', (snapshot) => {
-  document.body.setAttribute("data-style", snapshot.val() || "default");
-});
+if (firebaseOK){
+  db.ref('studentSettings/style').on('value', (snapshot) => {
+    document.body.setAttribute("data-style", snapshot.val() || "default");
+  });
 
-db.ref('themeSettings/theme').on('value', (snapshot) => {
-  document.body.setAttribute("data-theme", snapshot.val() || "broadcast");
-});
+  db.ref('themeSettings/theme').on('value', (snapshot) => {
+    document.body.setAttribute("data-theme", snapshot.val() || "broadcast");
+  });
+} else {
+  document.body.setAttribute("data-style", "default");
+  document.body.setAttribute("data-theme", "broadcast");
+  /* بمجرد رجوع الإنترنت لاحقاً، ما نكسر جلسة مذاكرة شغّالة —
+     فقط نحاول نجيب الشكل/الثيم مرة وحدة بهدوء بدون إعادة تحميل الصفحة. */
+  window.addEventListener("online", function tryLateSync(){
+    try{
+      if (typeof firebase === "undefined") return;
+      if (!firebaseOK){
+        firebase.initializeApp(firebaseConfig);
+        const lateDb = firebase.database();
+        lateDb.ref('studentSettings/style').on('value', (s) => document.body.setAttribute("data-style", s.val() || "default"));
+        lateDb.ref('themeSettings/theme').on('value', (s) => document.body.setAttribute("data-theme", s.val() || "broadcast"));
+        firebaseOK = true;
+      }
+    }catch(e){ /* تجاهل — تبقى الإعدادات الافتراضية */ }
+    window.removeEventListener("online", tryLateSync);
+  });
+}
 
 function setRingProgress(pct){
   pct = Math.max(0, Math.min(100, pct));
@@ -1767,6 +1799,13 @@ function showEyeToast(){
   setTimeout(() => { el.classList.remove("show"); }, 20000);
 }
 
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
