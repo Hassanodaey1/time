@@ -1004,11 +1004,10 @@ window.confirmFromToPicker = function(){
 
   // نحترم النمط (تصاعدي/تنازلي) المحدد مسبقًا من الأزرار الموجودة فوق:
   // - تصاعدي: يبدأ العد من تاريخ "من" فعليًا حتى تاريخ "إلى".
-  // - تنازلي: يعد تنازليًا من الآن حتى تاريخ "إلى" (تاريخ "من" هنا فقط لحساب عدد الأيام الإجمالي في المعاينة).
-  const isSameTarget = (originalTargetTime !== null) && (toTs === originalTargetTime) && originalUpdatedAt;
-  const newUpdatedAt = currentMode === "up"
-    ? fromTs
-    : (isSameTarget ? originalUpdatedAt : Date.now());
+  // - تنازلي: يعد تنازليًا من الآن الحقيقي حتى تاريخ "إلى" (targetTime - serverNow في صفحة العرض)،
+  //   لكن "من" الفعلي يُحفظ كنقطة startTime حتى تُحسب حلقة التقدّم (progress ring) بشكل صحيح
+  //   كنسبة من كامل الفترة (من → إلى)، بدل ما تُحسب فقط من لحظة آخر ضغط حفظ.
+  const newUpdatedAt = fromTs;
 
   db.ref('countdown').update({
     mode: currentMode,
