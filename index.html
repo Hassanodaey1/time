@@ -71,6 +71,10 @@
 
   .bento-card.study .bento-icon{background:rgba(255,180,0,.12); color:var(--amber);}
   .bento-card.study:hover{border-color:var(--amber);}
+  .bento-card.study.active{border-color:var(--green);}
+  .bento-card.study.active .bento-badge{background:rgba(46,204,113,.15); color:var(--green);}
+  .bento-card.study.inactive{opacity:.5; pointer-events:none;}
+  .bento-card.study.inactive .bento-badge{background:rgba(125,134,152,.15); color:var(--muted);}
 
   .bento-card.water .bento-icon{background:rgba(72,202,228,.12); color:#48cae4;}
   .bento-card.water.on{border-color:#48cae4;}
@@ -162,6 +166,7 @@
     <a href="study-challenge.html" class="bento-card study hidden-card" id="studyItem">
       <span class="bento-icon">🏆</span>
       <span class="bento-title">تحدي الدراسة</span>
+      <span class="bento-badge" id="studyStatus">—</span>
     </a>
 
     <div class="bento-card water" id="waterCard" onclick="toggleWaterReminder()">
@@ -246,7 +251,20 @@ db.ref('challenge').on('value', (snapshot) => {
 });
 
 db.ref('studyChallengeSettings/active').on('value', (snapshot) => {
-  document.getElementById("studyItem").classList.toggle("hidden-card", !snapshot.val());
+  const studyItem = document.getElementById("studyItem");
+  const studyStatusEl = document.getElementById("studyStatus");
+  studyItem.classList.remove("hidden-card");
+
+  const isActive = !!snapshot.val();
+  if (isActive){
+    studyItem.classList.add("active");
+    studyItem.classList.remove("inactive");
+    studyStatusEl.innerText = "مفعّل";
+  } else {
+    studyItem.classList.add("inactive");
+    studyItem.classList.remove("active");
+    studyStatusEl.innerText = "غير مفعّل";
+  }
 });
 </script>
 
