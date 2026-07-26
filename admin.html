@@ -250,7 +250,7 @@
 
 <!-- لوحة المؤقت الرئيسي -->
 <div class="card hidden" id="mainTimerPanel">
-  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع</button>
   <p class="eyebrow">المؤقت الرئيسي</p>
   <h1>تحديث بيانات المؤقت</h1>
 
@@ -262,7 +262,7 @@
     <button type="button" class="time-picker-btn" onclick="openFromToPicker()">
       <span class="tp-icon">🗓️</span>
       <span class="tp-text">
-        <span class="tp-label">من - إلى (تحديد فترة كاملة)</span>
+        <span class="tp-label">من - إلى</span>
         <span class="tp-value" id="fromToDisplay">اضغط لتحديد تاريخ البداية والنهاية</span>
       </span>
       <span class="arrow">‹</span>
@@ -274,8 +274,8 @@
 
   <label>نوع المؤقت</label>
   <div class="modes">
-    <button type="button" class="mode-btn active" id="btnDown" onclick="setMode('down', true)">⏳ تنازلي (حتى وقت)</button>
-    <button type="button" class="mode-btn" id="btnUp" onclick="setMode('up', true)">⏱️ تصاعدي (منذ وقت)</button>
+    <button type="button" class="mode-btn active" id="btnDown" onclick="setMode('down', true)">⏳ تنازلي</button>
+    <button type="button" class="mode-btn" id="btnUp" onclick="setMode('up', true)">⏱️ تصاعدي</button>
   </div>
 
   <div id="status"></div>
@@ -286,7 +286,7 @@
 
 <!-- لوحة تحدي الأستاذ -->
 <div class="card hidden" id="challengePanel">
-  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع</button>
   <p class="eyebrow">🔥 تحدي الأستاذ</p>
   <h1>ضبط التحدي</h1>
 
@@ -297,7 +297,7 @@
   <button type="button" class="time-picker-btn" onclick="openDurationPicker()">
     <span class="tp-icon">⏱️</span>
     <span class="tp-text">
-      <span class="tp-label">تخصيص مدة التحدي</span>
+      <span class="tp-label">مدة التحدي</span>
       <span class="tp-value" id="challengeDurationDisplay">اضغط لتحديد المدة</span>
     </span>
     <span class="arrow">‹</span>
@@ -306,8 +306,8 @@
 
   <label>نوع العد</label>
   <div class="modes">
-    <button type="button" class="mode-btn active" id="chBtnDown" onclick="setChallengeMode('down', true)">⏳ تنازلي (يبدأ من المدة وينقص)</button>
-    <button type="button" class="mode-btn" id="chBtnUp" onclick="setChallengeMode('up', true)">⏱️ تصاعدي (يبدأ من صفر ويزيد)</button>
+    <button type="button" class="mode-btn active" id="chBtnDown" onclick="setChallengeMode('down', true)">⏳ تنازلي</button>
+    <button type="button" class="mode-btn" id="chBtnUp" onclick="setChallengeMode('up', true)">⏱️ تصاعدي</button>
   </div>
 
   <label>تدرّج اللون خلال التحدي</label>
@@ -323,7 +323,7 @@
   </div>
 
   <div class="toggle-row">
-    <button class="toggle-btn" onclick="startChallenge()">🚀 بدء التحدي الآن</button>
+    <button class="toggle-btn" onclick="startChallenge()">🚀 بدء التحدي</button>
     <button class="toggle-btn" onclick="stopChallenge()">⏹️ إيقاف التحدي</button>
   </div>
   <div id="challengeStatusMsg" class="hint"></div>
@@ -331,28 +331,28 @@
 
 <!-- لوحة تحدي الدراسة -->
 <div class="card hidden" id="studyChallengePanel">
-  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع</button>
   <p class="eyebrow">📚 تحدي الدراسة</p>
   <h1>التحكم بزر تحدي الدراسة</h1>
   <p class="hint" style="margin-bottom:16px;">عند التفعيل، يصبح زر "تحدي الدراسة" في الصفحة الرئيسية مفعّلاً (حدود خضراء) ويقدر الطلاب يسجّلون بياناتهم ويتنافسون على أطول مدة دراسة. عند التعطيل، يبقى الزر ظاهرًا في الصفحة الرئيسية لكنه يصبح باهتًا وغير قابل للضغط، تمامًا كزر "تحدي الأستاذ".</p>
 
   <div class="toggle-row">
-    <button class="toggle-btn" onclick="startStudyChallenge()">🚀 تفعيل تحدي الدراسة</button>
-    <button class="toggle-btn" onclick="stopStudyChallenge()">⏹️ تعطيل تحدي الدراسة</button>
+    <button class="toggle-btn" onclick="startStudyChallenge()">🚀 تفعيل</button>
+    <button class="toggle-btn" onclick="stopStudyChallenge()">⏹️ تعطيل</button>
   </div>
   <div id="studyChallengeStatusMsg" class="hint"></div>
 
   <hr style="border-color:var(--border, #2a3a4a); margin:20px 0;">
   <p class="hint" style="margin-bottom:10px;">تصفير رصيد "هذا الأسبوع" لجميع الطلاب (لا يمس رصيدهم الكلي/الإجمالي إطلاقًا).</p>
   <div class="toggle-row">
-    <button class="toggle-btn" onclick="resetWeeklyLeaderboard()">🔄 تصفير الترتيب الأسبوعي</button>
+    <button class="toggle-btn" onclick="resetWeeklyLeaderboard()">🔄 تصفير</button>
   </div>
   <div id="weeklyResetStatusMsg" class="hint"></div>
 </div>
 
 <!-- لوحة الثيمات والأنماط الموحدة -->
 <div class="card hidden" id="themesPatternsPanel">
-  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع للوحة الرئيسية</button>
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع</button>
   <p class="eyebrow">🎨 الثيمات والأنماط</p>
   <h1>ألوان وأشكال المؤقتات</h1>
 
