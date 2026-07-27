@@ -83,6 +83,30 @@
 
   .loading{text-align:center; color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace; margin-bottom:10px;}
 
+  /* ================= وضع التركيز العميق ================= */
+  .focus-toggle-btn{
+    position:fixed; top:16px; left:16px; width:44px; height:44px; border-radius:50%; z-index:20;
+    background:var(--panel); border:1px solid var(--border); color:var(--muted); font-size:19px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,.4); transition:border-color .2s ease, color .2s ease, box-shadow .2s ease;
+  }
+  .focus-toggle-btn:active{transform:scale(0.93);}
+  .focus-toggle-btn.active{
+    border-color:var(--amber); color:var(--amber);
+    box-shadow:0 0 0 3px rgba(255,180,0,.15), 0 6px 18px rgba(0,0,0,.4);
+  }
+  .focus-toast{
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(16px);
+    max-width:320px; width:calc(100% - 36px);
+    background:var(--panel); border:1px solid var(--amber); color:#fff;
+    padding:12px 16px; border-radius:14px; display:flex; align-items:center; gap:10px;
+    font-family:'Tajawal',sans-serif; font-size:12.5px; font-weight:700; line-height:1.5;
+    box-shadow:0 10px 30px rgba(0,0,0,.5); z-index:35;
+    opacity:0; pointer-events:none; transition:opacity .3s ease, transform .3s ease;
+  }
+  .focus-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .focus-toast .f-icon{font-size:20px; flex-shrink:0;}
+
   /* ================= تذكير شرب الماء ================= */
   .info-btn{
     position:absolute; top:10px; inset-inline-start:10px; width:24px; height:24px; border-radius:50%;
@@ -151,6 +175,12 @@
 </style>
 </head>
 <body>
+
+<button type="button" class="focus-toggle-btn" id="focusToggleBtn" onclick="toggleDeepFocus()" aria-label="وضع التركيز العميق" title="وضع التركيز العميق">🧘</button>
+<div class="focus-toast" id="focusToast">
+  <span class="f-icon">🧘</span>
+  <span id="focusToastText"></span>
+</div>
 
 <div class="wrap">
   <p class="eyebrow">مركز المؤقتات</p>
@@ -351,6 +381,37 @@ window.addEventListener("offline", updateNetBanner);
 updateNetBanner();
 </script>
 
+<script>
+/* ================= وضع التركيز العميق ================= */
+/* مفتاح عام يتحفظ بالجهاز — لمن يكون مفعّل، صفحات المؤقتات (لمن نطبّقه فيها) تبسّط واجهتها وتوقف
+   التنبيهات غير الضرورية. هذا الزر هنا بس يفعّل/يوقف الحالة العامة، ما يغيّر شي بصفحة الرئيسية نفسها. */
+const FOCUS_KEY = "deep_focus_mode";
+let deepFocusOn = localStorage.getItem(FOCUS_KEY) === "1";
+
+function updateFocusButtonUI(){
+  document.getElementById("focusToggleBtn").classList.toggle("active", deepFocusOn);
+}
+
+window.toggleDeepFocus = function(){
+  deepFocusOn = !deepFocusOn;
+  localStorage.setItem(FOCUS_KEY, deepFocusOn ? "1" : "0");
+  updateFocusButtonUI();
+  showFocusToast();
+};
+
+let focusToastTimeout = null;
+function showFocusToast(){
+  const toast = document.getElementById("focusToast");
+  document.getElementById("focusToastText").innerText = deepFocusOn
+    ? "وضع التركيز العميق مفعّل — راح يبسّط واجهة المؤقت ويوقف التنبيهات غير الضرورية"
+    : "تم إيقاف وضع التركيز العميق";
+  toast.classList.add("show");
+  if (focusToastTimeout) clearTimeout(focusToastTimeout);
+  focusToastTimeout = setTimeout(() => toast.classList.remove("show"), 3200);
+}
+
+updateFocusButtonUI();
+</script>
 <script>
 /* ================= تذكير شرب الماء ================= */
 const WATER_KEY = "water_reminder_enabled";
