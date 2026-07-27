@@ -480,6 +480,11 @@
     <p class="eyebrow">🏆 تحدي الدراسة</p>
     <h1>من يدرس لمدة أطول؟</h1>
     <p class="greeting" id="greeting">مرحبًا بك</p>
+    <div class="toggle-row" style="margin:-6px 0 12px;">
+      <button class="secondary" style="font-size:12px; padding:6px 10px;" onclick="openProfileModal(false)">✏️ تعديل بياناتي</button>
+      <button class="secondary" style="font-size:12px; padding:6px 10px;" id="showMyCodeBtn" onclick="showMyRecoveryCode()">🔑 رمزي</button>
+      <button class="secondary" style="font-size:12px; padding:6px 10px;" onclick="document.getElementById('recoverAccountOverlay').style.display='flex';">♻️ استرجاع حساب</button>
+    </div>
 
     <div id="setupView">
       <div class="presets">
@@ -638,6 +643,23 @@
       <input type="text" id="fGovOther" placeholder="اكتب اسم المحافظة أو المنطقة">
     </div>
     <button class="primary" id="profileSaveBtn" onclick="saveProfile()">💾 حفظ</button>
+  </div>
+</div>
+
+<div class="overlay" id="recoveryCodeOverlay">
+  <div class="modal">
+    <h2>🔑 رمز استرجاع حسابك</h2>
+    <p class="hint" style="line-height:1.8;">هذا رمزك الشخصي — احتفظ فيه بمكان آمن (صورة شاشة أو مكتوب بدفترك). لو ضاع حسابك يومًا (مسحت المتصفح، غيّرت جهاز...)، أعطي هذا الرمز لأستاذك وهو رح يرجّعلك رصيدك.</p>
+    <div style="text-align:center; font-size:28px; font-weight:800; letter-spacing:3px; padding:18px 10px; margin:14px 0; border:2px dashed var(--accent, #4a9eff); border-radius:12px;" id="recoveryCodeDisplay"></div>
+    <button class="primary" onclick="document.getElementById('recoveryCodeOverlay').style.display='none';">فهمت، احتفظت فيه ✅</button>
+  </div>
+</div>
+
+<div class="overlay" id="recoverAccountOverlay">
+  <div class="modal">
+    <h2>♻️ استرجاع حساب قديم</h2>
+    <p class="hint" style="line-height:1.8;">إذا عندك رمز استرجاع من حساب سابق، أعطيه لأستاذك مباشرة (بالواتساب أو بالصف) وهو رح يرجّعلك رصيدك من لوحة التحكم. هذا الزر فقط للتذكير — الاسترجاع نفسه يصير من عند الأستاذ.</p>
+    <button class="primary" onclick="document.getElementById('recoverAccountOverlay').style.display='none';">تمام</button>
   </div>
 </div>
 
@@ -993,6 +1015,46 @@ window.resetTimer = function(){
 
 /* ================= الملف الشخصي ================= */
 const PROFILE_KEY = "studyChallengeProfile";
+const RECOVERY_KEY = "studyChallengeRecoveryCode";
+const RECOVERY_CHARS = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // بدون أحرف/أرقام ملتبسة (0/O، 1/I/L)
+
+function generateRecoveryCode(){
+  let code = "";
+  for (let i = 0; i < 8; i++){
+    if (i === 4) code += "-";
+    code += RECOVERY_CHARS[Math.floor(Math.random() * RECOVERY_CHARS.length)];
+  }
+  return code;
+}
+
+function showRecoveryCode(code){
+  document.getElementById("recoveryCodeDisplay").innerText = code;
+  document.getElementById("recoveryCodeOverlay").style.display = "flex";
+}
+
+window.showMyRecoveryCode = function(){
+  const code = localStorage.getItem(RECOVERY_KEY);
+  if (code){ showRecoveryCode(code); return; }
+  // ما في رمز محفوظ محليًا (مثلاً بروفايل قديم من قبل الميزة) — ننشئ واحد جديد الآن
+  authReady.then(async (myUid) => {
+    const p = getProfile();
+    if (!p) return;
+    const code = await createRecoveryCode(myUid, p.name);
+    if (code) showRecoveryCode(code);
+  });
+};
+
+async function createRecoveryCode(myUid, name){
+  for (let attempt = 0; attempt < 3; attempt++){
+    const code = generateRecoveryCode();
+    try{
+      await db.ref('recoveryCodes/' + code).set({ uid: myUid, name: name, createdAt: firebase.database.ServerValue.TIMESTAMP });
+      localStorage.setItem(RECOVERY_KEY, code);
+      return code;
+    }catch(e){ /* الرمز مستخدم مسبقًا (نادر جدًا) أو خطأ مؤقت — نجرب رمز تاني */ }
+  }
+  return null;
+}
 
 function getProfile(){
   try{
@@ -1058,6 +1120,13 @@ window.saveProfile = async function(){
   if (isNewProfile) profileUpdate.totalSeconds = 0; // مسموح فقط عند إنشاء السجل لأول مرة (تفرضه قاعدة الأمان)
   try{
     await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
+    if (isNewProfile){
+      const code = await createRecoveryCode(myUid, p.name);
+      document.getElementById("profileOverlay").style.display = "none";
+      updateGreeting();
+      if (code) showRecoveryCode(code);
+      return;
+    }
   } finally {
     if (saveBtn) saveBtn.disabled = false;
   }
