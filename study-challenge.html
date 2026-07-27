@@ -35,7 +35,7 @@
     position:fixed; top:14px; inset-inline-end:18px; z-index:5;
     display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:20px;
     border:1px solid var(--border); background:var(--panel); color:#fff; font-size:12.5px;
-    font-family:'Tajawal',sans-serif; font-weight:700; cursor:pointer;
+    font-family:'Tajawal',sans-serif; font-weight:700; cursor:pointer; text-decoration:none;
   }
   .wrap{width:100%; max-width:440px; display:flex; flex-direction:column; gap:16px;}
   .card{
@@ -355,7 +355,7 @@
 <body>
 
 <a href="index.html" class="back-link">‹ الرئيسية</a>
-<button class="profile-btn" onclick="openProfileModal(false)">👤 الملف الشخصي</button>
+<a href="index.html" class="profile-btn" title="إدارة الملف الشخصي من الصفحة الرئيسية">👤 الملف الشخصي</a>
 
 <button class="calc-fab" onclick="openCalc()" aria-label="حاسبة">🧮</button>
 
@@ -480,11 +480,6 @@
     <p class="eyebrow">🏆 تحدي الدراسة</p>
     <h1>من يدرس لمدة أطول؟</h1>
     <p class="greeting" id="greeting">مرحبًا بك</p>
-    <div class="toggle-row" style="margin:-6px 0 12px;">
-      <button class="secondary" style="font-size:12px; padding:6px 10px;" onclick="openProfileModal(false)">✏️ تعديل بياناتي</button>
-      <button class="secondary" style="font-size:12px; padding:6px 10px;" id="showMyCodeBtn" onclick="showMyRecoveryCode()">🔑 رمزي</button>
-      <button class="secondary" style="font-size:12px; padding:6px 10px;" onclick="document.getElementById('recoverAccountOverlay').style.display='flex';">♻️ استرجاع حساب</button>
-    </div>
 
     <div id="setupView">
       <div class="presets">
@@ -576,90 +571,6 @@
       <button class="secondary" onclick="closeTimePicker()">إلغاء</button>
       <button class="primary" style="margin-top:0;" onclick="confirmTimePicker()">تأكيد ✅</button>
     </div>
-  </div>
-</div>
-
-<div class="overlay" id="profileOverlay">
-  <div class="modal">
-    <h2>📝 معلوماتك الشخصية</h2>
-    <p class="modal-error" id="profileError">فضلاً عبّئ الاسم والعمر والبلد بشكل صحيح</p>
-    <div class="field">
-      <label>الاسم</label>
-      <input type="text" id="fName" placeholder="اكتب اسمك">
-    </div>
-    <div class="field">
-      <label>العمر</label>
-      <input type="number" id="fAge" min="5" max="100" placeholder="اكتب عمرك">
-    </div>
-    <div class="field">
-      <label>البلد</label>
-      <select id="fCountry" onchange="onCountryChange()">
-        <option value="العراق">العراق</option>
-        <option value="السعودية">السعودية</option>
-        <option value="الأردن">الأردن</option>
-        <option value="سوريا">سوريا</option>
-        <option value="لبنان">لبنان</option>
-        <option value="مصر">مصر</option>
-        <option value="الكويت">الكويت</option>
-        <option value="الإمارات">الإمارات</option>
-        <option value="قطر">قطر</option>
-        <option value="البحرين">البحرين</option>
-        <option value="عُمان">عُمان</option>
-        <option value="اليمن">اليمن</option>
-        <option value="فلسطين">فلسطين</option>
-        <option value="ليبيا">ليبيا</option>
-        <option value="تونس">تونس</option>
-        <option value="الجزائر">الجزائر</option>
-        <option value="المغرب">المغرب</option>
-        <option value="السودان">السودان</option>
-        <option value="أخرى">أخرى</option>
-      </select>
-    </div>
-    <div class="field" id="iraqGovField">
-      <label>المحافظة</label>
-      <select id="fGovIraq">
-        <option value="بغداد">بغداد</option>
-        <option value="البصرة">البصرة</option>
-        <option value="نينوى">نينوى</option>
-        <option value="أربيل">أربيل</option>
-        <option value="النجف">النجف</option>
-        <option value="كربلاء">كربلاء</option>
-        <option value="الأنبار">الأنبار</option>
-        <option value="ذي قار">ذي قار</option>
-        <option value="ديالى">ديالى</option>
-        <option value="كركوك">كركوك</option>
-        <option value="بابل">بابل</option>
-        <option value="واسط">واسط</option>
-        <option value="ميسان">ميسان</option>
-        <option value="المثنى">المثنى</option>
-        <option value="القادسية">القادسية</option>
-        <option value="صلاح الدين">صلاح الدين</option>
-        <option value="دهوك">دهوك</option>
-        <option value="السليمانية">السليمانية</option>
-      </select>
-    </div>
-    <div class="field hidden" id="otherGovField">
-      <label>المحافظة / المنطقة</label>
-      <input type="text" id="fGovOther" placeholder="اكتب اسم المحافظة أو المنطقة">
-    </div>
-    <button class="primary" id="profileSaveBtn" onclick="saveProfile()">💾 حفظ</button>
-  </div>
-</div>
-
-<div class="overlay" id="recoveryCodeOverlay">
-  <div class="modal">
-    <h2>🔑 رمز استرجاع حسابك</h2>
-    <p class="hint" style="line-height:1.8;">هذا رمزك الشخصي — احتفظ فيه بمكان آمن (صورة شاشة أو مكتوب بدفترك). لو ضاع حسابك يومًا (مسحت المتصفح، غيّرت جهاز...)، أعطي هذا الرمز لأستاذك وهو رح يرجّعلك رصيدك.</p>
-    <div style="text-align:center; font-size:28px; font-weight:800; letter-spacing:3px; padding:18px 10px; margin:14px 0; border:2px dashed var(--accent, #4a9eff); border-radius:12px;" id="recoveryCodeDisplay"></div>
-    <button class="primary" onclick="document.getElementById('recoveryCodeOverlay').style.display='none';">فهمت، احتفظت فيه ✅</button>
-  </div>
-</div>
-
-<div class="overlay" id="recoverAccountOverlay">
-  <div class="modal">
-    <h2>♻️ استرجاع حساب قديم</h2>
-    <p class="hint" style="line-height:1.8;">إذا عندك رمز استرجاع من حساب سابق، أعطيه لأستاذك مباشرة (بالواتساب أو بالصف) وهو رح يرجّعلك رصيدك من لوحة التحكم. هذا الزر فقط للتذكير — الاسترجاع نفسه يصير من عند الأستاذ.</p>
-    <button class="primary" onclick="document.getElementById('recoverAccountOverlay').style.display='none';">تمام</button>
   </div>
 </div>
 
@@ -897,7 +808,7 @@ window.pickPreset = function(minutes, el){
 };
 
 window.startTimer = function(){
-  if (!getProfile()){ openProfileModal(true); return; }
+  if (!getProfile()){ location.href = "index.html"; return; }
   const customVal = document.getElementById("customTime").value;
   let minutes = selectedMinutes;
   if (customVal){
@@ -1013,48 +924,10 @@ window.resetTimer = function(){
   if (wakeLock){ wakeLock.release().catch(()=>{}); wakeLock = null; }
 };
 
-/* ================= الملف الشخصي ================= */
+/* ================= الملف الشخصي =================
+   إدارة الملف الشخصي (تعديل البيانات، الرمز، الاسترجاع) انتقلت بالكامل
+   إلى الصفحة الرئيسية (index.html). هذه الصفحة فقط تقرأ الملف الشخصي المحفوظ محليًا. */
 const PROFILE_KEY = "studyChallengeProfile";
-const RECOVERY_KEY = "studyChallengeRecoveryCode";
-const RECOVERY_CHARS = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // بدون أحرف/أرقام ملتبسة (0/O، 1/I/L)
-
-function generateRecoveryCode(){
-  let code = "";
-  for (let i = 0; i < 8; i++){
-    if (i === 4) code += "-";
-    code += RECOVERY_CHARS[Math.floor(Math.random() * RECOVERY_CHARS.length)];
-  }
-  return code;
-}
-
-function showRecoveryCode(code){
-  document.getElementById("recoveryCodeDisplay").innerText = code;
-  document.getElementById("recoveryCodeOverlay").style.display = "flex";
-}
-
-window.showMyRecoveryCode = function(){
-  const code = localStorage.getItem(RECOVERY_KEY);
-  if (code){ showRecoveryCode(code); return; }
-  // ما في رمز محفوظ محليًا (مثلاً بروفايل قديم من قبل الميزة) — ننشئ واحد جديد الآن
-  authReady.then(async (myUid) => {
-    const p = getProfile();
-    if (!p) return;
-    const code = await createRecoveryCode(myUid, p.name);
-    if (code) showRecoveryCode(code);
-  });
-};
-
-async function createRecoveryCode(myUid, name){
-  for (let attempt = 0; attempt < 3; attempt++){
-    const code = generateRecoveryCode();
-    try{
-      await db.ref('recoveryCodes/' + code).set({ uid: myUid, name: name, createdAt: firebase.database.ServerValue.TIMESTAMP });
-      localStorage.setItem(RECOVERY_KEY, code);
-      return code;
-    }catch(e){ /* الرمز مستخدم مسبقًا (نادر جدًا) أو خطأ مؤقت — نجرب رمز تاني */ }
-  }
-  return null;
-}
 
 function getProfile(){
   try{
@@ -1062,78 +935,6 @@ function getProfile(){
     return raw ? JSON.parse(raw) : null;
   }catch(e){ return null; }
 }
-
-window.onCountryChange = function(){
-  const isIraq = document.getElementById("fCountry").value === "العراق";
-  document.getElementById("iraqGovField").classList.toggle("hidden", !isIraq);
-  document.getElementById("otherGovField").classList.toggle("hidden", isIraq);
-};
-
-window.openProfileModal = function(forced){
-  const p = getProfile();
-  if (p){
-    document.getElementById("fName").value = p.name || "";
-    document.getElementById("fAge").value = p.age || "";
-    document.getElementById("fCountry").value = p.country || "العراق";
-    onCountryChange();
-    if (p.country === "العراق") document.getElementById("fGovIraq").value = p.governorate || "بغداد";
-    else document.getElementById("fGovOther").value = p.governorate || "";
-  } else {
-    onCountryChange();
-  }
-  document.getElementById("profileError").style.display = "none";
-  document.getElementById("profileOverlay").style.display = "flex";
-};
-
-window.saveProfile = async function(){
-  const name = document.getElementById("fName").value.trim();
-  const age = parseInt(document.getElementById("fAge").value, 10);
-  const country = document.getElementById("fCountry").value;
-  const isIraq = country === "العراق";
-  const governorate = isIraq
-    ? document.getElementById("fGovIraq").value
-    : document.getElementById("fGovOther").value.trim();
-
-  if (!name || !age || age < 5 || age > 100 || !country || !governorate){
-    document.getElementById("profileError").style.display = "block";
-    return;
-  }
-
-  const saveBtn = document.getElementById("profileSaveBtn");
-  if (saveBtn) saveBtn.disabled = true;
-  const myUid = await authReady; // نستنى الدخول المجهول قبل أي كتابة، لأن قاعدة الأمان بتشترط auth.uid == $uid
-
-  const existing = getProfile();
-  // معرّف السجل هو دايمًا auth.uid الحالي — أي id قديم مخزّن محليًا (من نظام سابق) ما بينفع للكتابة بعد اليوم
-  const isNewProfile = !existing || existing.id !== myUid;
-  let p = { id: myUid };
-  p.name = name;
-  p.age = age;
-  p.country = country;
-  p.governorate = governorate;
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
-
-  const profileUpdate = {
-    name: p.name, age: p.age, country: p.country, governorate: p.governorate,
-    updatedAt: serverTimestampValue()
-  };
-  if (isNewProfile) profileUpdate.totalSeconds = 0; // مسموح فقط عند إنشاء السجل لأول مرة (تفرضه قاعدة الأمان)
-  try{
-    await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
-    if (isNewProfile){
-      const code = await createRecoveryCode(myUid, p.name);
-      document.getElementById("profileOverlay").style.display = "none";
-      updateGreeting();
-      if (code) showRecoveryCode(code);
-      return;
-    }
-  } finally {
-    if (saveBtn) saveBtn.disabled = false;
-  }
-
-  document.getElementById("profileOverlay").style.display = "none";
-  updateGreeting();
-};
 
 function updateGreeting(){
   const p = getProfile();
@@ -1291,18 +1092,27 @@ function updateStreakInfo(streak){
   }
 }
 
-authReady.then((myUid) => {
+authReady.then(async (myUid) => {
   const myProfileOnLoad = getProfile();
-  // ترحيل تلقائي: لو عندنا بروفايل محلي بمعرّف قديم (نظام قبل تفعيل تسجيل الدخول المجهول)
-  // ننشئ سجل جديد بنفس البيانات تحت auth.uid الحالي حتى تستمر كتابة الوقت تعمل.
-  // ملاحظة: totalSeconds بيبلش من 0 بالسجل الجديد (قيود الأمان ما بتسمح بغير هيك لغير الأدمن)،
-  // فالسجل القديم بيضل موجود بالقاعدة (يمكن دمجه يدويًا من لوحة التحكم لو الأمر يستاهل).
+  // ترحيل تلقائي: لو عندنا بروفايل محلي بمعرّف قديم (نظام قبل تفعيل تسجيل الدخول المجهول،
+  // أو لأي سبب تغيّر معرّف الدخول المجهول لهذا الجهاز) ننشئ سجل جديد بنفس البيانات تحت auth.uid الحالي.
+  // مهم: لا نصفّر رصيد الطالب أبدًا هنا — نجلب أولًا رصيده القديم (totalSeconds/streak/...) وننقله
+  // كاملاً للسجل الجديد، حتى لا تختفي ساعات دراسته بسبب مجرد تغيّر معرّف الدخول.
   if (myProfileOnLoad && myProfileOnLoad.id !== myUid){
     const migrated = { id: myUid, name: myProfileOnLoad.name, age: myProfileOnLoad.age, country: myProfileOnLoad.country, governorate: myProfileOnLoad.governorate };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(migrated));
+    let oldData = {};
+    try{
+      const oldSnap = await db.ref('studyLeaderboard/' + myProfileOnLoad.id).once('value');
+      oldData = oldSnap.val() || {};
+    }catch(e){ /* تعذّرت قراءة السجل القديم — نكمل بدون نقل رصيد بدل ما نعلّق الصفحة */ }
     db.ref('studyLeaderboard/' + myUid).update({
       name: migrated.name, age: migrated.age, country: migrated.country, governorate: migrated.governorate,
-      totalSeconds: 0, updatedAt: serverTimestampValue()
+      totalSeconds: oldData.totalSeconds || 0,
+      dayIndex: oldData.dayIndex, daySeconds: oldData.daySeconds || 0,
+      weekIndex: oldData.weekIndex, weeklySeconds: oldData.weeklySeconds || 0,
+      streak: oldData.streak || 0, lastStudyDayIndex: oldData.lastStudyDayIndex,
+      updatedAt: serverTimestampValue()
     });
   }
   db.ref('studyLeaderboard/' + myUid).on('value', (snap) => {
@@ -1315,9 +1125,8 @@ authReady.then((myUid) => {
 /* ================= بدء التشغيل ================= */
 updateGreeting();
 if (!getProfile()){
-  openProfileModal(true);
-} else {
-  document.getElementById("profileOverlay").style.display = "none";
+  // ما سجّل بياناته من الصفحة الرئيسية بعد — نرجعه ليسجّل هناك أولاً
+  location.href = "index.html";
 }
 </script>
 
