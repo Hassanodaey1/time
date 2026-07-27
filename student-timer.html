@@ -45,13 +45,6 @@
   }
   .preset-btn.active{border-color:var(--accent); color:var(--accent); background:rgba(72,202,228,.1);}
 
-  .preset-btn-open{
-    display:block; width:100%; padding:12px 4px; border-radius:24px; border:1px solid var(--border);
-    background:#16161c; color:#fff; font-family:'JetBrains Mono',monospace; font-weight:700;
-    cursor:pointer; font-size:14px; margin-bottom:14px;
-  }
-  .preset-btn-open.active{border-color:var(--accent); color:var(--accent); background:rgba(72,202,228,.1);}
-
   .custom-row{display:flex; gap:8px; margin-bottom:20px;}
   .custom-row input{
     flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:#16161c;
@@ -66,6 +59,8 @@
   }
   .time-picker-btn:active{transform:scale(0.98);}
   .time-picker-btn:hover{border-color:var(--accent);}
+  .time-picker-btn.active{border-color:var(--accent); background:rgba(255,180,0,.08);}
+  .time-picker-btn.active .tp-value{color:var(--accent);}
   .time-picker-btn .tp-icon{
     width:44px; height:44px; border-radius:13px; display:flex; align-items:center; justify-content:center;
     font-size:20px; flex-shrink:0; background:rgba(255,180,0,.12); color:var(--accent);
@@ -92,6 +87,12 @@
   }
   .tp-unit{font-size:11px; color:var(--muted);}
   .tp-sep{font-family:'JetBrains Mono',monospace; font-size:30px; font-weight:900; color:var(--muted); margin-top:-24px;}
+  .tp-num-year{min-width:88px; font-size:24px;}
+  .remind-clear-btn{
+    display:block; margin-top:8px; background:none; border:none; color:var(--muted);
+    font-family:'Tajawal',sans-serif; font-size:12px; cursor:pointer; text-decoration:underline;
+  }
+  .remind-clear-btn:hover{color:#fff;}
 
   .digits{display:flex; justify-content:center; gap:10px; margin-bottom:22px; display:none;}
   .unit{display:flex; flex-direction:column; align-items:center; gap:6px;}
@@ -170,8 +171,8 @@
   body[data-style="flipclock"]{ background:#000; }
   body[data-style="flipclock"] .card{ background:#000; border:none; }
   body[data-style="flipclock"] .eyebrow{ color:#4aa8ff; }
-  body[data-style="flipclock"] .preset-btn, body[data-style="flipclock"] .preset-btn-open{ background:#101418; border-color:#1c232b; color:#8aa0b8; }
-  body[data-style="flipclock"] .preset-btn.active, body[data-style="flipclock"] .preset-btn-open.active{ border-color:#4aa8ff; color:#4aa8ff; background:rgba(74,168,255,.1); }
+  body[data-style="flipclock"] .preset-btn, body[data-style="flipclock"] .time-picker-btn{ background:#101418; border-color:#1c232b; color:#8aa0b8; }
+  body[data-style="flipclock"] .preset-btn.active, body[data-style="flipclock"] .time-picker-btn.active{ border-color:#4aa8ff; color:#4aa8ff; background:rgba(74,168,255,.1); }
   body[data-style="flipclock"] .custom-row input{ background:#101418; border-color:#1c232b; color:#fff; }
   body[data-style="flipclock"] .digits{ gap:8px; }
   body[data-style="flipclock"] .unit{ perspective:300px; }
@@ -682,9 +683,8 @@
       <button class="preset-btn" onclick="pickPomoWork(35, this)">35 د</button>
       <button class="preset-btn" onclick="pickPomoWork(45, this)">45 د</button>
     </div>
-    <button class="preset-btn-open" id="pomoWorkOpenBtn" onclick="pickPomoWorkOpen(this)">مفتوح</button>
-    <div class="custom-row hidden" id="pomoWorkCustomRow">
-      <button type="button" class="time-picker-btn" style="margin-bottom:0;" onclick="openTimePicker('pomoWorkCustomTime','pomoWorkCustomTimeDisplay')">
+    <div class="custom-row" id="pomoWorkCustomRow">
+      <button type="button" class="time-picker-btn" id="pomoWorkCustomBtn" style="margin-bottom:0;" onclick="selectPomoWorkCustom(this)">
         <span class="tp-icon">⏰</span>
         <span class="tp-text">
           <span class="tp-label">تخصيص الوقت</span>
@@ -777,7 +777,16 @@
     </div>
     <div class="field">
       <label>تذكير بوقت معيّن (اختياري)</label>
-      <input type="datetime-local" id="taskRemindInput">
+      <button type="button" class="time-picker-btn" id="taskRemindBtn" style="margin-bottom:0;" onclick="openDateTimePicker('taskRemindValue','taskRemindDisplay')">
+        <span class="tp-icon">⏰</span>
+        <span class="tp-text">
+          <span class="tp-label">تخصيص الوقت</span>
+          <span class="tp-value" id="taskRemindDisplay">اضغط لتحديد التاريخ والوقت</span>
+        </span>
+        <span class="arrow">‹</span>
+      </button>
+      <input type="hidden" id="taskRemindValue" value="">
+      <button type="button" class="remind-clear-btn hidden" id="taskRemindClearBtn" onclick="clearTaskRemind()">✕ إلغاء التذكير</button>
     </div>
     <div class="controls">
       <button class="secondary" onclick="closeTaskModal()">إلغاء</button>
@@ -807,6 +816,51 @@
     <div class="app-dialog-actions">
       <button class="secondary" onclick="closeTimePicker()">إلغاء</button>
       <button class="primary" style="margin-top:0;" onclick="confirmTimePicker()">تأكيد ✅</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="dateTimePickerOverlay">
+  <div class="modal tp-modal" style="max-width:380px;">
+    <h2>⏰ حدد تاريخ ووقت التذكير</h2>
+    <div class="tp-steppers">
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDtField('year',1)">+</button>
+        <div class="tp-num tp-num-year" id="dtYearNum">2026</div>
+        <button type="button" class="tp-btn" onclick="adjustDtField('year',-1)">−</button>
+        <span class="tp-unit">سنة</span>
+      </div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDtField('month',1)">+</button>
+        <div class="tp-num" id="dtMonthNum">01</div>
+        <button type="button" class="tp-btn" onclick="adjustDtField('month',-1)">−</button>
+        <span class="tp-unit">شهر</span>
+      </div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDtField('day',1)">+</button>
+        <div class="tp-num" id="dtDayNum">01</div>
+        <button type="button" class="tp-btn" onclick="adjustDtField('day',-1)">−</button>
+        <span class="tp-unit">يوم</span>
+      </div>
+    </div>
+    <div class="tp-steppers">
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDtField('hour',1)">+</button>
+        <div class="tp-num" id="dtHourNum">00</div>
+        <button type="button" class="tp-btn" onclick="adjustDtField('hour',-1)">−</button>
+        <span class="tp-unit">ساعة</span>
+      </div>
+      <div class="tp-sep">:</div>
+      <div class="tp-stepper">
+        <button type="button" class="tp-btn" onclick="adjustDtField('minute',1)">+</button>
+        <div class="tp-num" id="dtMinuteNum">30</div>
+        <button type="button" class="tp-btn" onclick="adjustDtField('minute',-1)">−</button>
+        <span class="tp-unit">دقيقة</span>
+      </div>
+    </div>
+    <div class="app-dialog-actions">
+      <button class="secondary" onclick="closeDateTimePicker()">إلغاء</button>
+      <button class="primary" style="margin-top:0;" onclick="confirmDateTimePicker()">تأكيد ✅</button>
     </div>
   </div>
 </div>
@@ -930,6 +984,81 @@ window.confirmTimePicker = function(){
   displayEl.innerText = val + " ساعة:دقيقة";
   displayEl.classList.add("set");
   closeTimePicker();
+};
+
+/* ================= منتقي التاريخ والوقت (تذكيرات المهام) ================= */
+let dtYear, dtMonth, dtDay, dtHour, dtMinute;
+let dtTargetId = "taskRemindValue";
+let dtDisplayId = "taskRemindDisplay";
+
+function daysInMonth(y, m){ return new Date(y, m, 0).getDate(); }
+
+window.openDateTimePicker = function(targetId, displayId){
+  dtTargetId = targetId || "taskRemindValue";
+  dtDisplayId = displayId || "taskRemindDisplay";
+  const existing = document.getElementById(dtTargetId).value;
+  const base = existing ? new Date(Number(existing)) : new Date(Date.now() + 30 * 60 * 1000);
+  dtYear = base.getFullYear();
+  dtMonth = base.getMonth() + 1;
+  dtDay = base.getDate();
+  dtHour = base.getHours();
+  dtMinute = base.getMinutes();
+  renderDateTimePicker();
+  document.getElementById("dateTimePickerOverlay").classList.add("show");
+};
+window.closeDateTimePicker = function(){
+  document.getElementById("dateTimePickerOverlay").classList.remove("show");
+};
+function renderDateTimePicker(){
+  document.getElementById("dtYearNum").innerText = String(dtYear);
+  document.getElementById("dtMonthNum").innerText = String(dtMonth).padStart(2, "0");
+  document.getElementById("dtDayNum").innerText = String(dtDay).padStart(2, "0");
+  document.getElementById("dtHourNum").innerText = String(dtHour).padStart(2, "0");
+  document.getElementById("dtMinuteNum").innerText = String(dtMinute).padStart(2, "0");
+}
+window.adjustDtField = function(field, delta){
+  if (field === "year"){
+    dtYear = Math.max(2020, Math.min(2100, dtYear + delta));
+  } else if (field === "month"){
+    dtMonth += delta;
+    if (dtMonth > 12){ dtMonth = 1; dtYear = Math.min(2100, dtYear + 1); }
+    if (dtMonth < 1){ dtMonth = 12; dtYear = Math.max(2020, dtYear - 1); }
+  } else if (field === "day"){
+    const max = daysInMonth(dtYear, dtMonth);
+    dtDay += delta;
+    if (dtDay > max) dtDay = 1;
+    if (dtDay < 1) dtDay = max;
+  } else if (field === "hour"){
+    dtHour = (dtHour + delta + 24) % 24;
+  } else if (field === "minute"){
+    let total = dtHour * 60 + dtMinute + delta;
+    total = ((total % 1440) + 1440) % 1440;
+    dtHour = Math.floor(total / 60);
+    dtMinute = total % 60;
+  }
+  const maxDay = daysInMonth(dtYear, dtMonth);
+  if (dtDay > maxDay) dtDay = maxDay;
+  renderDateTimePicker();
+};
+window.confirmDateTimePicker = function(){
+  const dt = new Date(dtYear, dtMonth - 1, dtDay, dtHour, dtMinute, 0, 0);
+  document.getElementById(dtTargetId).value = String(dt.getTime());
+  const displayEl = document.getElementById(dtDisplayId);
+  displayEl.innerText = formatRemindTime(dt.getTime());
+  displayEl.classList.add("set");
+  const btn = document.getElementById("taskRemindBtn");
+  if (btn) btn.classList.add("active");
+  const clearBtn = document.getElementById("taskRemindClearBtn");
+  if (clearBtn) clearBtn.classList.remove("hidden");
+  closeDateTimePicker();
+};
+window.clearTaskRemind = function(){
+  document.getElementById("taskRemindValue").value = "";
+  const displayEl = document.getElementById("taskRemindDisplay");
+  displayEl.innerText = "اضغط لتحديد التاريخ والوقت";
+  displayEl.classList.remove("set");
+  document.getElementById("taskRemindBtn").classList.remove("active");
+  document.getElementById("taskRemindClearBtn").classList.add("hidden");
 };
 
 const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
@@ -1240,7 +1369,9 @@ window.openTaskModal = function(id){
   const titleEl = document.getElementById("taskModalTitle");
   const titleInput = document.getElementById("taskTitleInput");
   const noteInput = document.getElementById("taskNoteInput");
-  const remindInput = document.getElementById("taskRemindInput");
+  const remindValue = document.getElementById("taskRemindValue");
+  const remindDisplay = document.getElementById("taskRemindDisplay");
+  const remindClearBtn = document.getElementById("taskRemindClearBtn");
 
   if (id){
     const t = getTasks().find(x => x.id === id);
@@ -1248,12 +1379,19 @@ window.openTaskModal = function(id){
     titleEl.innerText = "✏️ تعديل المهمة";
     titleInput.value = t.title || "";
     noteInput.value = t.note || "";
-    remindInput.value = t.remindAt ? toLocalInputValue(t.remindAt) : "";
+    if (t.remindAt){
+      remindValue.value = String(t.remindAt);
+      remindDisplay.innerText = formatRemindTime(t.remindAt);
+      remindDisplay.classList.add("set");
+      remindClearBtn.classList.remove("hidden");
+    } else {
+      clearTaskRemind();
+    }
   } else {
     titleEl.innerText = "📝 مهمة جديدة";
     titleInput.value = "";
     noteInput.value = "";
-    remindInput.value = "";
+    clearTaskRemind();
   }
   overlay.classList.add("show");
   titleInput.focus();
@@ -1264,19 +1402,13 @@ window.closeTaskModal = function(){
   editingTaskId = null;
 };
 
-function toLocalInputValue(ms){
-  const d = new Date(ms);
-  const pad2 = n => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
-
 window.saveTaskFromModal = function(){
   const title = document.getElementById("taskTitleInput").value.trim();
   const note = document.getElementById("taskNoteInput").value.trim();
-  const remindVal = document.getElementById("taskRemindInput").value;
+  const remindVal = document.getElementById("taskRemindValue").value;
   if (!title){ appAlert("اكتب عنوان المهمة أولاً"); return; }
 
-  const remindAt = remindVal ? new Date(remindVal).getTime() : null;
+  const remindAt = remindVal ? Number(remindVal) : null;
 
   if (remindAt && "Notification" in window && Notification.permission === "default"){
     Notification.requestPermission();
@@ -1659,20 +1791,19 @@ let pomoWorkIsCustom = false;
 
 function clearPomoWorkActive(){
   document.getElementById("pomoWorkPresets").querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
-  document.getElementById("pomoWorkOpenBtn").classList.remove("active");
+  document.getElementById("pomoWorkCustomBtn").classList.remove("active");
 }
 window.pickPomoWork = function(minutes, el){
   pomoWorkMinutes = minutes;
   pomoWorkIsCustom = false;
-  document.getElementById("pomoWorkCustomRow").classList.add("hidden");
   clearPomoWorkActive();
   el.classList.add("active");
 };
-window.pickPomoWorkOpen = function(el){
+window.selectPomoWorkCustom = function(el){
   pomoWorkIsCustom = true;
-  document.getElementById("pomoWorkCustomRow").classList.remove("hidden");
   clearPomoWorkActive();
   el.classList.add("active");
+  openTimePicker('pomoWorkCustomTime','pomoWorkCustomTimeDisplay');
 };
 window.pickPomoBreak = function(minutes, el){
   pomoBreakMinutes = minutes;
