@@ -356,6 +356,14 @@
     <button class="toggle-btn" onclick="resetWeeklyLeaderboard()">🔄 تصفير</button>
   </div>
   <div id="weeklyResetStatusMsg" class="hint"></div>
+
+  <hr style="border-color:var(--border, #2a3a4a); margin:20px 0;">
+  <p class="hint" style="margin-bottom:10px;">ترحيل سجلات الطلاب اللي كان عندهم رصيد قبل تفعيل تسجيل الدخول الآمن — بيدمج الرصيد القديم مع سجلهم الجديد تلقائيًا حسب تطابق الاسم والعمر والبلد والمحافظة، وبعدين يحذف السجل القديم.</p>
+  <div class="toggle-row">
+    <button class="toggle-btn" onclick="scanLegacyRecords()">🔍 فحص السجلات القديمة</button>
+  </div>
+  <div id="legacyMigrateList"></div>
+  <div id="legacyMigrateStatusMsg" class="hint"></div>
 </div>
 
 <!-- لوحة الثيمات والأنماط الموحدة -->
@@ -1307,6 +1315,107 @@ window.resetWeeklyLeaderboard = function(){
     }).catch((error) => {
       msg.style.color = "#ff3b30";
       msg.innerText = "فشل التصفير: " + error.message;
+    });
+  });
+};
+
+function formatHoursShort(seconds){
+  const h = (seconds || 0) / 3600;
+  return h >= 1 ? h.toFixed(1) + " ساعة" : Math.round((seconds || 0) / 60) + " دقيقة";
+}
+
+window.scanLegacyRecords = function(){
+  const listEl = document.getElementById("legacyMigrateList");
+  const msg = document.getElementById("legacyMigrateStatusMsg");
+  listEl.innerHTML = "";
+  msg.style.color = "#8b8d99";
+  msg.innerText = "جارٍ الفحص...";
+
+  db.ref('studyLeaderboard').once('value').then(snapshot => {
+    const all = [];
+    snapshot.forEach(child => { all.push({ id: child.key, ...child.val() }); });
+
+    const legacy = all.filter(r => r.id.indexOf('s_') === 0);
+    const modern = all.filter(r => r.id.indexOf('s_') !== 0);
+
+    const pairs = [];
+    legacy.forEach(old => {
+      const match = modern.find(m =>
+        !m._matched && m.name === old.name && m.age === old.age &&
+        m.country === old.country && m.governorate === old.governorate
+      );
+      if (match){
+        match._matched = true;
+        pairs.push({ old, modern: match });
+      }
+    });
+
+    if (pairs.length === 0){
+      msg.style.color = "#8b8d99";
+      msg.innerText = legacy.length === 0
+        ? "ما في سجلات قديمة تحتاج ترحيل."
+        : `في ${legacy.length} سجل قديم بس ما لقيت له مطابقة تلقائية بعد (لسه الطالب ما فتح الصفحة من بعد التحديث).`;
+      return;
+    }
+
+    msg.innerText = `لقيت ${pairs.length} سجل يحتاج دمج — راجعهم وأزل التحديد عن أي واحد مو متأكد منه:`;
+    window._legacyPairs = pairs;
+
+    pairs.forEach((pair, idx) => {
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border, #2a3a4a); font-size:14px;";
+      row.innerHTML = `
+        <input type="checkbox" checked data-idx="${idx}" class="legacyMergeCheck" style="width:18px; height:18px; flex-shrink:0;">
+        <span>${pair.old.name} (${pair.old.age}، ${pair.old.governorate}) — قديم: <b>${formatHoursShort(pair.old.totalSeconds)}</b> ← جديد: <b>${formatHoursShort(pair.modern.totalSeconds)}</b></span>
+      `;
+      listEl.appendChild(row);
+    });
+
+    const confirmRow = document.createElement("div");
+    confirmRow.className = "toggle-row";
+    confirmRow.style.marginTop = "14px";
+    confirmRow.innerHTML = `<button class="toggle-btn" onclick="mergeLegacyRecords()">✅ دمج المحدد</button>`;
+    listEl.appendChild(confirmRow);
+  }).catch((error) => {
+    msg.style.color = "#ff3b30";
+    msg.innerText = "فشل الفحص: " + error.message;
+  });
+};
+
+window.mergeLegacyRecords = function(){
+  const msg = document.getElementById("legacyMigrateStatusMsg");
+  const pairs = window._legacyPairs || [];
+  const checks = document.querySelectorAll(".legacyMergeCheck");
+  const selected = [];
+  checks.forEach(c => { if (c.checked) selected.push(pairs[parseInt(c.dataset.idx, 10)]); });
+
+  if (selected.length === 0){ msg.innerText = "ما اخترت أي سجل للدمج."; return; }
+
+  appConfirm(`متأكد من دمج ${selected.length} سجل؟ السجلات القديمة رح تنحذف نهائيًا بعد الدمج، والعملية ما تنرجع.`, () => {
+    msg.style.color = "#8b8d99";
+    msg.innerText = "جارٍ الدمج...";
+
+    const updates = {};
+    selected.forEach(pair => {
+      const o = pair.old, n = pair.modern;
+      updates[n.id + '/totalSeconds'] = Math.max(o.totalSeconds || 0, n.totalSeconds || 0);
+      updates[n.id + '/daySeconds'] = Math.max(o.daySeconds || 0, n.daySeconds || 0);
+      if (o.dayIndex != null) updates[n.id + '/dayIndex'] = o.dayIndex;
+      updates[n.id + '/weeklySeconds'] = Math.max(o.weeklySeconds || 0, n.weeklySeconds || 0);
+      if (o.weekIndex != null) updates[n.id + '/weekIndex'] = o.weekIndex;
+      updates[n.id + '/streak'] = Math.max(o.streak || 0, n.streak || 0);
+      if (o.lastStudyDayIndex != null) updates[n.id + '/lastStudyDayIndex'] = o.lastStudyDayIndex;
+      updates[n.id + '/updatedAt'] = firebase.database.ServerValue.TIMESTAMP;
+      updates[o.id] = null;
+    });
+
+    db.ref('studyLeaderboard').update(updates).then(() => {
+      msg.style.color = "#2ecc71";
+      msg.innerText = `تم دمج ${selected.length} سجل بنجاح، والسجلات القديمة انحذفت.`;
+      document.getElementById("legacyMigrateList").innerHTML = "";
+    }).catch((error) => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "فشل الدمج: " + error.message;
     });
   });
 };
