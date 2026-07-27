@@ -364,6 +364,18 @@
   </div>
   <div id="legacyMigrateList"></div>
   <div id="legacyMigrateStatusMsg" class="hint"></div>
+
+  <hr style="border-color:var(--border, #2a3a4a); margin:20px 0;">
+  <p class="hint" style="margin-bottom:10px;">استرجاع حساب طالب فقد بياناته — اطلب منه رمز الاسترجاع اللي ظهرله عند إنشاء حسابه، وابحث عنه هون.</p>
+  <div class="field">
+    <label>رمز الاسترجاع</label>
+    <input type="text" id="recoveryCodeInput" placeholder="مثال: A3F9-K2QX" style="text-transform:uppercase;">
+  </div>
+  <div class="toggle-row">
+    <button class="toggle-btn" onclick="lookupRecoveryCode()">🔍 بحث</button>
+  </div>
+  <div id="recoveryLookupResult"></div>
+  <div id="recoveryLookupStatusMsg" class="hint"></div>
 </div>
 
 <!-- لوحة الثيمات والأنماط الموحدة -->
@@ -1416,6 +1428,125 @@ window.mergeLegacyRecords = function(){
     }).catch((error) => {
       msg.style.color = "#ff3b30";
       msg.innerText = "فشل الدمج: " + error.message;
+    });
+  });
+};
+
+window.lookupRecoveryCode = function(){
+  const raw = document.getElementById("recoveryCodeInput").value.trim().toUpperCase();
+  const resultEl = document.getElementById("recoveryLookupResult");
+  const msg = document.getElementById("recoveryLookupStatusMsg");
+  resultEl.innerHTML = "";
+  if (!raw){ msg.innerText = "اكتب الرمز أول."; return; }
+
+  msg.style.color = "#8b8d99";
+  msg.innerText = "جارٍ البحث...";
+
+  db.ref('recoveryCodes/' + raw).once('value').then(snap => {
+    const entry = snap.val();
+    if (!entry){
+      msg.style.color = "#ff3b30";
+      msg.innerText = "ما لقيت رمز بهاد الاسم. تأكد من كتابته صح.";
+      return;
+    }
+    return db.ref('studyLeaderboard/' + entry.uid).once('value').then(oldSnap => {
+      const oldRecord = { id: entry.uid, ...(oldSnap.val() || {}) };
+      msg.innerText = "";
+      renderRecoveryResult(raw, oldRecord);
+    });
+  }).catch((error) => {
+    msg.style.color = "#ff3b30";
+    msg.innerText = "فشل البحث: " + error.message;
+  });
+};
+
+function renderRecoveryResult(code, oldRecord){
+  const resultEl = document.getElementById("recoveryLookupResult");
+  resultEl.innerHTML = `
+    <div class="hint" style="padding:10px 0;">
+      الحساب القديم: <b>${oldRecord.name || "؟"}</b> — رصيده: <b>${formatHoursShort(oldRecord.totalSeconds)}</b>
+    </div>
+    <div class="field">
+      <label>ابحث عن حسابه الجديد بالاسم</label>
+      <input type="text" id="recoveryTargetSearch" placeholder="اكتب الاسم كما هو الآن">
+    </div>
+    <div class="toggle-row">
+      <button class="toggle-btn" onclick="searchRecoveryTarget('${code}', '${oldRecord.id}')">🔍 بحث عن السجل الجديد</button>
+    </div>
+    <div id="recoveryTargetList"></div>
+  `;
+}
+
+window.searchRecoveryTarget = function(code, oldUid){
+  const name = document.getElementById("recoveryTargetSearch").value.trim();
+  const listEl = document.getElementById("recoveryTargetList");
+  listEl.innerHTML = "";
+  if (!name) return;
+
+  db.ref('studyLeaderboard').once('value').then(snapshot => {
+    const matches = [];
+    snapshot.forEach(child => {
+      if (child.key === oldUid) return;
+      const v = child.val();
+      if (v.name && v.name.indexOf(name) !== -1) matches.push({ id: child.key, ...v });
+    });
+
+    if (matches.length === 0){
+      listEl.innerHTML = `<p class="hint">ما لقيت سجل بهاد الاسم.</p>`;
+      return;
+    }
+
+    matches.forEach((m, idx) => {
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border, #2a3a4a); font-size:14px;";
+      row.innerHTML = `
+        <input type="radio" name="recoveryTargetPick" value="${idx}" ${idx === 0 ? "checked" : ""}>
+        <span>${m.name} (${m.age}، ${m.country}، ${m.governorate}) — رصيده الحالي: <b>${formatHoursShort(m.totalSeconds)}</b></span>
+      `;
+      listEl.appendChild(row);
+    });
+
+    window._recoveryMatches = matches;
+
+    const confirmRow = document.createElement("div");
+    confirmRow.className = "toggle-row";
+    confirmRow.style.marginTop = "14px";
+    confirmRow.innerHTML = `<button class="toggle-btn" onclick="confirmRecoveryMerge('${code}', '${oldUid}')">✅ استرجاع لهاد الحساب</button>`;
+    listEl.appendChild(confirmRow);
+  });
+};
+
+window.confirmRecoveryMerge = function(code, oldUid){
+  const picked = document.querySelector('input[name="recoveryTargetPick"]:checked');
+  if (!picked) return;
+  const target = window._recoveryMatches[parseInt(picked.value, 10)];
+  const msg = document.getElementById("recoveryLookupStatusMsg");
+
+  appConfirm(`متأكد إنك بدك ترجّع رصيد الحساب القديم لـ"${target.name}"؟ الحساب القديم ورمز الاسترجاع رح ينحذفوا بعدها.`, () => {
+    db.ref('studyLeaderboard/' + oldUid).once('value').then(snap => {
+      const o = { id: oldUid, ...(snap.val() || {}) };
+      const n = target;
+      const updates = {};
+      updates[n.id + '/totalSeconds'] = Math.max(o.totalSeconds || 0, n.totalSeconds || 0);
+      updates[n.id + '/daySeconds'] = Math.max(o.daySeconds || 0, n.daySeconds || 0);
+      if (o.dayIndex != null) updates[n.id + '/dayIndex'] = o.dayIndex;
+      updates[n.id + '/weeklySeconds'] = Math.max(o.weeklySeconds || 0, n.weeklySeconds || 0);
+      if (o.weekIndex != null) updates[n.id + '/weekIndex'] = o.weekIndex;
+      updates[n.id + '/streak'] = Math.max(o.streak || 0, n.streak || 0);
+      if (o.lastStudyDayIndex != null) updates[n.id + '/lastStudyDayIndex'] = o.lastStudyDayIndex;
+      updates[n.id + '/updatedAt'] = firebase.database.ServerValue.TIMESTAMP;
+      updates[oldUid] = null;
+      return db.ref('studyLeaderboard').update(updates);
+    }).then(() => {
+      return db.ref('recoveryCodes/' + code).remove();
+    }).then(() => {
+      msg.style.color = "#2ecc71";
+      msg.innerText = "تم استرجاع الحساب بنجاح.";
+      document.getElementById("recoveryLookupResult").innerHTML = "";
+      document.getElementById("recoveryCodeInput").value = "";
+    }).catch((error) => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "فشل الاسترجاع: " + error.message;
     });
   });
 };
