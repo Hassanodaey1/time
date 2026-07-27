@@ -38,7 +38,11 @@
 
   .bento-icon{
     width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center;
-    font-size:26px; flex-shrink:0;
+    flex-shrink:0;
+  }
+  .bento-icon svg{
+    width:25px; height:25px; stroke:currentColor; fill:none;
+    stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;
   }
   .bento-title{font-weight:900; font-size:14.5px; margin:0; line-height:1.3;}
   .bento-desc{font-size:11px; color:var(--muted); margin:0; line-height:1.5;}
@@ -51,7 +55,8 @@
   .bento-card.hero{
     grid-column:1 / -1; flex-direction:row; justify-content:flex-start; text-align:start; padding:20px 20px;
   }
-  .bento-card.hero .bento-icon{width:56px; height:56px; font-size:28px;}
+  .bento-card.hero .bento-icon{width:56px; height:56px;}
+  .bento-card.hero .bento-icon svg{width:27px; height:27px;}
   .bento-card.hero .bento-txt{flex:1; display:flex; flex-direction:column; gap:3px;}
   .bento-card.hero .bento-title{font-size:16.5px;}
   .bento-card.hero .bento-desc{font-size:12px;}
@@ -90,6 +95,10 @@
     background:var(--panel); border:1px solid var(--border); color:var(--muted); font-size:19px;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
     box-shadow:0 6px 18px rgba(0,0,0,.4); transition:border-color .2s ease, color .2s ease, box-shadow .2s ease;
+  }
+  .focus-toggle-btn svg{
+    width:19px; height:19px; stroke:currentColor; fill:none;
+    stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;
   }
   .focus-toggle-btn:active{transform:scale(0.93);}
   .focus-toggle-btn.active{
@@ -203,7 +212,9 @@
 </head>
 <body>
 
-<button type="button" class="focus-toggle-btn" id="focusToggleBtn" onclick="toggleDeepFocus()" aria-label="وضع التركيز العميق" title="وضع التركيز العميق">🧘</button>
+<button type="button" class="focus-toggle-btn" id="focusToggleBtn" onclick="toggleDeepFocus()" aria-label="وضع التركيز العميق" title="وضع التركيز العميق">
+  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor" stroke="none"/></svg>
+</button>
 <button type="button" class="profile-btn" id="profileBtn" onclick="openProfileModal(false)">👤 الملف الشخصي</button>
 <div class="focus-toast" id="focusToast">
   <span class="f-icon">🧘</span>
@@ -221,7 +232,7 @@
 
   <div class="bento">
     <a href="student-timer.html" class="bento-card hero student">
-      <span class="bento-icon">📚</span>
+      <span class="bento-icon"><svg viewBox="0 0 24 24"><path d="M12 5.6c-1.7-1.3-4-1.6-6-1.2v13.6c2-.4 4.3-.1 6 1.2 1.7-1.3 4-1.6 6-1.2V4.4c-2-.4-4.3-.1-6 1.2Z"/><path d="M12 5.6v13.6"/></svg></span>
       <span class="bento-txt">
         <span class="bento-title">مؤقت الطالب</span>
         <span class="bento-desc">اضبط وقتك الخاص وابدأ الدراسة</span>
@@ -231,27 +242,27 @@
 
     <a href="display.html" class="bento-card annual needs-net" id="annualItem"
        onclick="return guardNetworkNav(event, 'المؤقت الرئيسي', 'المؤقت الرئيسي يعرض عدّاداً يتزامن لحظياً مع السيرفر، فما يشتغل بدون اتصال بالإنترنت.')">
-      <span class="bento-icon">📅</span>
+      <span class="bento-icon"><svg viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg></span>
       <span class="bento-title">المؤقت الرئيسي</span>
     </a>
 
     <a href="challenge-timer.html" class="bento-card challenge needs-net hidden-card" id="challengeItem"
        onclick="return guardNetworkNav(event, 'تحدي الأستاذ', 'تحدي الأستاذ يعتمد على إعدادات تُرسَل من الأستاذ مباشرة عبر الإنترنت، فما يشتغل بدون اتصال.')">
-      <span class="bento-icon">🔥</span>
+      <span class="bento-icon"><svg viewBox="0 0 24 24"><path d="M12 21c-4 0-6.8-2.6-6.8-6.2 0-3 2-4.7 2.8-7.5.4 1.5 1.4 2.4 2.4 2.2-.4-3.1 1-5.5 3.1-7.1-.6 2.7.4 4.1 1.9 5.6 1.7 1.7 3.4 3.5 3.4 6.8 0 3.6-2.8 6.2-6.8 6.2Z"/><path d="M12 21c-1.8 0-3-1.2-3-2.9 0-1.4.9-2.2 1.3-3.4.2.7.7 1.1 1.2 1 0-1.4.5-2.4 1.4-3.1-.2 1.2.2 1.9.9 2.6.8.8 1.5 1.5 1.5 2.9 0 1.7-1.5 2.9-3.3 2.9Z"/></svg></span>
       <span class="bento-title">تحدي الأستاذ</span>
       <span class="bento-badge" id="challengeStatus">—</span>
     </a>
 
     <a href="study-challenge.html" class="bento-card study needs-net hidden-card" id="studyItem"
        onclick="return guardNetworkNav(event, 'تحدي الدراسة', 'تحدي الدراسة يعتمد على قائمة متصدرين تتزامن مباشرة عبر الإنترنت، فما يشتغل بدون اتصال.')">
-      <span class="bento-icon">🏆</span>
+      <span class="bento-icon"><svg viewBox="0 0 24 24"><path d="M7 4h10v4.2a5 5 0 0 1-10 0Z"/><path d="M7 5.2H4.6A2.4 2.4 0 0 0 4 9.9 4 4 0 0 0 7 11.4"/><path d="M17 5.2h2.4A2.4 2.4 0 0 1 20 9.9 4 4 0 0 1 17 11.4"/><path d="M12 13.2v2.8"/><path d="M9.3 20h5.4"/><path d="M10 16.5h4l1 3.5H9Z"/></svg></span>
       <span class="bento-title">تحدي الدراسة</span>
       <span class="bento-badge" id="studyStatus">—</span>
     </a>
 
     <div class="bento-card water" id="waterCard" onclick="toggleWaterReminder()">
       <button class="info-btn" onclick="openWaterInfo(event)" aria-label="فوائد شرب الماء">!</button>
-      <span class="bento-icon">💧</span>
+      <span class="bento-icon"><svg viewBox="0 0 24 24"><path d="M12 3c3.4 4.1 6 7.7 6 10.6a6 6 0 1 1-12 0C6 10.7 8.6 7.1 12 3Z"/></svg></span>
       <span class="bento-title">تذكير الماء</span>
       <span class="bento-badge" id="waterToggleSwitch">متوقف</span>
     </div>
