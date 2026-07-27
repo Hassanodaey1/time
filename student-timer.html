@@ -219,6 +219,8 @@
   .hub-item.pomodoro:hover{border-color:#ff6b6b;}
   .hub-item.tasks .icon{background:rgba(72,202,228,.14); color:#48cae4; box-shadow:inset 0 0 0 1px rgba(72,202,228,.18);}
   .hub-item.tasks:hover{border-color:#48cae4;}
+  .hub-item.report .icon{background:rgba(154,140,255,.14); color:#9a8cff; box-shadow:inset 0 0 0 1px rgba(154,140,255,.18);}
+  .hub-item.report:hover{border-color:#9a8cff;}
   .hub-item.timer:hover{border-color:var(--accent);}
   .hub-item .txt{flex:1; min-width:0;}
   .hub-item .title{font-weight:900; font-size:15.5px; margin:0 0 3px; color:#fff;}
@@ -227,6 +229,46 @@
   .hub-item .soon{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; padding:3px 8px; border-radius:20px; background:rgba(125,134,152,.15); color:var(--muted); flex-shrink:0;}
   .hub-item .count{font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:900; padding:3px 9px; border-radius:20px; background:var(--accent); color:#06222d; flex-shrink:0;}
   .hub-item .arrow{font-size:17px; color:var(--muted); flex-shrink:0; opacity:.6;}
+
+  /* ================= وسم المادة (شرائح الاختيار) ================= */
+  .subject-label{font-size:12px; color:var(--muted); margin:0 0 8px; text-align:start;}
+  .subject-chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;}
+  .subject-chip{
+    padding:8px 14px; border-radius:20px; border:1px solid var(--border); background:transparent;
+    color:var(--muted); font-size:12.5px; font-weight:700; cursor:pointer; font-family:'Tajawal',sans-serif;
+  }
+  .subject-chip.active{background:var(--accent); border-color:var(--accent); color:#06222d;}
+  .subject-chip.manage{padding:8px 12px; opacity:.7;}
+  .subject-chip.manage:active{transform:scale(0.92);}
+
+  /* ================= إدارة المواد (نافذة منبثقة) ================= */
+  .subjects-manage-list{display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; margin-bottom:6px;}
+  .subject-manage-row{
+    display:flex; align-items:center; justify-content:space-between; background:#16161c;
+    border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:13px; color:#fff;
+  }
+  .subject-del-btn{background:none; border:none; color:var(--red); font-size:15px; cursor:pointer; padding:2px 6px;}
+
+  /* ================= التقرير الأسبوعي ================= */
+  .report-total-box{
+    text-align:center; background:linear-gradient(135deg, rgba(154,140,255,.14), rgba(154,140,255,.04));
+    border:1px solid rgba(154,140,255,.25); border-radius:16px; padding:20px 12px; margin-bottom:18px;
+  }
+  .report-total-num{display:block; font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:900; color:#9a8cff;}
+  .report-total-label{display:block; font-size:11.5px; color:var(--muted); margin-top:4px;}
+  .report-subjects-list{display:flex; flex-direction:column; gap:14px; margin-bottom:22px;}
+  .report-subject-row{width:100%;}
+  .report-subject-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+  .report-subject-name{font-size:13px; font-weight:700; color:#fff;}
+  .report-subject-time{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);}
+  .report-bar-track{width:100%; height:8px; border-radius:8px; background:#16161c; overflow:hidden;}
+  .report-bar-fill{height:100%; border-radius:8px; background:linear-gradient(90deg, #9a8cff, #6f5cff);}
+  .report-section-title{font-size:12px; color:var(--muted); margin:0 0 12px; text-align:start;}
+  .report-days-chart{display:flex; align-items:flex-end; justify-content:space-between; gap:6px; height:110px; padding:0 2px;}
+  .day-bar-col{display:flex; flex-direction:column; align-items:center; gap:8px; flex:1;}
+  .day-bar-track{width:100%; max-width:26px; height:74px; display:flex; align-items:flex-end; justify-content:center;}
+  .day-bar-fill{width:100%; border-radius:6px 6px 3px 3px; background:linear-gradient(180deg, #9a8cff, #6f5cff); min-height:4px;}
+  .day-bar-label{font-size:10.5px; color:var(--muted);}
 
   /* ================= لائحة المهام ================= */
   .task-add-btn{
@@ -535,6 +577,15 @@
     <span class="count hidden" id="taskCountBadge">0</span>
     <span class="arrow">‹</span>
   </button>
+
+  <button class="hub-item report" onclick="showView('report')">
+    <span class="icon">📊</span>
+    <span class="txt">
+      <p class="title">التقرير الأسبوعي</p>
+      <p class="desc">وين راح وقتك آخر 7 أيام، لكل مادة</p>
+    </span>
+    <span class="arrow">‹</span>
+  </button>
 </div>
 
 <div class="card hidden" id="timerCard">
@@ -543,6 +594,9 @@
   <h1>اضبط وقت دراستك</h1>
 
   <div id="setupView">
+    <p class="subject-label">المادة</p>
+    <div class="subject-chips" id="timerSubjectChips"></div>
+
     <button type="button" class="time-picker-btn" onclick="openTimePicker('customTime','customTimeDisplay')">
       <span class="tp-icon">⏰</span>
       <span class="tp-text">
@@ -575,6 +629,9 @@
   <h1>دورات تركيز واستراحة</h1>
 
   <div id="pomoSetupView">
+    <p class="subject-label">المادة</p>
+    <div class="subject-chips" id="pomoSubjectChips"></div>
+
     <p style="font-size:12px; color:var(--muted); margin:-10px 0 10px; text-align:start;">مدة التركيز</p>
     <div class="presets" id="pomoWorkPresets">
       <button class="preset-btn" onclick="pickPomoWork(15, this)">15 د</button>
@@ -628,6 +685,39 @@
   <button class="task-add-btn" onclick="openTaskModal()">+ إضافة مهمة</button>
   <div class="task-list" id="taskList">
     <p class="empty-note">ماكو مهام بعد — أضف أول مهمة لك!</p>
+  </div>
+</div>
+
+<div class="card hidden" id="reportCard">
+  <button class="back-btn" onclick="showView('hub')">‹ رجوع</button>
+  <p class="eyebrow">📊 التقرير الأسبوعي</p>
+  <h1>وين راح وقتك؟</h1>
+
+  <div class="report-total-box">
+    <span class="report-total-num" id="reportTotalNum">0 د</span>
+    <span class="report-total-label">إجمالي آخر 7 أيام</span>
+  </div>
+
+  <p class="empty-note hidden" id="reportEmptyMsg">ماكو جلسات مسجّلة بعد. خلّي مؤقت يخلص أو اضغط "إنهاء الجلسة" بعد ما تدرس شوي، وبيبدأ التقرير يتكوّن 📈</p>
+
+  <div id="reportSubjectsList" class="report-subjects-list"></div>
+
+  <p class="report-section-title">توزيع الأيام</p>
+  <div id="reportDaysChart" class="report-days-chart"></div>
+</div>
+
+<div class="overlay" id="manageSubjectsOverlay">
+  <div class="modal">
+    <h2>📚 إدارة المواد</h2>
+    <div class="field">
+      <label>إضافة مادة جديدة</label>
+      <input type="text" id="newSubjectInput" placeholder="مثال: فيزياء">
+    </div>
+    <button class="secondary" style="width:100%; margin-bottom:14px;" onclick="addNewSubject()">➕ إضافة</button>
+    <div id="subjectsManageList" class="subjects-manage-list"></div>
+    <div class="controls">
+      <button class="primary" style="width:100%;" onclick="closeManageSubjects()">تم</button>
+    </div>
   </div>
 </div>
 
@@ -709,6 +799,7 @@ let totalMs = 0;
 let paused = false;
 let timerHandle = null;
 let midAlerted = false, lastMinuteAlerted = false;
+let sessionLogged = false;
 
 /* ================= إشعارات الخلفية (تعمل حتى لو التطبيق مصغّر/الشاشة مقفلة) ================= */
 function requestNotifyPermission(){
@@ -892,6 +983,7 @@ window.startTimer = function(){
   paused = false;
   midAlerted = false;
   lastMinuteAlerted = false;
+  sessionLogged = false;
 
   document.getElementById("setupView").classList.add("hidden");
   document.getElementById("runningView").classList.remove("hidden");
@@ -924,6 +1016,10 @@ function step(){
     document.getElementById("doneMsg").style.display = "block";
     document.title = "🎉 انتهت الجلسة";
     if (wakeLock){ wakeLock.release().catch(()=>{}); wakeLock = null; }
+    if (typeof logStudySession === "function"){
+      logStudySession(currentSubject, Math.round(totalMs / 1000), "timer");
+      sessionLogged = true;
+    }
     return;
   }
 
@@ -964,6 +1060,11 @@ window.togglePause = function(){
 
 window.resetTimer = function(){
   if (timerHandle) clearInterval(timerHandle);
+  if (!sessionLogged && typeof logStudySession === "function"){
+    const elapsedSec = Math.round((totalMs - remainingMs) / 1000);
+    logStudySession(currentSubject, elapsedSec, "timer");
+  }
+  sessionLogged = false;
   document.getElementById("setupView").classList.remove("hidden");
   document.getElementById("runningView").classList.add("hidden");
   document.title = baseTitle;
@@ -976,11 +1077,16 @@ window.showView = function(name){
   document.getElementById("timerCard").classList.add("hidden");
   document.getElementById("pomodoroCard").classList.add("hidden");
   document.getElementById("tasksCard").classList.add("hidden");
+  document.getElementById("reportCard").classList.add("hidden");
   document.getElementById("homeLink").classList.add("hidden");
 
   if (name === "timer") document.getElementById("timerCard").classList.remove("hidden");
   else if (name === "pomodoro") document.getElementById("pomodoroCard").classList.remove("hidden");
   else if (name === "tasks") document.getElementById("tasksCard").classList.remove("hidden");
+  else if (name === "report"){
+    document.getElementById("reportCard").classList.remove("hidden");
+    if (typeof renderReport === "function") renderReport();
+  }
   else {
     document.getElementById("hubView").classList.remove("hidden");
     document.getElementById("homeLink").classList.remove("hidden");
@@ -1182,6 +1288,194 @@ setInterval(checkReminders, 15000);
 renderTasks();
 checkReminders();
 
+/* ================= المواد (الوسم) وسجل الجلسات والتقرير الأسبوعي ================= */
+const SUBJECTS_KEY = "studentSubjectsList";
+const CURRENT_SUBJECT_KEY = "studentCurrentSubject";
+const SESSIONS_KEY = "studentSessionsLog";
+const DEFAULT_SUBJECTS = ["عام", "رياضيات", "برمجة", "علوم", "لغة إنجليزية"];
+const MIN_LOGGED_SECONDS = 60; /* لا نسجل جلسات أقل من دقيقة عشان ما تصير ضوضاء بالتقرير */
+
+function getSubjects(){
+  try{
+    const raw = localStorage.getItem(SUBJECTS_KEY);
+    if (raw){
+      const list = JSON.parse(raw);
+      if (Array.isArray(list) && list.length) return list;
+    }
+  }catch(e){}
+  localStorage.setItem(SUBJECTS_KEY, JSON.stringify(DEFAULT_SUBJECTS));
+  return DEFAULT_SUBJECTS.slice();
+}
+function saveSubjects(list){
+  try{ localStorage.setItem(SUBJECTS_KEY, JSON.stringify(list)); }catch(e){}
+}
+
+let currentSubject = localStorage.getItem(CURRENT_SUBJECT_KEY) || "عام";
+if (!getSubjects().includes(currentSubject)){
+  currentSubject = getSubjects()[0] || "عام";
+}
+
+function renderAllSubjectChips(){
+  renderSubjectChipsInto("timerSubjectChips");
+  renderSubjectChipsInto("pomoSubjectChips");
+}
+function renderSubjectChipsInto(containerId){
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  const subjects = getSubjects();
+  wrap.innerHTML = subjects.map(s =>
+    `<button type="button" class="subject-chip${s === currentSubject ? " active" : ""}" onclick="selectSubject('${escapeHtml(s).replace(/'/g, "\\'")}')">${escapeHtml(s)}</button>`
+  ).join("") + `<button type="button" class="subject-chip manage" onclick="openManageSubjects()" title="إدارة المواد">⚙️</button>`;
+}
+window.selectSubject = function(name){
+  currentSubject = name;
+  localStorage.setItem(CURRENT_SUBJECT_KEY, name);
+  renderAllSubjectChips();
+};
+
+window.openManageSubjects = function(){
+  renderSubjectsManageList();
+  document.getElementById("newSubjectInput").value = "";
+  document.getElementById("manageSubjectsOverlay").classList.add("show");
+};
+window.closeManageSubjects = function(){
+  document.getElementById("manageSubjectsOverlay").classList.remove("show");
+  renderAllSubjectChips();
+};
+function renderSubjectsManageList(){
+  const subjects = getSubjects();
+  const wrap = document.getElementById("subjectsManageList");
+  wrap.innerHTML = subjects.map(s => `
+    <div class="subject-manage-row">
+      <span>${escapeHtml(s)}</span>
+      ${subjects.length > 1 ? `<button type="button" class="subject-del-btn" onclick="deleteSubject('${escapeHtml(s).replace(/'/g, "\\'")}')">✕</button>` : ""}
+    </div>
+  `).join("");
+}
+window.addNewSubject = function(){
+  const input = document.getElementById("newSubjectInput");
+  const name = input.value.trim();
+  if (!name) return;
+  const subjects = getSubjects();
+  if (!subjects.includes(name)){
+    subjects.push(name);
+    saveSubjects(subjects);
+  }
+  input.value = "";
+  currentSubject = name;
+  localStorage.setItem(CURRENT_SUBJECT_KEY, name);
+  renderSubjectsManageList();
+};
+window.deleteSubject = function(name){
+  let subjects = getSubjects();
+  if (subjects.length <= 1) return;
+  subjects = subjects.filter(s => s !== name);
+  saveSubjects(subjects);
+  if (currentSubject === name){
+    currentSubject = subjects[0];
+    localStorage.setItem(CURRENT_SUBJECT_KEY, currentSubject);
+  }
+  renderSubjectsManageList();
+};
+
+function localDateStr(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function logStudySession(subject, seconds, type){
+  seconds = Math.round(seconds || 0);
+  if (seconds < MIN_LOGGED_SECONDS) return;
+  try{
+    const raw = localStorage.getItem(SESSIONS_KEY);
+    const log = raw ? JSON.parse(raw) : [];
+    const now = new Date();
+    log.push({ subject: subject || "عام", seconds, type: type || "timer", date: localDateStr(now), ts: now.getTime() });
+    while (log.length > 500) log.shift(); /* نحتفظ بآخر 500 جلسة بس */
+    localStorage.setItem(SESSIONS_KEY, JSON.stringify(log));
+  }catch(e){}
+}
+
+function formatHM(totalSeconds){
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.round((totalSeconds % 3600) / 60);
+  if (h <= 0) return `${m} د`;
+  if (m <= 0) return `${h} س`;
+  return `${h} س ${m} د`;
+}
+
+const WEEKDAY_NAMES = ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
+
+function renderReport(){
+  let log = [];
+  try{ log = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "[]"); }catch(e){ log = []; }
+
+  const days = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days.push({ key: localDateStr(d), label: WEEKDAY_NAMES[d.getDay()], total: 0 });
+  }
+  const dayIndexByKey = {};
+  days.forEach((d, idx) => dayIndexByKey[d.key] = idx);
+
+  const weekStartKey = days[0].key;
+  const subjectTotals = {};
+  let grandTotal = 0;
+
+  log.forEach(entry => {
+    if (entry.date < weekStartKey) return; /* خارج آخر 7 أيام */
+    if (dayIndexByKey[entry.date] === undefined) return;
+    days[dayIndexByKey[entry.date]].total += entry.seconds;
+    subjectTotals[entry.subject] = (subjectTotals[entry.subject] || 0) + entry.seconds;
+    grandTotal += entry.seconds;
+  });
+
+  document.getElementById("reportTotalNum").innerText = grandTotal > 0 ? formatHM(grandTotal) : "0 د";
+
+  const emptyMsg = document.getElementById("reportEmptyMsg");
+  const subjectsList = document.getElementById("reportSubjectsList");
+  const daysChart = document.getElementById("reportDaysChart");
+
+  if (grandTotal <= 0){
+    emptyMsg.classList.remove("hidden");
+    subjectsList.innerHTML = "";
+  } else {
+    emptyMsg.classList.add("hidden");
+    const sortedSubjects = Object.keys(subjectTotals).sort((a, b) => subjectTotals[b] - subjectTotals[a]);
+    const maxSubjectSeconds = subjectTotals[sortedSubjects[0]] || 1;
+    subjectsList.innerHTML = sortedSubjects.map(subj => {
+      const secs = subjectTotals[subj];
+      const pct = Math.max(6, Math.round((secs / maxSubjectSeconds) * 100));
+      return `
+        <div class="report-subject-row">
+          <div class="report-subject-top">
+            <span class="report-subject-name">${escapeHtml(subj)}</span>
+            <span class="report-subject-time">${formatHM(secs)}</span>
+          </div>
+          <div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%;"></div></div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  const maxDaySeconds = Math.max(1, ...days.map(d => d.total));
+  daysChart.innerHTML = days.map(d => {
+    const h = Math.max(4, Math.round((d.total / maxDaySeconds) * 74));
+    return `
+      <div class="day-bar-col">
+        <div class="day-bar-track"><div class="day-bar-fill" style="height:${h}px;" title="${formatHM(d.total)}"></div></div>
+        <span class="day-bar-label">${d.label}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+renderAllSubjectChips();
+
 /* ================= بومودورو ================= */
 let pomoWorkMinutes = 25;
 let pomoBreakMinutes = 10;
@@ -1297,6 +1591,10 @@ function pomoStep(){
 function advancePomoPhase(){
   if (typeof window.playTimerAlert === "function") window.playTimerAlert("finish");
   if (pomoPhase === "work"){
+    if (typeof logStudySession === "function"){
+      const elapsedSec = Math.round((pomoTotalMs - pomoRemainingMs) / 1000);
+      logStudySession(currentSubject, elapsedSec, "pomodoro");
+    }
     pomoCycleCount++;
     pomoPhase = (pomoCycleCount % POMO_CYCLES_BEFORE_LONG_BREAK === 0) ? "longBreak" : "break";
   } else {
@@ -1323,6 +1621,10 @@ window.togglePomoPause = function(){
 
 window.resetPomodoro = function(){
   if (pomoHandle) clearInterval(pomoHandle);
+  if (pomoPhase === "work" && typeof logStudySession === "function"){
+    const elapsedSec = Math.round((pomoTotalMs - pomoRemainingMs) / 1000);
+    logStudySession(currentSubject, elapsedSec, "pomodoro");
+  }
   document.getElementById("pomoSetupView").classList.remove("hidden");
   document.getElementById("pomoRunningView").classList.add("hidden");
   if (pomoWakeLock){ pomoWakeLock.release().catch(()=>{}); pomoWakeLock = null; }
