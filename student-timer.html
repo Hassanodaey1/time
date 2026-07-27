@@ -437,6 +437,11 @@
   <span>قاعدة 20-20-20: انظر لشي يبعد 6 أمتار لمدة 20 ثانية لراحة عينك</span>
 </div>
 
+<div class="eye-toast" id="resumeToast">
+  <span class="eye-icon">↩️</span>
+  <span id="resumeToastText"></span>
+</div>
+
 <div class="board-overlay" id="boardOverlay">
   <div class="board-modal">
     <div class="board-head">
@@ -998,6 +1003,9 @@ window.startTimer = function(){
   requestWakeLock();
   if (timerHandle) clearInterval(timerHandle);
   timerHandle = setInterval(step, 1000);
+  if (typeof saveActiveSession === "function"){
+    saveActiveSession({ kind:"timer", subject: currentSubject, totalMs, remainingMs, savedAt: Date.now(), paused });
+  }
 };
 
 function step(){
@@ -1007,6 +1015,7 @@ function step(){
 
   if (remainingMs <= 0){
     clearInterval(timerHandle);
+    timerHandle = null;
     remainingMs = 0;
     renderTime();
     setRingProgress(0);
@@ -1020,6 +1029,7 @@ function step(){
       logStudySession(currentSubject, Math.round(totalMs / 1000), "timer");
       sessionLogged = true;
     }
+    if (typeof clearActiveSession === "function") clearActiveSession();
     return;
   }
 
@@ -1030,6 +1040,9 @@ function step(){
   setRingProgress((remainingMs / totalMs) * 100);
   renderTime();
   document.title = "📚 " + formatDuration(remainingMs);
+  if (typeof saveActiveSession === "function"){
+    saveActiveSession({ kind:"timer", subject: currentSubject, totalMs, remainingMs, savedAt: Date.now(), paused });
+  }
 }
 
 function setDigit(el, val){
@@ -1056,15 +1069,20 @@ function renderTime(){
 window.togglePause = function(){
   paused = !paused;
   document.getElementById("pauseBtn").innerText = paused ? "▶️ استئناف" : "⏸️ إيقاف مؤقت";
+  if (typeof saveActiveSession === "function"){
+    saveActiveSession({ kind:"timer", subject: currentSubject, totalMs, remainingMs, savedAt: Date.now(), paused });
+  }
 };
 
 window.resetTimer = function(){
   if (timerHandle) clearInterval(timerHandle);
+  timerHandle = null;
   if (!sessionLogged && typeof logStudySession === "function"){
     const elapsedSec = Math.round((totalMs - remainingMs) / 1000);
     logStudySession(currentSubject, elapsedSec, "timer");
   }
   sessionLogged = false;
+  if (typeof clearActiveSession === "function") clearActiveSession();
   document.getElementById("setupView").classList.remove("hidden");
   document.getElementById("runningView").classList.add("hidden");
   document.title = baseTitle;
@@ -1476,6 +1494,116 @@ function renderReport(){
 
 renderAllSubjectChips();
 
+/* ================= استئناف الجلسة تلقائيًا ================= */
+/* لو انسكر التبويب بالغلط أو راح النت أو تبدّل التطبيق، نحفظ حالة الجلسة الشغّالة
+   بشكل مستمر، وأول ما ترجع نحسب كم وقت فعلي مرّ ونكمل من نفس النقطة بالظبط. */
+const ACTIVE_SESSION_KEY = "studentActiveSession";
+
+function saveActiveSession(state){
+  try{ localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(state)); }catch(e){}
+}
+function clearActiveSession(){
+  try{ localStorage.removeItem(ACTIVE_SESSION_KEY); }catch(e){}
+}
+function loadActiveSession(){
+  try{
+    const raw = localStorage.getItem(ACTIVE_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function showResumeToast(msg){
+  const el = document.getElementById("resumeToast");
+  if (!el) return;
+  document.getElementById("resumeToastText").innerText = msg;
+  el.classList.add("show");
+  setTimeout(() => { el.classList.remove("show"); }, 6000);
+}
+
+function tryResumeActiveSession(){
+  const state = loadActiveSession();
+  if (!state) return;
+
+  const elapsedSinceSave = state.paused ? 0 : Math.max(0, Date.now() - state.savedAt);
+  const newRemainingMs = state.remainingMs - elapsedSinceSave;
+
+  if (state.kind === "timer"){
+    if (newRemainingMs <= 0){
+      /* الجلسة كانت راح تخلص وانت غايب — نسجّلها كاملة ونبلّغك */
+      logStudySession(state.subject, Math.round(state.totalMs / 1000), "timer");
+      clearActiveSession();
+      showResumeToast(`🎉 جلسة "${state.subject}" خلصت وانت غايب — تسجّلت كاملة`);
+      return;
+    }
+    currentSubject = state.subject;
+    totalMs = state.totalMs;
+    remainingMs = newRemainingMs;
+    paused = state.paused;
+    sessionLogged = false;
+    midAlerted = (1 - remainingMs / totalMs) >= 0.5;
+    lastMinuteAlerted = remainingMs <= 60000;
+
+    document.getElementById("hubView").classList.add("hidden");
+    document.getElementById("homeLink").classList.add("hidden");
+    document.getElementById("timerCard").classList.remove("hidden");
+    document.getElementById("setupView").classList.add("hidden");
+    document.getElementById("runningView").classList.remove("hidden");
+    document.getElementById("doneMsg").style.display = "none";
+    document.getElementById("digitsWrap").style.display = "flex";
+    document.getElementById("pauseBtn").innerText = paused ? "▶️ استئناف" : "⏸️ إيقاف مؤقت";
+    setRingProgress((remainingMs / totalMs) * 100);
+    renderTime();
+    requestWakeLock();
+    if (timerHandle) clearInterval(timerHandle);
+    timerHandle = setInterval(step, 1000);
+    showResumeToast("↩️ استأنفنا جلسة دراستك تلقائيًا من وين وقفت");
+  } else if (state.kind === "pomodoro"){
+    if (newRemainingMs <= 0){
+      /* مرحلة كاملة خلصت وانت غايب — نسجّل التركيز إذا كانت مرحلة عمل، ونرجّعك للإعداد
+         بدل ما نحاول نحاكي عدة انتقالات مراحل فاتتك. */
+      if (state.phase === "work"){
+        logStudySession(state.subject, Math.round(state.totalMs / 1000), "pomodoro");
+      }
+      clearActiveSession();
+      showResumeToast("⏱️ خلصت مرحلة البومودورو وانت غايب — ابدأ وحدة جديدة وقت ما تجهز");
+      return;
+    }
+    currentSubject = state.subject;
+    pomoPhase = state.phase;
+    pomoCycleCount = state.cycleCount;
+    pomoWorkMinutes = state.pomoWorkMinutes;
+    pomoBreakMinutes = state.pomoBreakMinutes;
+    pomoTotalMs = state.totalMs;
+    pomoRemainingMs = newRemainingMs;
+    pomoPaused = state.paused;
+
+    document.getElementById("hubView").classList.add("hidden");
+    document.getElementById("homeLink").classList.add("hidden");
+    document.getElementById("pomodoroCard").classList.remove("hidden");
+    document.getElementById("pomoSetupView").classList.add("hidden");
+    document.getElementById("pomoRunningView").classList.remove("hidden");
+    document.getElementById("pomoPauseBtn").innerText = pomoPaused ? "▶️ استئناف" : "⏸️ إيقاف مؤقت";
+    setPomoPhaseUI();
+    renderPomoTime();
+    requestPomoWakeLock();
+    if (pomoHandle) clearInterval(pomoHandle);
+    pomoHandle = setInterval(pomoStep, 1000);
+    showResumeToast("↩️ استأنفنا جلسة البومودورو تلقائيًا من وين وقفت");
+  }
+}
+
+/* نحفظ الحالة فوراً لما تختفي الصفحة (تبديل تطبيق، إغلاق الشاشة...) عشان ما نخسر ثواني */
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "hidden") return;
+  if (timerHandle && !document.getElementById("runningView").classList.contains("hidden")){
+    saveActiveSession({ kind:"timer", subject: currentSubject, totalMs, remainingMs, savedAt: Date.now(), paused });
+  }
+  if (pomoHandle && !document.getElementById("pomoRunningView").classList.contains("hidden")){
+    saveActiveSession({ kind:"pomodoro", subject: currentSubject, phase: pomoPhase, cycleCount: pomoCycleCount, pomoWorkMinutes, pomoBreakMinutes, totalMs: pomoTotalMs, remainingMs: pomoRemainingMs, savedAt: Date.now(), paused: pomoPaused });
+  }
+});
+
+tryResumeActiveSession();
+
 /* ================= بومودورو ================= */
 let pomoWorkMinutes = 25;
 let pomoBreakMinutes = 10;
@@ -1573,6 +1701,9 @@ function beginPomoPhase(){
   requestPomoWakeLock();
   if (pomoHandle) clearInterval(pomoHandle);
   pomoHandle = setInterval(pomoStep, 1000);
+  if (typeof saveActiveSession === "function"){
+    saveActiveSession({ kind:"pomodoro", subject: currentSubject, phase: pomoPhase, cycleCount: pomoCycleCount, pomoWorkMinutes, pomoBreakMinutes, totalMs: pomoTotalMs, remainingMs: pomoRemainingMs, savedAt: Date.now(), paused: pomoPaused });
+  }
 }
 
 function pomoStep(){
@@ -1586,6 +1717,9 @@ function pomoStep(){
     return;
   }
   renderPomoTime();
+  if (typeof saveActiveSession === "function"){
+    saveActiveSession({ kind:"pomodoro", subject: currentSubject, phase: pomoPhase, cycleCount: pomoCycleCount, pomoWorkMinutes, pomoBreakMinutes, totalMs: pomoTotalMs, remainingMs: pomoRemainingMs, savedAt: Date.now(), paused: pomoPaused });
+  }
 }
 
 function advancePomoPhase(){
@@ -1617,14 +1751,19 @@ window.skipPomoPhase = function(){
 window.togglePomoPause = function(){
   pomoPaused = !pomoPaused;
   document.getElementById("pomoPauseBtn").innerText = pomoPaused ? "▶️ استئناف" : "⏸️ إيقاف مؤقت";
+  if (typeof saveActiveSession === "function"){
+    saveActiveSession({ kind:"pomodoro", subject: currentSubject, phase: pomoPhase, cycleCount: pomoCycleCount, pomoWorkMinutes, pomoBreakMinutes, totalMs: pomoTotalMs, remainingMs: pomoRemainingMs, savedAt: Date.now(), paused: pomoPaused });
+  }
 };
 
 window.resetPomodoro = function(){
   if (pomoHandle) clearInterval(pomoHandle);
+  pomoHandle = null;
   if (pomoPhase === "work" && typeof logStudySession === "function"){
     const elapsedSec = Math.round((pomoTotalMs - pomoRemainingMs) / 1000);
     logStudySession(currentSubject, elapsedSec, "pomodoro");
   }
+  if (typeof clearActiveSession === "function") clearActiveSession();
   document.getElementById("pomoSetupView").classList.remove("hidden");
   document.getElementById("pomoRunningView").classList.add("hidden");
   if (pomoWakeLock){ pomoWakeLock.release().catch(()=>{}); pomoWakeLock = null; }
