@@ -2324,4 +2324,30 @@ window.boardClear = function(){
   boardCtx.fillRect(0, 0, canvas.width, canvas.height);
 };
 
-/* ================= تذكير قاعدة 20-20-20 لراحة العين =========
+/* ================= تذكير قاعدة 20-20-20 لراحة العين ================= */
+let eyeReminderElapsed = 0;
+const EYE_REMINDER_INTERVAL_SEC = 20 * 60; // كل 20 دقيقة
+function eyeReminderTick(){
+  eyeReminderElapsed++;
+  if (eyeReminderElapsed >= EYE_REMINDER_INTERVAL_SEC){
+    eyeReminderElapsed = 0;
+    showEyeToast();
+  }
+}
+function showEyeToast(){
+  const el = document.getElementById("eyeToast");
+  if (!el) return;
+  el.classList.add("show");
+  setTimeout(() => { el.classList.remove("show"); }, 20000);
+}
+
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
