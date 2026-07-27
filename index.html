@@ -82,6 +82,7 @@
   .bento-card.water.on .bento-badge{background:rgba(72,202,228,.15); color:#48cae4;}
 
   .loading{text-align:center; color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace; margin-bottom:10px;}
+  .home-greeting{text-align:center; color:var(--muted); font-size:13px; font-family:'Tajawal',sans-serif; margin:-16px 0 18px;}
 
   /* ================= وضع التركيز العميق ================= */
   .focus-toggle-btn{
@@ -157,6 +158,32 @@
   }
   .footer-credit span{ color:var(--amber); font-weight:700; }
 
+  /* ================= الملف الشخصي ================= */
+  .profile-btn{
+    position:fixed; top:16px; inset-inline-end:16px; z-index:20;
+    display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:20px;
+    border:1px solid var(--border); background:var(--panel); color:#fff; font-size:12.5px;
+    font-family:'Tajawal',sans-serif; font-weight:700; cursor:pointer; text-decoration:none;
+    box-shadow:0 6px 18px rgba(0,0,0,.4);
+  }
+  .profile-modal{
+    width:100%; max-width:400px; background:var(--panel); border:1px solid var(--border);
+    border-radius:20px; padding:26px 22px; text-align:start; max-height:88vh; overflow-y:auto;
+  }
+  .profile-modal h2{margin:0 0 16px; font-size:17px; font-weight:900; text-align:center; color:#fff;}
+  .profile-modal .hint{font-size:12px; color:var(--muted); line-height:1.8; margin:0 0 14px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12.5px; color:var(--muted); margin-bottom:6px;}
+  .field input, .field select{
+    width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--border);
+    background:#0d1420; color:#fff; font-family:'Tajawal',sans-serif; font-size:14px;
+  }
+  .field.hidden{display:none;}
+  .modal-error{color:var(--red); font-size:12px; text-align:center; margin:-8px 0 12px; display:none;}
+  .profile-modal .primary{width:100%; margin-top:6px;}
+  .profile-actions-row{display:flex; gap:8px; margin-top:12px;}
+  .profile-actions-row button{font-size:12px; padding:10px 8px;}
+
   /* ================= حالة عدم الاتصال بالإنترنت ================= */
   .net-banner{
     display:none; align-items:center; gap:8px; background:rgba(255,59,48,.12); border:1px solid rgba(255,59,48,.35);
@@ -177,6 +204,7 @@
 <body>
 
 <button type="button" class="focus-toggle-btn" id="focusToggleBtn" onclick="toggleDeepFocus()" aria-label="وضع التركيز العميق" title="وضع التركيز العميق">🧘</button>
+<button type="button" class="profile-btn" id="profileBtn" onclick="openProfileModal(false)">👤 الملف الشخصي</button>
 <div class="focus-toast" id="focusToast">
   <span class="f-icon">🧘</span>
   <span id="focusToastText"></span>
@@ -185,6 +213,7 @@
 <div class="wrap">
   <p class="eyebrow">مركز المؤقتات</p>
   <h1>اختر المؤقت</h1>
+  <p class="home-greeting" id="homeGreeting" style="display:none;"></p>
 
   <p class="net-banner" id="netBanner">📡 لا يوجد اتصال بالإنترنت — الأقسام التي تحتاج مزامنة مباشرة معطّلة مؤقتًا</p>
 
@@ -271,9 +300,100 @@
   </div>
 </div>
 
+<div class="overlay" id="profileOverlay">
+  <div class="profile-modal">
+    <h2>📝 معلوماتك الشخصية</h2>
+    <p class="modal-error" id="profileError">فضلاً عبّئ الاسم والعمر والبلد بشكل صحيح</p>
+    <div class="field">
+      <label>الاسم</label>
+      <input type="text" id="fName" placeholder="اكتب اسمك">
+    </div>
+    <div class="field">
+      <label>العمر</label>
+      <input type="number" id="fAge" min="5" max="100" placeholder="اكتب عمرك">
+    </div>
+    <div class="field">
+      <label>البلد</label>
+      <select id="fCountry" onchange="onCountryChange()">
+        <option value="العراق">العراق</option>
+        <option value="السعودية">السعودية</option>
+        <option value="الأردن">الأردن</option>
+        <option value="سوريا">سوريا</option>
+        <option value="لبنان">لبنان</option>
+        <option value="مصر">مصر</option>
+        <option value="الكويت">الكويت</option>
+        <option value="الإمارات">الإمارات</option>
+        <option value="قطر">قطر</option>
+        <option value="البحرين">البحرين</option>
+        <option value="عُمان">عُمان</option>
+        <option value="اليمن">اليمن</option>
+        <option value="فلسطين">فلسطين</option>
+        <option value="ليبيا">ليبيا</option>
+        <option value="تونس">تونس</option>
+        <option value="الجزائر">الجزائر</option>
+        <option value="المغرب">المغرب</option>
+        <option value="السودان">السودان</option>
+        <option value="أخرى">أخرى</option>
+      </select>
+    </div>
+    <div class="field" id="iraqGovField">
+      <label>المحافظة</label>
+      <select id="fGovIraq">
+        <option value="بغداد">بغداد</option>
+        <option value="البصرة">البصرة</option>
+        <option value="نينوى">نينوى</option>
+        <option value="أربيل">أربيل</option>
+        <option value="النجف">النجف</option>
+        <option value="كربلاء">كربلاء</option>
+        <option value="الأنبار">الأنبار</option>
+        <option value="ذي قار">ذي قار</option>
+        <option value="ديالى">ديالى</option>
+        <option value="كركوك">كركوك</option>
+        <option value="بابل">بابل</option>
+        <option value="واسط">واسط</option>
+        <option value="ميسان">ميسان</option>
+        <option value="المثنى">المثنى</option>
+        <option value="القادسية">القادسية</option>
+        <option value="صلاح الدين">صلاح الدين</option>
+        <option value="دهوك">دهوك</option>
+        <option value="السليمانية">السليمانية</option>
+      </select>
+    </div>
+    <div class="field hidden" id="otherGovField">
+      <label>المحافظة / المنطقة</label>
+      <input type="text" id="fGovOther" placeholder="اكتب اسم المحافظة أو المنطقة">
+    </div>
+    <button class="primary" id="profileSaveBtn" onclick="saveProfile()">💾 حفظ</button>
+
+    <!-- الأزرار الثلاث (تعديل بياناتي / رمزي / استرجاع حساب) أصبحت هنا داخل الملف الشخصي -->
+    <div class="profile-actions-row">
+      <button class="secondary" id="showMyCodeBtn" onclick="showMyRecoveryCode()">🔑 رمزي</button>
+      <button class="secondary" onclick="document.getElementById('recoverAccountOverlay').classList.add('show');">♻️ استرجاع حساب</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="recoveryCodeOverlay">
+  <div class="profile-modal">
+    <h2>🔑 رمز استرجاع حسابك</h2>
+    <p class="hint">هذا رمزك الشخصي — احتفظ فيه بمكان آمن (صورة شاشة أو مكتوب بدفترك). لو ضاع حسابك يومًا (مسحت المتصفح، غيّرت جهاز...)، أعطي هذا الرمز لأستاذك وهو رح يرجّعلك رصيدك.</p>
+    <div style="text-align:center; font-size:28px; font-weight:800; letter-spacing:3px; padding:18px 10px; margin:14px 0; border:2px dashed var(--amber); border-radius:12px;" id="recoveryCodeDisplay"></div>
+    <button class="primary" onclick="document.getElementById('recoveryCodeOverlay').classList.remove('show');">فهمت، احتفظت فيه ✅</button>
+  </div>
+</div>
+
+<div class="overlay" id="recoverAccountOverlay">
+  <div class="profile-modal">
+    <h2>♻️ استرجاع حساب قديم</h2>
+    <p class="hint">إذا عندك رمز استرجاع من حساب سابق، أعطيه لأستاذك مباشرة (بالواتساب أو بالصف) وهو رح يرجّعلك رصيدك من لوحة التحكم. هذا الزر فقط للتذكير — الاسترجاع نفسه يصير من عند الأستاذ.</p>
+    <button class="primary" onclick="document.getElementById('recoverAccountOverlay').classList.remove('show');">تمام</button>
+  </div>
+</div>
+
 <script src="timer-sounds.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDoZPCTfHBg-gCupUOd6FPqMMiJm4jT1vA",
@@ -286,11 +406,36 @@ const firebaseConfig = {
 };
 let db = null;
 let firebaseOK = false;
+let currentUid = null;
+let authReadyResolve;
+const authReady = new Promise((resolve) => { authReadyResolve = resolve; });
+function serverTimestampValue(){
+  try{
+    if (firebaseOK && typeof firebase !== "undefined" && firebase.database && firebase.database.ServerValue){
+      return firebase.database.ServerValue.TIMESTAMP;
+    }
+  }catch(e){}
+  return Date.now();
+}
 try{
   if (typeof firebase === "undefined") throw new Error("firebase-not-loaded");
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
   firebaseOK = true;
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user){
+      currentUid = user.uid;
+      authReadyResolve(currentUid);
+    }
+  });
+  // نضبط استمرارية الدخول صراحةً حتى يبقى نفس المعرّف لهذا الجهاز قدر الإمكان بين الزيارات
+  firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .catch(() => {})
+    .finally(() => {
+      firebase.auth().signInAnonymously().catch(() => {
+        /* لو فشل الدخول المجهول، الدوال التي تكتب على studyLeaderboard رح تنتظر authReady وما رح تكمل */
+      });
+    });
 }catch(e){
   firebaseOK = false;
 }
@@ -379,6 +524,176 @@ window.closeNetRequired = function(){
 window.addEventListener("online", updateNetBanner);
 window.addEventListener("offline", updateNetBanner);
 updateNetBanner();
+</script>
+
+<script>
+/* ================= الملف الشخصي =================
+   أول ما يدخل اللاعب للعبة (هذه الصفحة الرئيسية) ولا يوجد له ملف شخصي محفوظ، تُفتح هذه النافذة
+   إجباريًا ليسجّل بياناته قبل ما يقدر يفتح أي مؤقت. */
+const PROFILE_KEY = "studyChallengeProfile";
+const RECOVERY_KEY = "studyChallengeRecoveryCode";
+const RECOVERY_CHARS = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // بدون أحرف/أرقام ملتبسة (0/O، 1/I/L)
+
+function generateRecoveryCode(){
+  let code = "";
+  for (let i = 0; i < 8; i++){
+    if (i === 4) code += "-";
+    code += RECOVERY_CHARS[Math.floor(Math.random() * RECOVERY_CHARS.length)];
+  }
+  return code;
+}
+
+function showRecoveryCode(code){
+  document.getElementById("recoveryCodeDisplay").innerText = code;
+  document.getElementById("recoveryCodeOverlay").classList.add("show");
+}
+
+window.showMyRecoveryCode = function(){
+  const code = localStorage.getItem(RECOVERY_KEY);
+  if (code){ showRecoveryCode(code); return; }
+  // ما في رمز محفوظ محليًا (مثلاً بروفايل قديم من قبل الميزة) — ننشئ واحد جديد الآن
+  authReady.then(async (myUid) => {
+    const p = getProfile();
+    if (!p) return;
+    const code = await createRecoveryCode(myUid, p.name);
+    if (code) showRecoveryCode(code);
+  });
+};
+
+async function createRecoveryCode(myUid, name){
+  for (let attempt = 0; attempt < 3; attempt++){
+    const code = generateRecoveryCode();
+    try{
+      await db.ref('recoveryCodes/' + code).set({ uid: myUid, name: name, createdAt: firebase.database.ServerValue.TIMESTAMP });
+      localStorage.setItem(RECOVERY_KEY, code);
+      return code;
+    }catch(e){ /* الرمز مستخدم مسبقًا (نادر جدًا) أو خطأ مؤقت — نجرب رمز تاني */ }
+  }
+  return null;
+}
+
+function getProfile(){
+  try{
+    const raw = localStorage.getItem(PROFILE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+window.onCountryChange = function(){
+  const isIraq = document.getElementById("fCountry").value === "العراق";
+  document.getElementById("iraqGovField").classList.toggle("hidden", !isIraq);
+  document.getElementById("otherGovField").classList.toggle("hidden", isIraq);
+};
+
+window.openProfileModal = function(forced){
+  const p = getProfile();
+  if (p){
+    document.getElementById("fName").value = p.name || "";
+    document.getElementById("fAge").value = p.age || "";
+    document.getElementById("fCountry").value = p.country || "العراق";
+    onCountryChange();
+    if (p.country === "العراق") document.getElementById("fGovIraq").value = p.governorate || "بغداد";
+    else document.getElementById("fGovOther").value = p.governorate || "";
+  } else {
+    onCountryChange();
+  }
+  document.getElementById("profileError").style.display = "none";
+  document.getElementById("profileOverlay").classList.add("show");
+};
+
+window.saveProfile = async function(){
+  const name = document.getElementById("fName").value.trim();
+  const age = parseInt(document.getElementById("fAge").value, 10);
+  const country = document.getElementById("fCountry").value;
+  const isIraq = country === "العراق";
+  const governorate = isIraq
+    ? document.getElementById("fGovIraq").value
+    : document.getElementById("fGovOther").value.trim();
+
+  if (!name || !age || age < 5 || age > 100 || !country || !governorate){
+    document.getElementById("profileError").innerText = "فضلاً عبّئ الاسم والعمر والبلد بشكل صحيح";
+    document.getElementById("profileError").style.display = "block";
+    return;
+  }
+
+  if (!firebaseOK || !navigator.onLine){
+    document.getElementById("profileError").innerText = "يجب الاتصال بالإنترنت لحفظ بياناتك، حاول مرة ثانية.";
+    document.getElementById("profileError").style.display = "block";
+    return;
+  }
+
+  const saveBtn = document.getElementById("profileSaveBtn");
+  if (saveBtn) saveBtn.disabled = true;
+  const myUid = await authReady; // نستنى الدخول المجهول قبل أي كتابة، لأن قاعدة الأمان بتشترط auth.uid == $uid
+
+  const existing = getProfile();
+  // معرّف السجل هو دايمًا auth.uid الحالي. لو عندنا بروفايل محلي قديم بمعرّف مختلف، هذا "تعديل بيانات"
+  // للاعب موجود أصلاً، فلازم نحافظ على رصيده القديم (totalSeconds) بدل ما نصفّره أو ننشئ حساب جديد.
+  const isBrandNewPlayer = !existing;
+  let p = { id: myUid };
+  p.name = name;
+  p.age = age;
+  p.country = country;
+  p.governorate = governorate;
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+
+  const profileUpdate = {
+    name: p.name, age: p.age, country: p.country, governorate: p.governorate,
+    updatedAt: serverTimestampValue()
+  };
+
+  try{
+    if (isBrandNewPlayer){
+      // لاعب جديد كليًا: هذا هو المكان الوحيد المسموح فيه بإنشاء سجل بـ totalSeconds = 0
+      profileUpdate.totalSeconds = 0;
+      await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
+      const code = await createRecoveryCode(myUid, p.name);
+      document.getElementById("profileOverlay").classList.remove("show");
+      updateHomeGreeting();
+      if (code) showRecoveryCode(code);
+      return;
+    }
+
+    if (existing.id !== myUid){
+      // بروفايل محلي بمعرّف مختلف (مثلاً تغيّر معرّف الدخول المجهول): ننقل رصيده القديم كاملاً بدل تصفيره
+      let oldData = {};
+      try{
+        const oldSnap = await db.ref('studyLeaderboard/' + existing.id).once('value');
+        oldData = oldSnap.val() || {};
+      }catch(e){}
+      profileUpdate.totalSeconds = oldData.totalSeconds || 0;
+      profileUpdate.dayIndex = oldData.dayIndex;
+      profileUpdate.daySeconds = oldData.daySeconds || 0;
+      profileUpdate.weekIndex = oldData.weekIndex;
+      profileUpdate.weeklySeconds = oldData.weeklySeconds || 0;
+      profileUpdate.streak = oldData.streak || 0;
+      profileUpdate.lastStudyDayIndex = oldData.lastStudyDayIndex;
+    }
+
+    await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
+  }
+
+  document.getElementById("profileOverlay").classList.remove("show");
+  updateHomeGreeting();
+};
+
+function updateHomeGreeting(){
+  const p = getProfile();
+  const el = document.getElementById("homeGreeting");
+  if (p){
+    el.innerText = `مرحبًا، ${p.name} 👋`;
+    el.style.display = "block";
+  } else {
+    el.style.display = "none";
+  }
+}
+
+updateHomeGreeting();
+if (!getProfile()){
+  openProfileModal(true);
+}
 </script>
 
 <script>
