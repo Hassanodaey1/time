@@ -637,13 +637,14 @@
       <label>المحافظة / المنطقة</label>
       <input type="text" id="fGovOther" placeholder="اكتب اسم المحافظة أو المنطقة">
     </div>
-    <button class="primary" onclick="saveProfile()">💾 حفظ</button>
+    <button class="primary" id="profileSaveBtn" onclick="saveProfile()">💾 حفظ</button>
   </div>
 </div>
 
 <script src="timer-sounds.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script>
 /* ================= المؤقت ================= */
 let selectedMinutes = 15;
@@ -793,6 +794,9 @@ const firebaseConfig = {
    نحمّل فايربيس بأمان، وإن تعذّر (لا يوجد إنترنت) نعرض شاشة واضحة بدل شاشة "التحدي غير مفعّل" المضلّلة. */
 let db = null;
 let firebaseOK = false;
+let currentUid = null;
+let authReadyResolve;
+const authReady = new Promise((resolve) => { authReadyResolve = resolve; });
 function makeOfflineDbStub(){
   const chain = {
     on(){ return chain; }, off(){ return chain; },
@@ -815,6 +819,16 @@ try{
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
   firebaseOK = true;
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user){
+      currentUid = user.uid;
+      authReadyResolve(currentUid);
+    }
+  });
+  firebase.auth().signInAnonymously().catch(() => {
+    /* لو فشل الدخول المجهول (مثلاً معطّل بإعدادات المشروع) نبقى بلا uid،
+       والدوال اللي بتكتب على studyLeaderboard رح تنتظر authReady وما رح تكمل. */
+  });
 }catch(e){
   firebaseOK = false;
   db = makeOfflineDbStub();
@@ -987,10 +1001,6 @@ function getProfile(){
   }catch(e){ return null; }
 }
 
-function uid(){
-  return "s_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
-
 window.onCountryChange = function(){
   const isIraq = document.getElementById("fCountry").value === "العراق";
   document.getElementById("iraqGovField").classList.toggle("hidden", !isIraq);
@@ -1013,7 +1023,7 @@ window.openProfileModal = function(forced){
   document.getElementById("profileOverlay").style.display = "flex";
 };
 
-window.saveProfile = function(){
+window.saveProfile = async function(){
   const name = document.getElementById("fName").value.trim();
   const age = parseInt(document.getElementById("fAge").value, 10);
   const country = document.getElementById("fCountry").value;
@@ -1027,10 +1037,14 @@ window.saveProfile = function(){
     return;
   }
 
+  const saveBtn = document.getElementById("profileSaveBtn");
+  if (saveBtn) saveBtn.disabled = true;
+  const myUid = await authReady; // نستنى الدخول المجهول قبل أي كتابة، لأن قاعدة الأمان بتشترط auth.uid == $uid
+
   const existing = getProfile();
-  const isNewProfile = !existing;
-  let p = existing;
-  if (!p) p = { id: uid() };
+  // معرّف السجل هو دايمًا auth.uid الحالي — أي id قديم مخزّن محليًا (من نظام سابق) ما بينفع للكتابة بعد اليوم
+  const isNewProfile = !existing || existing.id !== myUid;
+  let p = { id: myUid };
   p.name = name;
   p.age = age;
   p.country = country;
@@ -1042,7 +1056,11 @@ window.saveProfile = function(){
     updatedAt: serverTimestampValue()
   };
   if (isNewProfile) profileUpdate.totalSeconds = 0; // مسموح فقط عند إنشاء السجل لأول مرة (تفرضه قاعدة الأمان)
-  db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
+  try{
+    await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
+  }
 
   document.getElementById("profileOverlay").style.display = "none";
   updateGreeting();
@@ -1063,8 +1081,8 @@ function getBadge(totalSeconds){
 
 function bankStudyTime(seconds){
   const p = getProfile();
-  if (!p || seconds <= 0) return;
-  const ref = db.ref('studyLeaderboard/' + p.id);
+  if (!p || seconds <= 0 || !currentUid) return;
+  const ref = db.ref('studyLeaderboard/' + currentUid);
 
   ref.once('value').then(snap => {
     const cur = snap.val() || {};
@@ -1204,14 +1222,26 @@ function updateStreakInfo(streak){
   }
 }
 
-const myProfileOnLoad = getProfile();
-if (myProfileOnLoad){
-  db.ref('studyLeaderboard/' + myProfileOnLoad.id).on('value', (snap) => {
+authReady.then((myUid) => {
+  const myProfileOnLoad = getProfile();
+  // ترحيل تلقائي: لو عندنا بروفايل محلي بمعرّف قديم (نظام قبل تفعيل تسجيل الدخول المجهول)
+  // ننشئ سجل جديد بنفس البيانات تحت auth.uid الحالي حتى تستمر كتابة الوقت تعمل.
+  // ملاحظة: totalSeconds بيبلش من 0 بالسجل الجديد (قيود الأمان ما بتسمح بغير هيك لغير الأدمن)،
+  // فالسجل القديم بيضل موجود بالقاعدة (يمكن دمجه يدويًا من لوحة التحكم لو الأمر يستاهل).
+  if (myProfileOnLoad && myProfileOnLoad.id !== myUid){
+    const migrated = { id: myUid, name: myProfileOnLoad.name, age: myProfileOnLoad.age, country: myProfileOnLoad.country, governorate: myProfileOnLoad.governorate };
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(migrated));
+    db.ref('studyLeaderboard/' + myUid).update({
+      name: migrated.name, age: migrated.age, country: migrated.country, governorate: migrated.governorate,
+      totalSeconds: 0, updatedAt: serverTimestampValue()
+    });
+  }
+  db.ref('studyLeaderboard/' + myUid).on('value', (snap) => {
     const val = snap.val() || {};
     updateMyRankBanner(val.totalSeconds || 0);
     updateStreakInfo(val.streak || 0);
   });
-}
+});
 
 /* ================= بدء التشغيل ================= */
 updateGreeting();
