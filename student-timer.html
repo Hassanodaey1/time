@@ -376,6 +376,25 @@
     justify-content:center; padding:14px; z-index:40;
   }
   .board-overlay.show{display:flex;}
+
+  /* ================= الدفتر السريع العائم ================= */
+  .notebook-fab{
+    position:fixed; bottom:150px; inset-inline-end:18px; width:50px; height:50px; border-radius:50%;
+    background:var(--panel); border:1px solid var(--border); color:var(--accent); font-size:20px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:20;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);
+  }
+  .notebook-fab:active{transform:scale(0.94);}
+  .notebook-modal{width:100%; max-width:420px; max-height:88vh; display:flex; flex-direction:column;}
+  .notebook-textarea{
+    width:100%; flex:1; min-height:260px; resize:vertical; padding:12px; border-radius:12px;
+    border:1px solid var(--border); background:#16161c; color:#fff; font-family:'JetBrains Mono',monospace;
+    font-size:13px; line-height:1.6; margin:10px 0 12px; direction:auto;
+  }
+  .notebook-footer{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+  .notebook-saved{font-size:10.5px; color:var(--muted); font-family:'JetBrains Mono',monospace;}
+  .notebook-actions{display:flex; gap:8px;}
+  .notebook-actions button{padding:8px 14px; font-size:12px; margin:0;}
   .board-modal{
     width:100%; max-width:640px; max-height:92vh; background:var(--panel); border:1px solid var(--border);
     border-radius:20px; padding:14px; display:flex; flex-direction:column; gap:10px;
@@ -432,6 +451,8 @@
 
 <button class="board-fab" onclick="openBoard()" aria-label="سبورة">📝</button>
 
+<button class="notebook-fab" onclick="openNotebook()" aria-label="دفتر ملاحظات">🗒️</button>
+
 <div class="eye-toast" id="eyeToast">
   <span class="eye-icon">👁️</span>
   <span>قاعدة 20-20-20: انظر لشي يبعد 6 أمتار لمدة 20 ثانية لراحة عينك</span>
@@ -468,6 +489,23 @@
         <button class="board-action-btn" id="boardEraserBtn" onclick="boardToggleEraser()">🧹 ممحاة</button>
         <button class="board-action-btn" onclick="boardUndo()">↩️ تراجع</button>
         <button class="board-action-btn" onclick="boardClear()">🗑️ مسح الكل</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="notebookOverlay">
+  <div class="modal notebook-modal">
+    <div class="calc-head">
+      <h2>🗒️ دفتر سريع</h2>
+      <button class="calc-close" onclick="closeNotebook()">✕</button>
+    </div>
+    <textarea id="notebookTextarea" class="notebook-textarea" placeholder="اكتب فكرة أو سنيبت كود أو أي شي تحب تحفظه بسرعة قبل ما تنساه..." oninput="onNotebookInput()"></textarea>
+    <div class="notebook-footer">
+      <span class="notebook-saved" id="notebookSavedIndicator">محفوظ تلقائيًا ✓</span>
+      <div class="notebook-actions">
+        <button class="secondary" onclick="copyNotebook()">📋 نسخ</button>
+        <button class="secondary" onclick="clearNotebook()">🗑️ مسح</button>
       </div>
     </div>
   </div>
@@ -2103,6 +2141,69 @@ window.calcEquals = function(){
   }
 };
 
+/* ================= الدفتر السريع العائم ================= */
+/* دفتر ملاحظات صغير عائم — يحفظ تلقائيًا بالجهاز فقط، ومستقل تمامًا عن أي مؤقت شغّال.
+   الفكرة: تكتب فكرة أو سنيبت كود بسرعة قبل ما تروح من بالك، بدون ما توقف جلستك. */
+const NOTEBOOK_KEY = "studentQuickNotebook";
+let notebookSaveTimeout = null;
+
+function getNotebookContent(){
+  try{ return localStorage.getItem(NOTEBOOK_KEY) || ""; }catch(e){ return ""; }
+}
+function saveNotebookContent(text){
+  try{ localStorage.setItem(NOTEBOOK_KEY, text); }catch(e){}
+}
+
+window.openNotebook = function(){
+  document.getElementById("notebookTextarea").value = getNotebookContent();
+  document.getElementById("notebookSavedIndicator").innerText = "محفوظ تلقائيًا ✓";
+  document.getElementById("notebookOverlay").classList.add("show");
+};
+window.closeNotebook = function(){
+  /* حفظ فوري قبل الإغلاق حتى لو المستخدم كتب وسكّر بسرعة قبل ما ينتهي التأخير */
+  saveNotebookContent(document.getElementById("notebookTextarea").value);
+  document.getElementById("notebookOverlay").classList.remove("show");
+};
+
+window.onNotebookInput = function(){
+  const indicator = document.getElementById("notebookSavedIndicator");
+  indicator.innerText = "جارٍ الحفظ...";
+  if (notebookSaveTimeout) clearTimeout(notebookSaveTimeout);
+  notebookSaveTimeout = setTimeout(() => {
+    saveNotebookContent(document.getElementById("notebookTextarea").value);
+    indicator.innerText = "محفوظ تلقائيًا ✓";
+  }, 500);
+};
+
+window.copyNotebook = function(){
+  const textarea = document.getElementById("notebookTextarea");
+  const text = textarea.value;
+  const indicator = document.getElementById("notebookSavedIndicator");
+  const showCopied = () => {
+    indicator.innerText = "📋 اتنسخ!";
+    setTimeout(() => { indicator.innerText = "محفوظ تلقائيًا ✓"; }, 1800);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(showCopied).catch(() => {
+      textarea.select();
+      document.execCommand("copy");
+      showCopied();
+    });
+  } else {
+    textarea.select();
+    document.execCommand("copy");
+    showCopied();
+  }
+};
+
+window.clearNotebook = function(){
+  appConfirm("متأكد تبي تمسح كل محتوى الدفتر؟ ما ينرجع بعدها.", () => {
+    document.getElementById("notebookTextarea").value = "";
+    saveNotebookContent("");
+    document.getElementById("notebookSavedIndicator").innerText = "محفوظ تلقائيًا ✓";
+  });
+};
+
 /* ================= السبورة العائمة ================= */
 /* مستقلة تماماً عن منطق المؤقت: فتحها أو إغلاقها لا يوقف أو يبطئ أي مؤقت شغّال بالخلفية. */
 let boardCtx = null;
@@ -2223,30 +2324,4 @@ window.boardClear = function(){
   boardCtx.fillRect(0, 0, canvas.width, canvas.height);
 };
 
-/* ================= تذكير قاعدة 20-20-20 لراحة العين ================= */
-let eyeReminderElapsed = 0;
-const EYE_REMINDER_INTERVAL_SEC = 20 * 60; // كل 20 دقيقة
-function eyeReminderTick(){
-  eyeReminderElapsed++;
-  if (eyeReminderElapsed >= EYE_REMINDER_INTERVAL_SEC){
-    eyeReminderElapsed = 0;
-    showEyeToast();
-  }
-}
-function showEyeToast(){
-  const el = document.getElementById("eyeToast");
-  if (!el) return;
-  el.classList.add("show");
-  setTimeout(() => { el.classList.remove("show"); }, 20000);
-}
-
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
-  });
-}
-</script>
-</body>
-</html>
+/* ================= تذكير قاعدة 20-20-20 لراحة العين =========
