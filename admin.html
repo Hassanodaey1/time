@@ -1357,7 +1357,9 @@ window.resetWeeklyLeaderboard = function(){
     msg.style.color = "#8b8d99";
     msg.innerText = "جارٍ التصفير...";
 
-    const currentWeekIndex = Math.floor(Date.now() / 604800000);
+    // نفس حد الأسبوع المستخدم بصفحة تحدي الدراسة: بتوقيت بغداد (UTC+3) بدل منتصف ليل غرينتش
+    const LOCAL_UTC_OFFSET_MS = 3 * 60 * 60 * 1000;
+    const currentWeekIndex = Math.floor((Date.now() + LOCAL_UTC_OFFSET_MS) / 604800000);
 
     db.ref('studyLeaderboard').once('value').then(snapshot => {
       const updates = {};
