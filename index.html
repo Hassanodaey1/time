@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -15,7 +15,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#000000; --panel:#131316; --amber:#ffb400; --red:#ff3b30; --green:#2ecc71; --muted:#8b8d99; --border:#26262d; --purple:#a78bfa; }
+  :root{ --bg:#000000; --panel:#131316; --amber:#ffb400; --red:#ff3b30; --green:#2ecc71; --muted:#8b8d99; --border:#26262d; --purple:#a78bfa;
+    --safe-t:env(safe-area-inset-top, 0px); --safe-r:env(safe-area-inset-right, 0px);
+    --safe-b:env(safe-area-inset-bottom, 0px); --safe-l:env(safe-area-inset-left, 0px); }
   /* ================= مقياس الخط (Typography Scale) ================= */
   :root{
     --fs-01: 10px; /* used across the page */
@@ -41,7 +43,8 @@
   html,body{height:100%;}
   body{
     margin:0; background:var(--bg); color:#f2f4f8; font-family:'Tajawal',sans-serif;
-    display:flex; align-items:center; justify-content:center; padding:24px;
+    display:flex; align-items:center; justify-content:center;
+    padding:calc(24px + var(--safe-t)) calc(24px + var(--safe-r)) calc(24px + var(--safe-b)) calc(24px + var(--safe-l));
     background-image:
       radial-gradient(circle at 15% 15%, rgba(255,180,0,0.06), transparent 42%),
       radial-gradient(circle at 85% 85%, rgba(255,59,48,0.05), transparent 42%);
@@ -51,6 +54,14 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   .wrap{width:100%; max-width:460px;}
+  /* ================= تناسق مع التابلت والحاسوب ================= */
+  @media (min-width:700px){
+    .wrap{max-width:600px;}
+    .bento{grid-template-columns:repeat(3,1fr);}
+  }
+  @media (min-width:1024px){
+    .wrap{max-width:760px;}
+  }
   .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:var(--fs-02); letter-spacing:3px; color:var(--amber);
     text-transform:uppercase; text-align:center; margin:0 0 6px; }
   h1{text-align:center; margin:0 0 28px; font-size:var(--fs-16); font-weight:900;}
@@ -122,7 +133,7 @@
 
   /* ================= وضع التركيز العميق ================= */
   .focus-toggle-btn{
-    position:fixed; top:16px; left:16px; width:44px; height:44px; border-radius:50%; z-index:20;
+    position:fixed; top:calc(16px + var(--safe-t)); left:calc(16px + var(--safe-l)); width:44px; height:44px; border-radius:50%; z-index:20;
     background:var(--panel); border:1px solid var(--border); color:var(--muted); font-size:var(--fs-14);
     display:flex; align-items:center; justify-content:center; cursor:pointer;
     box-shadow:0 6px 18px rgba(0,0,0,.4); transition:border-color .2s ease, color .2s ease, box-shadow .2s ease;
@@ -137,7 +148,7 @@
     box-shadow:0 0 0 3px rgba(255,180,0,.15), 0 6px 18px rgba(0,0,0,.4);
   }
   .focus-toast{
-    position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(16px);
+    position:fixed; bottom:calc(18px + var(--safe-b)); left:50%; transform:translateX(-50%) translateY(16px);
     max-width:320px; width:calc(100% - 36px);
     background:var(--panel); border:1px solid var(--amber); color:#fff;
     padding:12px 16px; border-radius:14px; display:flex; align-items:center; gap:10px;
@@ -200,7 +211,7 @@
 
   /* ================= الملف الشخصي ================= */
   .profile-btn{
-    position:fixed; top:16px; right:16px; z-index:20;
+    position:fixed; top:calc(16px + var(--safe-t)); right:calc(16px + var(--safe-r)); z-index:20;
     display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:20px;
     border:1px solid var(--border); background:var(--panel); color:#fff; font-size:var(--fs-05);
     font-family:'Tajawal',sans-serif; font-weight:700; cursor:pointer; text-decoration:none;
@@ -341,7 +352,8 @@
   /* ================= شاشة البداية (Splash) ================= */
   .splash-screen{
     position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column; align-items:center;
-    justify-content:center; gap:20px; padding:28px; text-align:center; background:var(--bg);
+    justify-content:center; gap:20px; text-align:center; background:var(--bg);
+    padding:calc(28px + var(--safe-t)) calc(28px + var(--safe-r)) calc(28px + var(--safe-b)) calc(28px + var(--safe-l));
     background-image:
       radial-gradient(circle at 15% 15%, rgba(255,180,0,0.08), transparent 42%),
       radial-gradient(circle at 85% 85%, rgba(255,59,48,0.06), transparent 42%);
@@ -391,7 +403,7 @@
     font-size:var(--fs-02); margin:2px 0 0; line-height:1.6; text-align:start;}
   .splash-offline-note svg{flex-shrink:0; margin-top:2px;}
   .splash-error{color:var(--red); font-size:var(--fs-03); margin:2px 0 0; display:none; line-height:1.6;}
-  .splash-footer{position:absolute; bottom:22px; font-size:var(--fs-01); color:var(--muted);
+  .splash-footer{position:absolute; bottom:calc(22px + var(--safe-b)); font-size:var(--fs-01); color:var(--muted);
     font-family:'JetBrains Mono',monospace; letter-spacing:.5px;}
 </style>
 </head>
