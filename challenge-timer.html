@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
+:root{ --safe-t:env(safe-area-inset-top, 0px); --safe-r:env(safe-area-inset-right, 0px); --safe-b:env(safe-area-inset-bottom, 0px); --safe-l:env(safe-area-inset-left, 0px); }
   :root{ --theme-color:#ffb400; }
   /* ================= مقياس الخط (Typography Scale) ================= */
   :root{
@@ -46,7 +47,8 @@
   html,body{height:100%; margin:0;}
   body{
     background:#000000; color:#fff; font-family:'Tajawal',sans-serif;
-    display:flex; align-items:center; justify-content:center; padding:24px;
+    display:flex; align-items:center; justify-content:center;
+    padding:calc(24px + var(--safe-t)) calc(24px + var(--safe-r)) calc(24px + var(--safe-b)) calc(24px + var(--safe-l));
     transition: background-color 1s linear;
     background-image:
       radial-gradient(circle at 15% 15%, rgba(255,180,0,0.05), transparent 42%),
@@ -57,7 +59,7 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   .back-link{
-    position:fixed; top:16px; right:16px; z-index:15;
+    position:fixed; top:calc(16px + var(--safe-t)); right:calc(16px + var(--safe-r)); z-index:15;
     display:inline-flex; align-items:center; gap:5px; background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.25);
     color:var(--theme-color); font-family:'Tajawal',sans-serif; font-weight:800; font-size:var(--fs-08);
     padding:9px 16px; border-radius:20px; text-decoration:none; box-shadow:0 6px 18px rgba(0,0,0,.45);
@@ -169,10 +171,18 @@
   @media (max-width:480px){
     .flip{min-width:58px; font-size:var(--fs-15); padding:10px 4px;}
   }
+  /* ================= تناسق مع التابلت والحاسوب ================= */
+  @media (min-width:900px){
+    .stage{max-width:760px;}
+  }
+  @media (min-width:1200px){
+    .stage{max-width:900px;}
+    .flip{font-size:var(--fs-17);}
+  }
 
   /* ================= الحاسبة العلمية العائمة ================= */
   .calc-fab{
-    position:fixed; bottom:18px; inset-inline-end:18px; width:50px; height:50px; border-radius:50%;
+    position:fixed; bottom:calc(18px + var(--safe-b)); inset-inline-end:calc(18px + var(--safe-l)); width:50px; height:50px; border-radius:50%;
     background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.25); color:var(--theme-color); font-size:var(--fs-13);
     display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:20;
     box-shadow:0 4px 14px rgba(0,0,0,.35); backdrop-filter:blur(2px);
@@ -214,7 +224,7 @@
   .calc-btn.zero{grid-column:span 2;}
   /* ================= السبورة العائمة ================= */
   .board-fab{
-    position:fixed; bottom:84px; inset-inline-end:18px; width:50px; height:50px; border-radius:50%;
+    position:fixed; bottom:calc(84px + var(--safe-b)); inset-inline-end:calc(18px + var(--safe-l)); width:50px; height:50px; border-radius:50%;
     background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.25); color:var(--theme-color); font-size:var(--fs-13);
     display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:20;
     box-shadow:0 4px 14px rgba(0,0,0,.35); backdrop-filter:blur(2px);
