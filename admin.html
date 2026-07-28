@@ -194,6 +194,8 @@
     padding:9px 16px; border-radius:20px; box-shadow:0 6px 18px rgba(0,0,0,.45);
   }
   .back-btn:hover{color:#fff;}
+
+  .ico{width:1em;height:1em;display:inline-block;vertical-align:-0.15em;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -219,9 +221,9 @@
 <!-- شاشة عدم الاتصال بالإنترنت -->
 <div class="card hidden" id="adminOfflineView">
   <p class="eyebrow">لوحة التحكم</p>
-  <h1>📡 لا يوجد اتصال بالإنترنت</h1>
+  <h1><svg class="ico" viewBox="0 0 24 24"><path d="M4 9a12 12 0 0 1 16 0"/><path d="M7 12.5a7.5 7.5 0 0 1 10 0"/><path d="M10 16a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg> لا يوجد اتصال بالإنترنت</h1>
   <p class="hint">لوحة التحكم بالكامل تحتاج اتصال إنترنت لأنها تتصل مباشرة بحساب فايربيس وتتحكم بالمؤقتات عن بُعد. تأكد من اتصالك بالإنترنت ثم حاول مرة ثانية.</p>
-  <button class="primary" onclick="location.reload()">🔄 إعادة المحاولة</button>
+  <button class="primary" onclick="location.reload()"><svg class="ico" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.6-5.7"/><path d="M20 12a8 8 0 0 1-13.6 5.7"/><path d="M17.6 3.6v3.2h-3.2"/><path d="M6.4 20.4v-3.2h3.2"/></svg> إعادة المحاولة</button>
 </div>
 
 <!-- اللوحة الرئيسية بعد تسجيل الدخول -->
@@ -230,25 +232,25 @@
   <h1>اختر ما تريد التحكم به</h1>
 
   <button type="button" class="hub-btn" onclick="showPanel('main')">
-    <span class="icon">⏱️</span>
+    <span class="icon"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg></span>
     <span class="txt"><b>المؤقت الرئيسي</b><small>ضبط وقت العد التنازلي/التصاعدي وعنوان الحدث</small></span>
     <span class="arrow">‹</span>
   </button>
 
   <button type="button" class="hub-btn challenge" onclick="showPanel('challenge')">
-    <span class="icon">🔥</span>
+    <span class="icon"><svg class="ico" viewBox="0 0 24 24"><path d="M12 21c-4 0-6.8-2.6-6.8-6.2 0-3 2-4.7 2.8-7.5.4 1.5 1.4 2.4 2.4 2.2-.4-3.1 1-5.5 3.1-7.1-.6 2.7.4 4.1 1.9 5.6 1.7 1.7 3.4 3.5 3.4 6.8 0 3.6-2.8 6.2-6.8 6.2Z"/><path d="M12 21c-1.8 0-3-1.2-3-2.9 0-1.4.9-2.2 1.3-3.4.2.7.7 1.1 1.2 1 0-1.4.5-2.4 1.4-3.1-.2 1.2.2 1.9.9 2.6.8.8 1.5 1.5 1.5 2.9 0 1.7-1.5 2.9-3.3 2.9Z"/></svg></span>
     <span class="txt"><b>تحدي الأستاذ</b><small>بدء أو إيقاف مؤقت التحدي</small></span>
     <span class="arrow">‹</span>
   </button>
 
   <button type="button" class="hub-btn study" onclick="showPanel('studyChallenge')">
-    <span class="icon">📚</span>
+    <span class="icon"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5.6c-1.7-1.3-4-1.6-6-1.2v13.6c2-.4 4.3-.1 6 1.2 1.7-1.3 4-1.6 6-1.2V4.4c-2-.4-4.3-.1-6 1.2Z"/><path d="M12 5.6v13.6"/></svg></span>
     <span class="txt"><b>تحدي الدراسة</b><small>تفعيل أو تعطيل زر تحدي الدراسة في الصفحة الرئيسية</small></span>
     <span class="arrow">‹</span>
   </button>
 
   <button type="button" class="hub-btn themes" onclick="showPanel('themesPatterns')">
-    <span class="icon">🎨</span>
+    <span class="icon"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c1.4 0 2.2-.9 2.2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.9 1.9-1.9H17a4 4 0 0 0 4-4c0-4.1-4-7.5-9-7.5Z"/><circle cx="8" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="10.5" r="1" fill="currentColor" stroke="none"/></svg></span>
     <span class="txt"><b>الثيمات والأنماط</b><small>لون الأرقام لكل المؤقتات + شكل كل مؤقت على حدة</small></span>
     <span class="arrow">‹</span>
   </button>
@@ -268,7 +270,7 @@
   <div id="rangeDateSection">
     <label>الفترة (من - إلى)</label>
     <button type="button" class="time-picker-btn" onclick="openFromToPicker()">
-      <span class="tp-icon">🗓️</span>
+      <span class="tp-icon"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9h16"/><path d="M8 3v4"/><path d="M16 3v4"/></svg></span>
       <span class="tp-text">
         <span class="tp-label">من - إلى</span>
         <span class="tp-value" id="fromToDisplay">اضغط لتحديد تاريخ البداية والنهاية</span>
@@ -283,7 +285,7 @@
   <label>نوع المؤقت</label>
   <div class="modes">
     <button type="button" class="mode-btn active" id="btnDown" onclick="setMode('down', true)">⏳ تنازلي</button>
-    <button type="button" class="mode-btn" id="btnUp" onclick="setMode('up', true)">⏱️ تصاعدي</button>
+    <button type="button" class="mode-btn" id="btnUp" onclick="setMode('up', true)"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg> تصاعدي</button>
   </div>
 
   <div id="status"></div>
@@ -295,7 +297,7 @@
 <!-- لوحة تحدي الأستاذ -->
 <div class="card hidden" id="challengePanel">
   <button type="button" class="back-btn" onclick="showHub()">‹ رجوع</button>
-  <p class="eyebrow">🔥 تحدي الأستاذ</p>
+  <p class="eyebrow"><svg class="ico" viewBox="0 0 24 24"><path d="M12 21c-4 0-6.8-2.6-6.8-6.2 0-3 2-4.7 2.8-7.5.4 1.5 1.4 2.4 2.4 2.2-.4-3.1 1-5.5 3.1-7.1-.6 2.7.4 4.1 1.9 5.6 1.7 1.7 3.4 3.5 3.4 6.8 0 3.6-2.8 6.2-6.8 6.2Z"/><path d="M12 21c-1.8 0-3-1.2-3-2.9 0-1.4.9-2.2 1.3-3.4.2.7.7 1.1 1.2 1 0-1.4.5-2.4 1.4-3.1-.2 1.2.2 1.9.9 2.6.8.8 1.5 1.5 1.5 2.9 0 1.7-1.5 2.9-3.3 2.9Z"/></svg> تحدي الأستاذ</p>
   <h1>ضبط التحدي</h1>
 
   <label>عنوان التحدي</label>
@@ -303,7 +305,7 @@
 
   <label>مدة التحدي (يوم : ساعة : دقيقة)</label>
   <button type="button" class="time-picker-btn" onclick="openDurationPicker()">
-    <span class="tp-icon">⏱️</span>
+    <span class="tp-icon"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg></span>
     <span class="tp-text">
       <span class="tp-label">مدة التحدي</span>
       <span class="tp-value" id="challengeDurationDisplay">اضغط لتحديد المدة</span>
@@ -315,7 +317,7 @@
   <label>نوع العد</label>
   <div class="modes">
     <button type="button" class="mode-btn active" id="chBtnDown" onclick="setChallengeMode('down', true)">⏳ تنازلي</button>
-    <button type="button" class="mode-btn" id="chBtnUp" onclick="setChallengeMode('up', true)">⏱️ تصاعدي</button>
+    <button type="button" class="mode-btn" id="chBtnUp" onclick="setChallengeMode('up', true)"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg> تصاعدي</button>
   </div>
 
   <label>تدرّج اللون خلال التحدي</label>
@@ -331,7 +333,7 @@
   </div>
 
   <div class="toggle-row">
-    <button class="toggle-btn" onclick="startChallenge()">🚀 بدء التحدي</button>
+    <button class="toggle-btn" onclick="startChallenge()"><svg class="ico" viewBox="0 0 24 24"><path d="M12 2.5c3 2 4.5 5.5 4.5 9 0 2-.6 3.6-1.3 4.8l-3.2 3-3.2-3c-.7-1.2-1.3-2.8-1.3-4.8 0-3.5 1.5-7 4.5-9Z"/><circle cx="12" cy="10.5" r="1.6" fill="currentColor" stroke="none"/><path d="M8.5 16.5 6 20l3-1"/><path d="M15.5 16.5 18 20l-3-1"/></svg> بدء التحدي</button>
     <button class="toggle-btn" onclick="stopChallenge()">⏹️ إيقاف التحدي</button>
   </div>
   <div id="challengeStatusMsg" class="hint"></div>
@@ -340,12 +342,12 @@
 <!-- لوحة تحدي الدراسة -->
 <div class="card hidden" id="studyChallengePanel">
   <button type="button" class="back-btn" onclick="showHub()">‹ رجوع</button>
-  <p class="eyebrow">📚 تحدي الدراسة</p>
+  <p class="eyebrow"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5.6c-1.7-1.3-4-1.6-6-1.2v13.6c2-.4 4.3-.1 6 1.2 1.7-1.3 4-1.6 6-1.2V4.4c-2-.4-4.3-.1-6 1.2Z"/><path d="M12 5.6v13.6"/></svg> تحدي الدراسة</p>
   <h1>التحكم بزر تحدي الدراسة</h1>
   <p class="hint" style="margin-bottom:16px;">عند التفعيل، يصبح زر "تحدي الدراسة" في الصفحة الرئيسية مفعّلاً (حدود خضراء) ويقدر الطلاب يسجّلون بياناتهم ويتنافسون على أطول مدة دراسة. عند التعطيل، يبقى الزر ظاهرًا في الصفحة الرئيسية لكنه يصبح باهتًا وغير قابل للضغط، تمامًا كزر "تحدي الأستاذ".</p>
 
   <div class="toggle-row">
-    <button class="toggle-btn" onclick="startStudyChallenge()">🚀 تفعيل</button>
+    <button class="toggle-btn" onclick="startStudyChallenge()"><svg class="ico" viewBox="0 0 24 24"><path d="M12 2.5c3 2 4.5 5.5 4.5 9 0 2-.6 3.6-1.3 4.8l-3.2 3-3.2-3c-.7-1.2-1.3-2.8-1.3-4.8 0-3.5 1.5-7 4.5-9Z"/><circle cx="12" cy="10.5" r="1.6" fill="currentColor" stroke="none"/><path d="M8.5 16.5 6 20l3-1"/><path d="M15.5 16.5 18 20l-3-1"/></svg> تفعيل</button>
     <button class="toggle-btn" onclick="stopStudyChallenge()">⏹️ تعطيل</button>
   </div>
   <div id="studyChallengeStatusMsg" class="hint"></div>
@@ -353,14 +355,14 @@
   <hr style="border-color:var(--border, #2a3a4a); margin:20px 0;">
   <p class="hint" style="margin-bottom:10px;">تصفير رصيد "هذا الأسبوع" لجميع الطلاب (لا يمس رصيدهم الكلي/الإجمالي إطلاقًا).</p>
   <div class="toggle-row">
-    <button class="toggle-btn" onclick="resetWeeklyLeaderboard()">🔄 تصفير</button>
+    <button class="toggle-btn" onclick="resetWeeklyLeaderboard()"><svg class="ico" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.6-5.7"/><path d="M20 12a8 8 0 0 1-13.6 5.7"/><path d="M17.6 3.6v3.2h-3.2"/><path d="M6.4 20.4v-3.2h3.2"/></svg> تصفير</button>
   </div>
   <div id="weeklyResetStatusMsg" class="hint"></div>
 
   <hr style="border-color:var(--border, #2a3a4a); margin:20px 0;">
   <p class="hint" style="margin-bottom:10px;">ترحيل سجلات الطلاب اللي كان عندهم رصيد قبل تفعيل تسجيل الدخول الآمن — بيدمج الرصيد القديم مع سجلهم الجديد تلقائيًا حسب تطابق الاسم والعمر والبلد والمحافظة، وبعدين يحذف السجل القديم.</p>
   <div class="toggle-row">
-    <button class="toggle-btn" onclick="scanLegacyRecords()">🔍 فحص السجلات القديمة</button>
+    <button class="toggle-btn" onclick="scanLegacyRecords()"><svg class="ico" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg> فحص السجلات القديمة</button>
   </div>
   <div id="legacyMigrateList"></div>
   <div id="legacyMigrateStatusMsg" class="hint"></div>
@@ -372,7 +374,7 @@
     <input type="text" id="recoveryCodeInput" placeholder="مثال: A3F9-K2QX" style="text-transform:uppercase;">
   </div>
   <div class="toggle-row">
-    <button class="toggle-btn" onclick="lookupRecoveryCode()">🔍 بحث</button>
+    <button class="toggle-btn" onclick="lookupRecoveryCode()"><svg class="ico" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg> بحث</button>
   </div>
   <div id="recoveryLookupResult"></div>
   <div id="recoveryLookupStatusMsg" class="hint"></div>
@@ -381,7 +383,7 @@
 <!-- لوحة الثيمات والأنماط الموحدة -->
 <div class="card hidden" id="themesPatternsPanel">
   <button type="button" class="back-btn" onclick="showHub()">‹ رجوع</button>
-  <p class="eyebrow">🎨 الثيمات والأنماط</p>
+  <p class="eyebrow"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c1.4 0 2.2-.9 2.2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.9 1.9-1.9H17a4 4 0 0 0 4-4c0-4.1-4-7.5-9-7.5Z"/><circle cx="8" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="10.5" r="1" fill="currentColor" stroke="none"/></svg> الثيمات والأنماط</p>
   <h1>ألوان وأشكال المؤقتات</h1>
 
   <label>ثيم لون الأرقام — مشترك ويُطبَّق فورًا على المؤقت الرئيسي وتحدي الأستاذ ومؤقت الطالب معًا</label>
@@ -409,61 +411,61 @@
   <label>الأنماط — شكل صندوق الأرقام، كل مؤقت له نمط مستقل عن غيره</label>
 
   <div class="pattern-box">
-    <p class="pattern-box-title">⏱️ المؤقت الرئيسي</p>
+    <p class="pattern-box-title"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg> المؤقت الرئيسي</p>
     <div class="themes" id="stylesGrid">
-      <button type="button" class="theme-btn active" id="style-default" onclick="setStyle('default')">🔲 افتراضي</button>
-      <button type="button" class="theme-btn" id="style-circular" onclick="setStyle('circular')">⭕ دائري</button>
-      <button type="button" class="theme-btn" id="style-pixel" onclick="setStyle('pixel')">👾 بكسل</button>
-      <button type="button" class="theme-btn" id="style-neon" onclick="setStyle('neon')">✨ نيون</button>
-      <button type="button" class="theme-btn" id="style-ring" onclick="setStyle('ring')">🟠 حلقي</button>
-      <button type="button" class="theme-btn" id="style-digital" onclick="setStyle('digital')">⬛ رقمي بسيط</button>
-      <button type="button" class="theme-btn" id="style-dotmatrix" onclick="setStyle('dotmatrix')">🔶 نقطي LED</button>
-      <button type="button" class="theme-btn" id="style-flipclock" onclick="setStyle('flipclock')">🕐 فليب كلوك</button>
+      <button type="button" class="theme-btn active" id="style-default" onclick="setStyle('default')"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg> افتراضي</button>
+      <button type="button" class="theme-btn" id="style-circular" onclick="setStyle('circular')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg> دائري</button>
+      <button type="button" class="theme-btn" id="style-pixel" onclick="setStyle('pixel')"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg> بكسل</button>
+      <button type="button" class="theme-btn" id="style-neon" onclick="setStyle('neon')"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3c.6 3.4 2.6 5.4 6 6-3.4.6-5.4 2.6-6 6-.6-3.4-2.6-5.4-6-6 3.4-.6 5.4-2.6 6-6Z"/></svg> نيون</button>
+      <button type="button" class="theme-btn" id="style-ring" onclick="setStyle('ring')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg> حلقي</button>
+      <button type="button" class="theme-btn" id="style-digital" onclick="setStyle('digital')"><svg class="ico" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" stroke="none"/></svg> رقمي بسيط</button>
+      <button type="button" class="theme-btn" id="style-dotmatrix" onclick="setStyle('dotmatrix')"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4 20 12 12 20 4 12Z"/></svg> نقطي LED</button>
+      <button type="button" class="theme-btn" id="style-flipclock" onclick="setStyle('flipclock')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> فليب كلوك</button>
     </div>
     <div id="themeSaveStatus" class="hint"></div>
   </div>
 
   <div class="pattern-box">
-    <p class="pattern-box-title">🔥 تحدي الأستاذ</p>
+    <p class="pattern-box-title"><svg class="ico" viewBox="0 0 24 24"><path d="M12 21c-4 0-6.8-2.6-6.8-6.2 0-3 2-4.7 2.8-7.5.4 1.5 1.4 2.4 2.4 2.2-.4-3.1 1-5.5 3.1-7.1-.6 2.7.4 4.1 1.9 5.6 1.7 1.7 3.4 3.5 3.4 6.8 0 3.6-2.8 6.2-6.8 6.2Z"/><path d="M12 21c-1.8 0-3-1.2-3-2.9 0-1.4.9-2.2 1.3-3.4.2.7.7 1.1 1.2 1 0-1.4.5-2.4 1.4-3.1-.2 1.2.2 1.9.9 2.6.8.8 1.5 1.5 1.5 2.9 0 1.7-1.5 2.9-3.3 2.9Z"/></svg> تحدي الأستاذ</p>
     <div class="themes" id="challengeStylesGrid">
-      <button type="button" class="theme-btn active" id="chstyle-default" onclick="setChallengeStyle('default')">🔲 افتراضي</button>
-      <button type="button" class="theme-btn" id="chstyle-circular" onclick="setChallengeStyle('circular')">⭕ دائري</button>
-      <button type="button" class="theme-btn" id="chstyle-pixel" onclick="setChallengeStyle('pixel')">👾 بكسل</button>
-      <button type="button" class="theme-btn" id="chstyle-neon" onclick="setChallengeStyle('neon')">✨ نيون</button>
-      <button type="button" class="theme-btn" id="chstyle-ring" onclick="setChallengeStyle('ring')">🟠 حلقي</button>
-      <button type="button" class="theme-btn" id="chstyle-digital" onclick="setChallengeStyle('digital')">⬛ رقمي بسيط</button>
-      <button type="button" class="theme-btn" id="chstyle-dotmatrix" onclick="setChallengeStyle('dotmatrix')">🔶 نقطي LED</button>
-      <button type="button" class="theme-btn" id="chstyle-flipclock" onclick="setChallengeStyle('flipclock')">🕐 فليب كلوك</button>
+      <button type="button" class="theme-btn active" id="chstyle-default" onclick="setChallengeStyle('default')"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg> افتراضي</button>
+      <button type="button" class="theme-btn" id="chstyle-circular" onclick="setChallengeStyle('circular')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg> دائري</button>
+      <button type="button" class="theme-btn" id="chstyle-pixel" onclick="setChallengeStyle('pixel')"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg> بكسل</button>
+      <button type="button" class="theme-btn" id="chstyle-neon" onclick="setChallengeStyle('neon')"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3c.6 3.4 2.6 5.4 6 6-3.4.6-5.4 2.6-6 6-.6-3.4-2.6-5.4-6-6 3.4-.6 5.4-2.6 6-6Z"/></svg> نيون</button>
+      <button type="button" class="theme-btn" id="chstyle-ring" onclick="setChallengeStyle('ring')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg> حلقي</button>
+      <button type="button" class="theme-btn" id="chstyle-digital" onclick="setChallengeStyle('digital')"><svg class="ico" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" stroke="none"/></svg> رقمي بسيط</button>
+      <button type="button" class="theme-btn" id="chstyle-dotmatrix" onclick="setChallengeStyle('dotmatrix')"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4 20 12 12 20 4 12Z"/></svg> نقطي LED</button>
+      <button type="button" class="theme-btn" id="chstyle-flipclock" onclick="setChallengeStyle('flipclock')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> فليب كلوك</button>
     </div>
     <div id="challengeStyleSaveStatus" class="hint"></div>
   </div>
 
   <div class="pattern-box">
-    <p class="pattern-box-title">📚 مؤقت الطالب</p>
+    <p class="pattern-box-title"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5.6c-1.7-1.3-4-1.6-6-1.2v13.6c2-.4 4.3-.1 6 1.2 1.7-1.3 4-1.6 6-1.2V4.4c-2-.4-4.3-.1-6 1.2Z"/><path d="M12 5.6v13.6"/></svg> مؤقت الطالب</p>
     <div class="themes" id="studentStylesGrid">
-      <button type="button" class="theme-btn active" id="stustyle-default" onclick="setStudentStyle('default')">🔲 افتراضي</button>
-      <button type="button" class="theme-btn" id="stustyle-circular" onclick="setStudentStyle('circular')">⭕ دائري</button>
-      <button type="button" class="theme-btn" id="stustyle-pixel" onclick="setStudentStyle('pixel')">👾 بكسل</button>
-      <button type="button" class="theme-btn" id="stustyle-neon" onclick="setStudentStyle('neon')">✨ نيون</button>
-      <button type="button" class="theme-btn" id="stustyle-ring" onclick="setStudentStyle('ring')">🟠 حلقي</button>
-      <button type="button" class="theme-btn" id="stustyle-digital" onclick="setStudentStyle('digital')">⬛ رقمي بسيط</button>
-      <button type="button" class="theme-btn" id="stustyle-dotmatrix" onclick="setStudentStyle('dotmatrix')">🔶 نقطي LED</button>
-      <button type="button" class="theme-btn" id="stustyle-flipclock" onclick="setStudentStyle('flipclock')">🕐 فليب كلوك</button>
+      <button type="button" class="theme-btn active" id="stustyle-default" onclick="setStudentStyle('default')"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg> افتراضي</button>
+      <button type="button" class="theme-btn" id="stustyle-circular" onclick="setStudentStyle('circular')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg> دائري</button>
+      <button type="button" class="theme-btn" id="stustyle-pixel" onclick="setStudentStyle('pixel')"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg> بكسل</button>
+      <button type="button" class="theme-btn" id="stustyle-neon" onclick="setStudentStyle('neon')"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3c.6 3.4 2.6 5.4 6 6-3.4.6-5.4 2.6-6 6-.6-3.4-2.6-5.4-6-6 3.4-.6 5.4-2.6 6-6Z"/></svg> نيون</button>
+      <button type="button" class="theme-btn" id="stustyle-ring" onclick="setStudentStyle('ring')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg> حلقي</button>
+      <button type="button" class="theme-btn" id="stustyle-digital" onclick="setStudentStyle('digital')"><svg class="ico" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" stroke="none"/></svg> رقمي بسيط</button>
+      <button type="button" class="theme-btn" id="stustyle-dotmatrix" onclick="setStudentStyle('dotmatrix')"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4 20 12 12 20 4 12Z"/></svg> نقطي LED</button>
+      <button type="button" class="theme-btn" id="stustyle-flipclock" onclick="setStudentStyle('flipclock')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> فليب كلوك</button>
     </div>
     <div id="studentStyleSaveStatus" class="hint"></div>
   </div>
 
   <div class="pattern-box">
-    <p class="pattern-box-title">🏆 تحدي الدراسة</p>
+    <p class="pattern-box-title"><svg class="ico" viewBox="0 0 24 24"><path d="M7 4h10v4.2a5 5 0 0 1-10 0Z"/><path d="M7 5.2H4.6A2.4 2.4 0 0 0 4 9.9 4 4 0 0 0 7 11.4"/><path d="M17 5.2h2.4A2.4 2.4 0 0 1 20 9.9 4 4 0 0 1 17 11.4"/><path d="M12 13.2v2.8"/><path d="M9.3 20h5.4"/><path d="M10 16.5h4l1 3.5H9Z"/></svg> تحدي الدراسة</p>
     <div class="themes" id="studyChallengeStylesGrid">
-      <button type="button" class="theme-btn active" id="sdystyle-default" onclick="setStudyChallengeStyle('default')">🔲 افتراضي</button>
-      <button type="button" class="theme-btn" id="sdystyle-circular" onclick="setStudyChallengeStyle('circular')">⭕ دائري</button>
-      <button type="button" class="theme-btn" id="sdystyle-pixel" onclick="setStudyChallengeStyle('pixel')">👾 بكسل</button>
-      <button type="button" class="theme-btn" id="sdystyle-neon" onclick="setStudyChallengeStyle('neon')">✨ نيون</button>
-      <button type="button" class="theme-btn" id="sdystyle-ring" onclick="setStudyChallengeStyle('ring')">🟠 حلقي</button>
-      <button type="button" class="theme-btn" id="sdystyle-digital" onclick="setStudyChallengeStyle('digital')">⬛ رقمي بسيط</button>
-      <button type="button" class="theme-btn" id="sdystyle-dotmatrix" onclick="setStudyChallengeStyle('dotmatrix')">🔶 نقطي LED</button>
-      <button type="button" class="theme-btn" id="sdystyle-flipclock" onclick="setStudyChallengeStyle('flipclock')">🕐 فليب كلوك</button>
+      <button type="button" class="theme-btn active" id="sdystyle-default" onclick="setStudyChallengeStyle('default')"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg> افتراضي</button>
+      <button type="button" class="theme-btn" id="sdystyle-circular" onclick="setStudyChallengeStyle('circular')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg> دائري</button>
+      <button type="button" class="theme-btn" id="sdystyle-pixel" onclick="setStudyChallengeStyle('pixel')"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg> بكسل</button>
+      <button type="button" class="theme-btn" id="sdystyle-neon" onclick="setStudyChallengeStyle('neon')"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3c.6 3.4 2.6 5.4 6 6-3.4.6-5.4 2.6-6 6-.6-3.4-2.6-5.4-6-6 3.4-.6 5.4-2.6 6-6Z"/></svg> نيون</button>
+      <button type="button" class="theme-btn" id="sdystyle-ring" onclick="setStudyChallengeStyle('ring')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/></svg> حلقي</button>
+      <button type="button" class="theme-btn" id="sdystyle-digital" onclick="setStudyChallengeStyle('digital')"><svg class="ico" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" stroke="none"/></svg> رقمي بسيط</button>
+      <button type="button" class="theme-btn" id="sdystyle-dotmatrix" onclick="setStudyChallengeStyle('dotmatrix')"><svg class="ico" viewBox="0 0 24 24"><path d="M12 4 20 12 12 20 4 12Z"/></svg> نقطي LED</button>
+      <button type="button" class="theme-btn" id="sdystyle-flipclock" onclick="setStudyChallengeStyle('flipclock')"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> فليب كلوك</button>
     </div>
     <div id="studyChallengeStyleSaveStatus" class="hint"></div>
   </div>
@@ -484,7 +486,7 @@
 <!-- نافذة تخصيص مدة التحدي (يوم/ساعة/دقيقة) -->
 <div class="overlay" id="durationPickerOverlay">
   <div class="modal tp-modal" style="max-width:360px;">
-    <h2>⏱️ حدد مدة التحدي</h2>
+    <h2><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg> حدد مدة التحدي</h2>
     <div class="tp-steppers">
       <div class="tp-stepper">
         <button type="button" class="tp-btn" onclick="adjustDurDay(1)">+</button>
@@ -509,7 +511,7 @@
     </div>
     <div class="controls" style="display:flex; gap:10px;">
       <button class="secondary" style="flex:1;" onclick="closeDurationPicker()">إلغاء</button>
-      <button class="primary" style="flex:1; margin-top:0;" onclick="confirmDurationPicker()">تأكيد ✅</button>
+      <button class="primary" style="flex:1; margin-top:0;" onclick="confirmDurationPicker()">تأكيد <svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
     </div>
   </div>
 </div>
@@ -517,7 +519,7 @@
 <!-- نافذة تحديد فترة كاملة (من - إلى) -->
 <div class="overlay" id="fromToPickerOverlay">
   <div class="modal tp-modal" style="max-width:400px;">
-    <h2>🗓️ حدد فترة المؤقت</h2>
+    <h2><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9h16"/><path d="M8 3v4"/><path d="M16 3v4"/></svg> حدد فترة المؤقت</h2>
     <p class="hint" style="text-align:center; margin:-8px 0 18px;">من</p>
     <div class="tp-steppers">
       <div class="tp-stepper">
@@ -561,10 +563,10 @@
       </div>
     </div>
     <p class="hint" style="text-align:center; margin:0 0 16px; font-weight:700; color:var(--amber);" id="fromToDaysPreview">—</p>
-    <p class="hint" style="margin:0 0 14px;">سيُستخدم النمط المحدد فوق (تصاعدي ⏱️ أو تنازلي ⏳) كما هو — في النمط التصاعدي سيبدأ العد فعليًا من تاريخ "من"، وفي النمط التنازلي سيُحسب العد التنازلي حتى تاريخ "إلى".</p>
+    <p class="hint" style="margin:0 0 14px;">سيُستخدم النمط المحدد فوق (تصاعدي <svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg> أو تنازلي ⏳) كما هو — في النمط التصاعدي سيبدأ العد فعليًا من تاريخ "من"، وفي النمط التنازلي سيُحسب العد التنازلي حتى تاريخ "إلى".</p>
     <div class="controls" style="display:flex; gap:10px;">
       <button class="secondary" style="flex:1;" onclick="closeFromToPicker()">إلغاء</button>
-      <button class="primary" style="flex:1; margin-top:0;" onclick="confirmFromToPicker()">تأكيد ✅</button>
+      <button class="primary" style="flex:1; margin-top:0;" onclick="confirmFromToPicker()">تأكيد <svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
     </div>
   </div>
 </div>
@@ -1386,7 +1388,7 @@ window.scanLegacyRecords = function(){
     const confirmRow = document.createElement("div");
     confirmRow.className = "toggle-row";
     confirmRow.style.marginTop = "14px";
-    confirmRow.innerHTML = `<button class="toggle-btn" onclick="mergeLegacyRecords()">✅ دمج المحدد</button>`;
+    confirmRow.innerHTML = `<button class="toggle-btn" onclick="mergeLegacyRecords()"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg> دمج المحدد</button>`;
     listEl.appendChild(confirmRow);
   }).catch((error) => {
     msg.style.color = "#ff3b30";
@@ -1471,7 +1473,7 @@ function renderRecoveryResult(code, oldRecord){
       <input type="text" id="recoveryTargetSearch" placeholder="اكتب الاسم كما هو الآن">
     </div>
     <div class="toggle-row">
-      <button class="toggle-btn" onclick="searchRecoveryTarget('${code}', '${oldRecord.id}')">🔍 بحث عن السجل الجديد</button>
+      <button class="toggle-btn" onclick="searchRecoveryTarget('${code}', '${oldRecord.id}')"><svg class="ico" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg> بحث عن السجل الجديد</button>
     </div>
     <div id="recoveryTargetList"></div>
   `;
@@ -1511,7 +1513,7 @@ window.searchRecoveryTarget = function(code, oldUid){
     const confirmRow = document.createElement("div");
     confirmRow.className = "toggle-row";
     confirmRow.style.marginTop = "14px";
-    confirmRow.innerHTML = `<button class="toggle-btn" onclick="confirmRecoveryMerge('${code}', '${oldUid}')">✅ استرجاع لهاد الحساب</button>`;
+    confirmRow.innerHTML = `<button class="toggle-btn" onclick="confirmRecoveryMerge('${code}', '${oldUid}')"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg> استرجاع لهاد الحساب</button>`;
     listEl.appendChild(confirmRow);
   });
 };
