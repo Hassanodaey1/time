@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
+:root{ --safe-t:env(safe-area-inset-top, 0px); --safe-r:env(safe-area-inset-right, 0px); --safe-b:env(safe-area-inset-bottom, 0px); --safe-l:env(safe-area-inset-left, 0px); }
   :root{ --bg:#000000; --panel:#131316; --accent:#ffb400; --muted:#8b8d99; --border:#26262d; --green:#2ecc71; --red:#ff3b30; }
   /* ================= مقياس الخط (Typography Scale) ================= */
   :root{
@@ -50,7 +51,8 @@
   html,body{height:100%;}
   body{
     margin:0; background:var(--bg); color:#f2f4f8; font-family:'Tajawal',sans-serif;
-    display:flex; align-items:flex-start; justify-content:center; padding:70px 18px 30px;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:calc(70px + var(--safe-t)) calc(18px + var(--safe-r)) calc(30px + var(--safe-b)) calc(18px + var(--safe-l));
     min-height:100vh;
     background-image:
       radial-gradient(circle at 15% 15%, rgba(255,180,0,0.05), transparent 42%),
@@ -61,12 +63,15 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   .back-link{
-    position:fixed; top:16px; right:16px; z-index:15;
+    position:fixed; top:calc(16px + var(--safe-t)); right:calc(16px + var(--safe-r)); z-index:15;
     display:inline-flex; align-items:center; gap:5px; background:var(--panel); border:1px solid var(--border);
     color:var(--accent); font-family:'Tajawal',sans-serif; font-weight:800; font-size:var(--fs-09);
     padding:9px 16px; border-radius:20px; text-decoration:none; box-shadow:0 6px 18px rgba(0,0,0,.45);
   }
   .wrap{width:100%; max-width:440px; display:flex; flex-direction:column; gap:16px;}
+  /* ================= تناسق مع التابلت والحاسوب ================= */
+  @media (min-width:700px){ .wrap{max-width:580px;} }
+  @media (min-width:1024px){ .wrap{max-width:700px;} }
   .card{
     width:100%; background:var(--panel); border:1px solid var(--border);
     border-radius:20px; padding:28px 24px; text-align:center;
@@ -311,7 +316,7 @@
 
   /* ================= الحاسبة العلمية العائمة ================= */
   .calc-fab{
-    position:fixed; bottom:18px; inset-inline-end:18px; width:50px; height:50px; border-radius:50%;
+    position:fixed; bottom:calc(18px + var(--safe-b)); inset-inline-end:calc(18px + var(--safe-l)); width:50px; height:50px; border-radius:50%;
     background:var(--panel); border:1px solid var(--border); color:var(--accent); font-size:var(--fs-17);
     display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:20;
     box-shadow:0 4px 14px rgba(0,0,0,.35);
@@ -353,7 +358,7 @@
   .calc-btn.zero{grid-column:span 2;}
   /* ================= تذكير قاعدة 20-20-20 لراحة العين ================= */
   .eye-toast{
-    position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(16px);
+    position:fixed; bottom:calc(18px + var(--safe-b)); left:50%; transform:translateX(-50%) translateY(16px);
     max-width:320px; width:calc(100% - 36px);
     background:var(--panel); border:1px solid var(--accent); color:#fff;
     padding:12px 16px; border-radius:14px; display:flex; align-items:center; gap:10px;
@@ -365,7 +370,7 @@
   .eye-toast .eye-icon{font-size:var(--fs-17); flex-shrink:0;}
   /* ================= السبورة العائمة ================= */
   .board-fab{
-    position:fixed; bottom:84px; inset-inline-end:18px; width:50px; height:50px; border-radius:50%;
+    position:fixed; bottom:calc(84px + var(--safe-b)); inset-inline-end:calc(18px + var(--safe-l)); width:50px; height:50px; border-radius:50%;
     background:var(--panel); border:1px solid var(--border); color:var(--accent); font-size:var(--fs-17);
     display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:20;
     box-shadow:0 4px 14px rgba(0,0,0,.35);
