@@ -46,7 +46,7 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   .tally{
-    position:fixed; top:20px; inset-inline-end:20px; display:flex; align-items:center; gap:8px;
+    position:fixed; top:20px; right:20px; display:flex; align-items:center; gap:8px;
     font-family:'JetBrains Mono',monospace; font-size:var(--fs-03); color:var(--muted); letter-spacing:1px;
   }
   .tally .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);}
@@ -211,7 +211,7 @@
 
   /* ===== زر الرجوع داخل كل لوحة فرعية ===== */
   .back-btn{
-    position:fixed; top:16px; right:16px; z-index:15;
+    position:fixed; top:16px; left:16px; z-index:15;
     display:inline-flex; align-items:center; gap:5px; background:var(--panel); border:1px solid var(--border);
     color:var(--amber); font-family:'Tajawal',sans-serif; font-weight:800; font-size:var(--fs-04); cursor:pointer;
     padding:9px 16px; border-radius:20px; box-shadow:0 6px 18px rgba(0,0,0,.45);
