@@ -208,6 +208,8 @@
   .net-modal .ic{font-size:36px; margin-bottom:10px;}
   .net-modal h2{margin:0 0 6px; font-size:16px; color:#fff;}
   .net-modal p{margin:0 0 20px; font-size:13px; color:var(--muted); line-height:1.7;}
+
+  .ico{width:1em;height:1em;display:inline-block;vertical-align:-0.15em;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -215,7 +217,7 @@
 <button type="button" class="focus-toggle-btn" id="focusToggleBtn" onclick="toggleDeepFocus()" aria-label="وضع التركيز العميق" title="وضع التركيز العميق">
   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor" stroke="none"/></svg>
 </button>
-<button type="button" class="profile-btn" id="profileBtn" onclick="openProfileModal(false)">👤 الملف الشخصي</button>
+<button type="button" class="profile-btn" id="profileBtn" onclick="openProfileModal(false)"><svg class="ico" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4.5 20c1.4-3.5 4.4-5.5 7.5-5.5s6.1 2 7.5 5.5"/></svg> الملف الشخصي</button>
 <div class="focus-toast" id="focusToast">
   <span class="f-icon">🧘</span>
   <span id="focusToastText"></span>
@@ -226,7 +228,7 @@
   <h1>اختر المؤقت</h1>
   <p class="home-greeting" id="homeGreeting" style="display:none;"></p>
 
-  <p class="net-banner" id="netBanner">📡 لا يوجد اتصال بالإنترنت — الأقسام التي تحتاج مزامنة مباشرة معطّلة مؤقتًا</p>
+  <p class="net-banner" id="netBanner"><svg class="ico" viewBox="0 0 24 24"><path d="M4 9a12 12 0 0 1 16 0"/><path d="M7 12.5a7.5 7.5 0 0 1 10 0"/><path d="M10 16a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg> لا يوجد اتصال بالإنترنت — الأقسام التي تحتاج مزامنة مباشرة معطّلة مؤقتًا</p>
 
   <p class="loading" id="challengeLoading">جارٍ التحقق من حالة التحدي...</p>
 
@@ -280,19 +282,19 @@
       <div class="lbl">الكمية التقريبية التي يحتاجها جسم الإنسان البالغ يومياً من كل السوائل والأطعمة (تزيد مع الجو الحار أو النشاط البدني)</div>
     </div>
     <ul class="water-benefits">
-      <li><span>🧠</span><span>يحسّن التركيز والذاكرة — قلة شرب الماء تسبب تعب ذهني وبطء بالاستيعاب أثناء المذاكرة</span></li>
-      <li><span>⚡</span><span>يقلل الصداع والإرهاق اللي يصير بسبب الجلوس لفترة طويلة بدون شرب</span></li>
-      <li><span>😴</span><span>يحافظ على مستوى طاقتك ويقلل الشعور بالنعاس والخمول</span></li>
-      <li><span>🩺</span><span>يدعم عمل الكلى والدورة الدموية والهضم بشكل عام</span></li>
+      <li><span><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor" stroke="none"/></svg></span><span>يحسّن التركيز والذاكرة — قلة شرب الماء تسبب تعب ذهني وبطء بالاستيعاب أثناء المذاكرة</span></li>
+      <li><span><svg class="ico" viewBox="0 0 24 24"><path d="M13 3 5 13.5h5.5L10 21l8-11h-5.5Z"/></svg></span><span>يقلل الصداع والإرهاق اللي يصير بسبب الجلوس لفترة طويلة بدون شرب</span></li>
+      <li><span><svg class="ico" viewBox="0 0 24 24"><path d="M15 3.5a8.5 8.5 0 1 0 5.5 14.6A7.2 7.2 0 0 1 15 3.5Z"/></svg></span><span>يحافظ على مستوى طاقتك ويقلل الشعور بالنعاس والخمول</span></li>
+      <li><span><svg class="ico" viewBox="0 0 24 24"><path d="M12 20s-7-4.5-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 5c-2.3 4.5-9.3 9-9.3 9Z"/></svg></span><span>يدعم عمل الكلى والدورة الدموية والهضم بشكل عام</span></li>
     </ul>
     <p class="water-note">ملاحظة: هذا رقم عام تقريبي وليس استشارة طبية — احتياج كل شخص من الماء يختلف حسب الوزن والنشاط والحالة الصحية والطقس.</p>
-    <button class="primary" onclick="closeWaterInfo()">فهمت 👍</button>
+    <button class="primary" onclick="closeWaterInfo()">فهمت <svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
   </div>
 </div>
 
 <div class="overlay" id="netRequiredOverlay">
   <div class="net-modal">
-    <div class="ic">📡</div>
+    <div class="ic"><svg class="ico" viewBox="0 0 24 24"><path d="M4 9a12 12 0 0 1 16 0"/><path d="M7 12.5a7.5 7.5 0 0 1 10 0"/><path d="M10 16a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg></div>
     <h2 id="netRequiredTitle">هذا القسم يحتاج إنترنت</h2>
     <p id="netRequiredText">تأكد من اتصالك بالإنترنت وحاول مرة ثانية.</p>
     <button class="primary" onclick="closeNetRequired()">تمام</button>
@@ -305,15 +307,15 @@
     <h2>وقت شرب الماء!</h2>
     <p>خذ استراحة قصيرة واشرب كوب ماء قبل لا ترجع تذاكر</p>
     <div class="controls">
-      <button class="secondary" onclick="snoozeWaterReminder()">😴 تأجيل 10 د</button>
-      <button class="primary" onclick="dismissWaterReminder()">✅ شربت</button>
+      <button class="secondary" onclick="snoozeWaterReminder()"><svg class="ico" viewBox="0 0 24 24"><path d="M15 3.5a8.5 8.5 0 1 0 5.5 14.6A7.2 7.2 0 0 1 15 3.5Z"/></svg> تأجيل 10 د</button>
+      <button class="primary" onclick="dismissWaterReminder()"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg> شربت</button>
     </div>
   </div>
 </div>
 
 <div class="overlay" id="profileOverlay">
   <div class="profile-modal">
-    <h2>📝 معلوماتك الشخصية</h2>
+    <h2><svg class="ico" viewBox="0 0 24 24"><rect x="4.5" y="3" width="15" height="18" rx="2"/><path d="M8.5 8h7"/><path d="M8.5 12h7"/><path d="M8.5 16h4"/></svg> معلوماتك الشخصية</h2>
     <p class="modal-error" id="profileError">فضلاً عبّئ الاسم والعمر والبلد بشكل صحيح</p>
     <div class="field">
       <label>الاسم</label>
@@ -374,28 +376,28 @@
       <label>المحافظة / المنطقة</label>
       <input type="text" id="fGovOther" placeholder="اكتب اسم المحافظة أو المنطقة">
     </div>
-    <button class="primary" id="profileSaveBtn" onclick="saveProfile()">💾 حفظ</button>
+    <button class="primary" id="profileSaveBtn" onclick="saveProfile()"><svg class="ico" viewBox="0 0 24 24"><path d="M5 4.5h11l3 3V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z"/><path d="M8 4.5V9h6V4.5"/><rect x="7.5" y="13" width="9" height="6"/></svg> حفظ</button>
 
     <!-- الأزرار الثلاث (تعديل بياناتي / رمزي / استرجاع حساب) أصبحت هنا داخل الملف الشخصي -->
     <div class="profile-actions-row">
-      <button class="secondary" id="showMyCodeBtn" onclick="showMyRecoveryCode()">🔑 رمزي</button>
-      <button class="secondary" onclick="document.getElementById('recoverAccountOverlay').classList.add('show');">♻️ استرجاع حساب</button>
+      <button class="secondary" id="showMyCodeBtn" onclick="showMyRecoveryCode()"><svg class="ico" viewBox="0 0 24 24"><circle cx="8" cy="15" r="3.5"/><path d="M10.5 12.5 18 5"/><path d="M15.5 7.5l2 2"/><path d="M17.5 5.5l2 2"/></svg> رمزي</button>
+      <button class="secondary" onclick="document.getElementById('recoverAccountOverlay').classList.add('show');"><svg class="ico" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.6-5.7"/><path d="M20 12a8 8 0 0 1-13.6 5.7"/><path d="M17.6 3.6v3.2h-3.2"/><path d="M6.4 20.4v-3.2h3.2"/></svg> استرجاع حساب</button>
     </div>
   </div>
 </div>
 
 <div class="overlay" id="recoveryCodeOverlay">
   <div class="profile-modal">
-    <h2>🔑 رمز استرجاع حسابك</h2>
+    <h2><svg class="ico" viewBox="0 0 24 24"><circle cx="8" cy="15" r="3.5"/><path d="M10.5 12.5 18 5"/><path d="M15.5 7.5l2 2"/><path d="M17.5 5.5l2 2"/></svg> رمز استرجاع حسابك</h2>
     <p class="hint">هذا رمزك الشخصي — احتفظ فيه بمكان آمن (صورة شاشة أو مكتوب بدفترك). لو ضاع حسابك يومًا (مسحت المتصفح، غيّرت جهاز...)، أعطي هذا الرمز لأستاذك وهو رح يرجّعلك رصيدك.</p>
     <div style="text-align:center; font-size:28px; font-weight:800; letter-spacing:3px; padding:18px 10px; margin:14px 0; border:2px dashed var(--amber); border-radius:12px;" id="recoveryCodeDisplay"></div>
-    <button class="primary" onclick="document.getElementById('recoveryCodeOverlay').classList.remove('show');">فهمت، احتفظت فيه ✅</button>
+    <button class="primary" onclick="document.getElementById('recoveryCodeOverlay').classList.remove('show');">فهمت، احتفظت فيه <svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
   </div>
 </div>
 
 <div class="overlay" id="recoverAccountOverlay">
   <div class="profile-modal">
-    <h2>♻️ استرجاع حساب قديم</h2>
+    <h2><svg class="ico" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.6-5.7"/><path d="M20 12a8 8 0 0 1-13.6 5.7"/><path d="M17.6 3.6v3.2h-3.2"/><path d="M6.4 20.4v-3.2h3.2"/></svg> استرجاع حساب قديم</h2>
     <p class="hint">إذا عندك رمز استرجاع من حساب سابق، أعطيه لأستاذك مباشرة (بالواتساب أو بالصف) وهو رح يرجّعلك رصيدك من لوحة التحكم. هذا الزر فقط للتذكير — الاسترجاع نفسه يصير من عند الأستاذ.</p>
     <button class="primary" onclick="document.getElementById('recoverAccountOverlay').classList.remove('show');">تمام</button>
   </div>
