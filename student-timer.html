@@ -567,7 +567,7 @@
     </div>
     <div class="calc-grid">
       <button class="calc-btn fn" onclick="calcClear()">C</button>
-      <button class="calc-btn fn" onclick="calcBackspace()">⌫</button>
+      <button class="calc-btn fn" onclick="calcBackspace()"><svg class="ico" viewBox="0 0 24 24"><path d="M8 6H20a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-6-6Z"/><path d="M13 10l4 4"/><path d="M17 10l-4 4"/></svg></button>
       <button class="calc-btn fn" onclick="calcInput('(')">(</button>
       <button class="calc-btn fn" onclick="calcInput(')')">)</button>
 
@@ -603,7 +603,7 @@
   <h1 style="text-align:center;">شنو تحب تسوي؟</h1>
 
   <button class="hub-item timer" onclick="showView('timer')">
-    <span class="icon">⏱️</span>
+    <span class="icon"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg></span>
     <span class="txt">
       <p class="title">مؤقت عادي</p>
       <p class="desc">اضبط وقت دراسة وابدأ العد التنازلي</p>
@@ -650,7 +650,7 @@
     <div class="subject-chips" id="timerSubjectChips"></div>
 
     <button type="button" class="time-picker-btn" onclick="openTimePicker('customTime','customTimeDisplay')">
-      <span class="tp-icon">⏰</span>
+      <span class="tp-icon"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M7 3.5 4 6"/><path d="M17 3.5 20 6"/></svg></span>
       <span class="tp-text">
         <span class="tp-label">تخصيص الوقت</span>
         <span class="tp-value" id="customTimeDisplay">اضغط لتحديد الساعة والدقيقة</span>
@@ -658,7 +658,7 @@
       <span class="arrow">‹</span>
     </button>
     <input type="hidden" id="customTime" value="">
-    <button class="primary" onclick="startTimer()">▶️ ابدأ الدراسة</button>
+    <button class="primary" onclick="startTimer()"><svg class="ico" viewBox="0 0 24 24"><path d="M7 5v14l12-7Z" fill="currentColor" stroke="none"/></svg> ابدأ الدراسة</button>
   </div>
 
   <div id="runningView" class="hidden">
@@ -693,7 +693,7 @@
     </div>
     <div class="custom-row" id="pomoWorkCustomRow">
       <button type="button" class="time-picker-btn" id="pomoWorkCustomBtn" style="margin-bottom:0;" onclick="selectPomoWorkCustom(this)">
-        <span class="tp-icon">⏰</span>
+        <span class="tp-icon"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M7 3.5 4 6"/><path d="M17 3.5 20 6"/></svg></span>
         <span class="tp-text">
           <span class="tp-label">تخصيص الوقت</span>
           <span class="tp-value" id="pomoWorkCustomTimeDisplay">اضغط لتحديد الساعة والدقيقة</span>
@@ -709,7 +709,7 @@
       <button class="preset-btn" onclick="pickPomoBreak(15, this)">15 د</button>
     </div>
     <p style="font-size:11.5px; color:var(--muted); margin:0 0 20px;">بعد كل 4 دورات عمل، استراحة طويلة 15 دقيقة تلقائيًا</p>
-    <button class="primary" onclick="startPomodoro()">▶️ ابدأ البومودورو</button>
+    <button class="primary" onclick="startPomodoro()"><svg class="ico" viewBox="0 0 24 24"><path d="M7 5v14l12-7Z" fill="currentColor" stroke="none"/></svg> ابدأ البومودورو</button>
   </div>
 
   <div id="pomoRunningView" class="hidden">
@@ -722,7 +722,7 @@
     </div>
     <div class="controls">
       <button class="secondary" id="pomoPauseBtn" onclick="togglePomoPause()">⏸️ إيقاف مؤقت</button>
-      <button class="secondary" onclick="skipPomoPhase()">⏭️ تخطي المرحلة</button>
+      <button class="secondary" onclick="skipPomoPhase()"><svg class="ico" viewBox="0 0 24 24"><path d="M6 5v14l10-7Z" fill="currentColor" stroke="none"/><rect x="17" y="5" width="2.5" height="14" fill="currentColor" stroke="none"/></svg> تخطي المرحلة</button>
     </div>
     <button class="task-add-btn" style="margin-top:10px;" onclick="resetPomodoro()"><svg class="ico" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.6-5.7"/><path d="M20 12a8 8 0 0 1-13.6 5.7"/><path d="M17.6 3.6v3.2h-3.2"/><path d="M6.4 20.4v-3.2h3.2"/></svg> إنهاء الجلسة</button>
   </div>
@@ -800,7 +800,7 @@
     <div class="field">
       <label>تذكير بوقت معيّن (اختياري)</label>
       <button type="button" class="time-picker-btn" id="taskRemindBtn" style="margin-bottom:0;" onclick="openDateTimePicker('taskRemindValue','taskRemindDisplay')">
-        <span class="tp-icon">⏰</span>
+        <span class="tp-icon"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M7 3.5 4 6"/><path d="M17 3.5 20 6"/></svg></span>
         <span class="tp-text">
           <span class="tp-label">تخصيص الوقت</span>
           <span class="tp-value" id="taskRemindDisplay">اضغط لتحديد التاريخ والوقت</span>
@@ -819,7 +819,7 @@
 
 <div class="overlay" id="timePickerOverlay">
   <div class="modal tp-modal" style="max-width:340px;">
-    <h2>⏰ حدد وقت دراستك</h2>
+    <h2><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M7 3.5 4 6"/><path d="M17 3.5 20 6"/></svg> حدد وقت دراستك</h2>
     <div class="tp-steppers">
       <div class="tp-stepper">
         <button type="button" class="tp-btn" onclick="adjustPickerHour(1)">+</button>
@@ -844,7 +844,7 @@
 
 <div class="overlay" id="dateTimePickerOverlay">
   <div class="modal tp-modal" style="max-width:380px;">
-    <h2>⏰ حدد تاريخ ووقت التذكير</h2>
+    <h2><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M7 3.5 4 6"/><path d="M17 3.5 20 6"/></svg> حدد تاريخ ووقت التذكير</h2>
     <div class="tp-steppers">
       <div class="tp-stepper">
         <button type="button" class="tp-btn" onclick="adjustDtField('year',1)">+</button>
@@ -899,7 +899,7 @@
 
 <div class="overlay" id="reminderOverlay">
   <div class="reminder-alert">
-    <div class="bell">⏰</div>
+    <div class="bell"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M7 3.5 4 6"/><path d="M17 3.5 20 6"/></svg></div>
     <h2 id="reminderTaskTitle">وقت المهمة!</h2>
     <p id="reminderTaskNote"></p>
     <div class="controls">
@@ -1370,7 +1370,7 @@ function renderTasks(){
       <div class="task-body" onclick="openTaskModal('${t.id}')">
         <p class="task-title">${escapeHtml(t.title)}</p>
         ${t.note ? `<p class="task-note">${escapeHtml(t.note)}</p>` : ""}
-        ${t.remindAt ? `<p class="task-remind">⏰ ${formatRemindTime(t.remindAt)}</p>` : ""}
+        ${t.remindAt ? `<p class="task-remind"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M7 3.5 4 6"/><path d="M17 3.5 20 6"/></svg> ${formatRemindTime(t.remindAt)}</p>` : ""}
       </div>
       <button class="task-del" onclick="deleteTask('${t.id}')"><svg class="ico" viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M7 7l1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
     </div>
