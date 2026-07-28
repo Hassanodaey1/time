@@ -439,7 +439,7 @@
     </div>
     <div class="calc-grid">
       <button class="calc-btn fn" onclick="calcClear()">C</button>
-      <button class="calc-btn fn" onclick="calcBackspace()">⌫</button>
+      <button class="calc-btn fn" onclick="calcBackspace()"><svg class="ico" viewBox="0 0 24 24"><path d="M8 6H20a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H8l-6-6Z"/><path d="M13 10l4 4"/><path d="M17 10l-4 4"/></svg></button>
       <button class="calc-btn fn" onclick="calcInput('(')">(</button>
       <button class="calc-btn fn" onclick="calcInput(')')">)</button>
 
@@ -484,7 +484,7 @@
         <button class="preset-btn" onclick="pickPreset(45, this)">45 د</button>
       </div>
       <button type="button" class="time-picker-btn" onclick="openTimePicker('customTime','customTimeDisplay')">
-        <span class="tp-icon">⏰</span>
+        <span class="tp-icon"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M7 3.5 4 6"/><path d="M17 3.5 20 6"/></svg></span>
         <span class="tp-text">
           <span class="tp-label">تخصيص الوقت</span>
           <span class="tp-value" id="customTimeDisplay">اضغط لتحديد الساعة والدقيقة</span>
@@ -493,7 +493,7 @@
       </button>
       <input type="hidden" id="customTime" value="">
       <p style="font-size:11.5px; color:var(--muted); margin:-14px 0 20px;">أو اختر مدة جاهزة فوق</p>
-      <button class="primary" onclick="startTimer()">▶️ ابدأ الدراسة</button>
+      <button class="primary" onclick="startTimer()"><svg class="ico" viewBox="0 0 24 24"><path d="M7 5v14l12-7Z" fill="currentColor" stroke="none"/></svg> ابدأ الدراسة</button>
     </div>
 
     <div id="runningView" class="hidden">
@@ -546,7 +546,7 @@
 
 <div class="overlay" id="timePickerOverlay">
   <div class="modal tp-modal" style="max-width:340px;">
-    <h2>⏰ حدد وقت دراستك</h2>
+    <h2><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5"/><path d="M7 3.5 4 6"/><path d="M17 3.5 20 6"/></svg> حدد وقت دراستك</h2>
     <div class="tp-steppers">
       <div class="tp-stepper">
         <button type="button" class="tp-btn" onclick="adjustPickerHour(1)">+</button>
