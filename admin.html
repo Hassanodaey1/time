@@ -284,7 +284,7 @@
 
   <label>نوع المؤقت</label>
   <div class="modes">
-    <button type="button" class="mode-btn active" id="btnDown" onclick="setMode('down', true)">⏳ تنازلي</button>
+    <button type="button" class="mode-btn active" id="btnDown" onclick="setMode('down', true)"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg> تنازلي</button>
     <button type="button" class="mode-btn" id="btnUp" onclick="setMode('up', true)"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg> تصاعدي</button>
   </div>
 
@@ -316,7 +316,7 @@
 
   <label>نوع العد</label>
   <div class="modes">
-    <button type="button" class="mode-btn active" id="chBtnDown" onclick="setChallengeMode('down', true)">⏳ تنازلي</button>
+    <button type="button" class="mode-btn active" id="chBtnDown" onclick="setChallengeMode('down', true)"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg> تنازلي</button>
     <button type="button" class="mode-btn" id="chBtnUp" onclick="setChallengeMode('up', true)"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg> تصاعدي</button>
   </div>
 
@@ -334,7 +334,7 @@
 
   <div class="toggle-row">
     <button class="toggle-btn" onclick="startChallenge()"><svg class="ico" viewBox="0 0 24 24"><path d="M12 2.5c3 2 4.5 5.5 4.5 9 0 2-.6 3.6-1.3 4.8l-3.2 3-3.2-3c-.7-1.2-1.3-2.8-1.3-4.8 0-3.5 1.5-7 4.5-9Z"/><circle cx="12" cy="10.5" r="1.6" fill="currentColor" stroke="none"/><path d="M8.5 16.5 6 20l3-1"/><path d="M15.5 16.5 18 20l-3-1"/></svg> بدء التحدي</button>
-    <button class="toggle-btn" onclick="stopChallenge()">⏹️ إيقاف التحدي</button>
+    <button class="toggle-btn" onclick="stopChallenge()"><svg class="ico" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor" stroke="none"/></svg> إيقاف التحدي</button>
   </div>
   <div id="challengeStatusMsg" class="hint"></div>
 </div>
@@ -348,7 +348,7 @@
 
   <div class="toggle-row">
     <button class="toggle-btn" onclick="startStudyChallenge()"><svg class="ico" viewBox="0 0 24 24"><path d="M12 2.5c3 2 4.5 5.5 4.5 9 0 2-.6 3.6-1.3 4.8l-3.2 3-3.2-3c-.7-1.2-1.3-2.8-1.3-4.8 0-3.5 1.5-7 4.5-9Z"/><circle cx="12" cy="10.5" r="1.6" fill="currentColor" stroke="none"/><path d="M8.5 16.5 6 20l3-1"/><path d="M15.5 16.5 18 20l-3-1"/></svg> تفعيل</button>
-    <button class="toggle-btn" onclick="stopStudyChallenge()">⏹️ تعطيل</button>
+    <button class="toggle-btn" onclick="stopStudyChallenge()"><svg class="ico" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor" stroke="none"/></svg> تعطيل</button>
   </div>
   <div id="studyChallengeStatusMsg" class="hint"></div>
 
@@ -563,7 +563,7 @@
       </div>
     </div>
     <p class="hint" style="text-align:center; margin:0 0 16px; font-weight:700; color:var(--amber);" id="fromToDaysPreview">—</p>
-    <p class="hint" style="margin:0 0 14px;">سيُستخدم النمط المحدد فوق (تصاعدي <svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg> أو تنازلي ⏳) كما هو — في النمط التصاعدي سيبدأ العد فعليًا من تاريخ "من"، وفي النمط التنازلي سيُحسب العد التنازلي حتى تاريخ "إلى".</p>
+    <p class="hint" style="margin:0 0 14px;">سيُستخدم النمط المحدد فوق (تصاعدي <svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg> أو تنازلي <svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg>) كما هو — في النمط التصاعدي سيبدأ العد فعليًا من تاريخ "من"، وفي النمط التنازلي سيُحسب العد التنازلي حتى تاريخ "إلى".</p>
     <div class="controls" style="display:flex; gap:10px;">
       <button class="secondary" style="flex:1;" onclick="closeFromToPicker()">إلغاء</button>
       <button class="primary" style="flex:1; margin-top:0;" onclick="confirmFromToPicker()">تأكيد <svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
