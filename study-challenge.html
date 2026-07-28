@@ -249,6 +249,19 @@
   .empty-note{font-size:var(--fs-07); color:var(--muted); text-align:center; padding:14px 0;}
   .badge-icon{font-size:var(--fs-09); margin-inline-start:4px;}
 
+  .lb-row{display:grid; gap:8px; margin-bottom:10px;}
+  .lb-row.lb-row-2{grid-template-columns:repeat(2,1fr);}
+  .lb-row.lb-row-1{grid-template-columns:1fr;}
+  /* نفس تصميم preset-btn تمامًا (بما فيه تخصيص ثيم flipclock)، بكلاس منفصل حتى ما يتصادم
+     مع منطق تصفير أزرار المؤقت (اللي يفرّغ كل .preset-btn عند اختيار وقت مخصص) */
+  .game-btn{
+    padding:12px 4px; border-radius:10px; border:1px solid var(--border); background:#16161c;
+    color:#fff; font-family:'JetBrains Mono',monospace; font-weight:700; cursor:pointer; font-size:var(--fs-08);
+  }
+  .game-btn.active{border-color:var(--accent); color:var(--accent); background:rgba(72,202,228,.1);}
+  body[data-style="flipclock"] .game-btn{ background:#101418; border-color:#1c232b; color:#8aa0b8; }
+  body[data-style="flipclock"] .game-btn.active{ border-color:#4aa8ff; color:#4aa8ff; background:rgba(74,168,255,.1); }
+
   .session-notice{
     margin:14px 0 0; padding:10px 12px; border-radius:10px; font-size:var(--fs-07); text-align:center;
     background:rgba(255,59,48,.1); border:1px solid rgba(255,59,48,.35); color:#ff8a80;
@@ -558,6 +571,13 @@
       <h2><svg class="ico" viewBox="0 0 24 24"><path d="M7 4h10v4.2a5 5 0 0 1-10 0Z"/><path d="M7 5.2H4.6A2.4 2.4 0 0 0 4 9.9 4 4 0 0 0 7 11.4"/><path d="M17 5.2h2.4A2.4 2.4 0 0 1 20 9.9 4 4 0 0 1 17 11.4"/><path d="M12 13.2v2.8"/><path d="M9.3 20h5.4"/><path d="M10 16.5h4l1 3.5H9Z"/></svg> ترتيب الطلاب</h2>
       <span id="lbCount">—</span>
     </div>
+    <div class="lb-row lb-row-2" id="lbToggle">
+      <button class="game-btn active" data-mode="total" onclick="setLbMode('total')">🏆 الكل</button>
+      <button class="game-btn" data-mode="week" onclick="setLbMode('week')">📅 هذا الأسبوع</button>
+    </div>
+    <div class="lb-row lb-row-1">
+      <button class="game-btn" id="lbGovBtn" onclick="toggleLbGov()">🏠 محافظتي فقط</button>
+    </div>
     <p class="my-rank-banner" id="myRankBanner" style="display:none;"></p>
     <p class="streak-info" id="streakInfo" style="display:none;"></p>
     <div class="leaderboard-list" id="leaderboardList">
@@ -647,7 +667,13 @@ async function requestWakeLock(){
 
 /* ================= الوقت الحقيقي (متزامن مع السيرفر) ================= */
 let serverTimeOffset = 0;
-function serverNow(){ return Date.now() + serverTimeOffset; }
+function serverNow(){ return Date.now() + serverTimeOffset; } // المصدر الموثوق للوقت — يبقى كما هو، ما نلمسه
+
+/* حد فاصل موحّد لليوم/الأسبوع بتوقيت بغداد (UTC+3)، بدل منتصف ليل غرينتش.
+   هذا يغيّر فقط "متى يبدأ يوم جديد"، وليس مصدر الوقت نفسه (يبقى serverNow دومًا). */
+const LOCAL_UTC_OFFSET_MS = 3 * 60 * 60 * 1000;
+function localDayIndex(ts){ return Math.floor((ts + LOCAL_UTC_OFFSET_MS) / 86400000); }
+function localWeekIndex(ts){ return Math.floor((ts + LOCAL_UTC_OFFSET_MS) / 604800000); }
 
 const DAILY_CAP_SECONDS = 6 * 60 * 60; // الحد الأقصى المحسوب يوميًا لكل طالب: 6 ساعات
 
@@ -994,8 +1020,8 @@ function bankStudyTime(seconds){
   ref.once('value').then(snap => {
     const cur = snap.val() || {};
     const nowServer = serverNow();
-    const todayIndex = Math.floor(nowServer / 86400000);
-    const thisWeekIndex = Math.floor(nowServer / 604800000);
+    const todayIndex = localDayIndex(nowServer);
+    const thisWeekIndex = localWeekIndex(nowServer);
 
     /* ---- الحد اليومي (6 ساعات) ---- */
     let dayIndex = cur.dayIndex;
@@ -1020,12 +1046,34 @@ function bankStudyTime(seconds){
       showSessionNotice("🚫 وصلت للحد الأقصى اليومي (6 ساعات). رجعلك باچر 💪");
     }
 
-    /* ---- سلسلة الأيام المتتالية ---- */
+    /* ---- سلسلة الأيام المتتالية + حماية السلسلة (Streak Freeze) ----
+       كل طالب عنده حماية واحدة تتجدد كل أسبوع: لو فاته يوم واحد بالضبط ما تنكسر سلسلته،
+       تُستهلك الحماية تلقائيًا وتزيد السلسلة بدل ما تصفر لـ1. */
     let streak = cur.streak || 0;
     let lastStudyDayIndex = cur.lastStudyDayIndex;
+    let freezeWeekIndex = cur.freezeWeekIndex;
+    let freezeUsed = cur.freezeUsed || false;
+    let freezeConsumedNow = false;
+
+    if (freezeWeekIndex !== thisWeekIndex){
+      freezeWeekIndex = thisWeekIndex;
+      freezeUsed = false; // حماية جديدة مع كل أسبوع
+    }
+
     if (lastStudyDayIndex !== todayIndex){
-      streak = (lastStudyDayIndex === todayIndex - 1) ? streak + 1 : 1;
+      const gap = (lastStudyDayIndex == null) ? null : todayIndex - lastStudyDayIndex;
+      if (gap === 2 && !freezeUsed){
+        streak += 1;
+        freezeUsed = true;
+        freezeConsumedNow = true;
+      } else {
+        streak = (gap === 1) ? streak + 1 : 1;
+      }
       lastStudyDayIndex = todayIndex;
+    }
+
+    if (freezeConsumedNow){
+      showSessionNotice("🧊 فاتك يوم أمس، بس حماية السلسلة حفظت سلسلتك — استمر!");
     }
 
     /* ---- الترتيب الأسبوعي ---- */
@@ -1041,6 +1089,7 @@ function bankStudyTime(seconds){
       dayIndex, daySeconds,
       weekIndex, weeklySeconds,
       streak, lastStudyDayIndex,
+      freezeWeekIndex, freezeUsed,
       updatedAt: serverTimestampValue()
     });
   });
@@ -1056,7 +1105,7 @@ function formatTotal(seconds){
 }
 
 function renderLeaderboard(snapshot){
-  const rows = [];
+  let rows = [];
   snapshot.forEach(child => { rows.push({ id: child.key, ...child.val() }); });
   rows.reverse();
 
@@ -1064,18 +1113,27 @@ function renderLeaderboard(snapshot){
   const countEl = document.getElementById("lbCount");
   const myProfile = getProfile();
 
+  if (lbGovOnly && myProfile && myProfile.governorate){
+    rows = rows.filter(r => r.governorate === myProfile.governorate);
+  }
+
   countEl.innerText = rows.length + " طالب";
 
   if (rows.length === 0){
-    listEl.innerHTML = '<p class="empty-note">لا يوجد طلاب في الترتيب بعد — كن أول من يبدأ!</p>';
+    listEl.innerHTML = (lbGovOnly && myProfile && myProfile.governorate)
+      ? `<p class="empty-note">لا يوجد طلاب من ${escapeHtml(myProfile.governorate)} بعد — كن أول من يبدأ!</p>`
+      : (lbMode === "week"
+        ? '<p class="empty-note">ما أحد درس هالأسبوع بعد — كن أول من يبدأ!</p>'
+        : '<p class="empty-note">لا يوجد طلاب في الترتيب بعد — كن أول من يبدأ!</p>');
     return;
   }
 
   listEl.innerHTML = rows.map((r, i) => {
     const isMe = myProfile && r.id === myProfile.id;
     const medal = i === 0 ? '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="15" r="5"/><path d="M9 10 6 3"/><path d="M15 10 18 3"/><path d="M12 13.2l.8 1.6 1.8.2-1.3 1.2.3 1.8-1.6-.9-1.6.9.3-1.8-1.3-1.2 1.8-.2Z" fill="currentColor" stroke="none"/></svg>' : i === 1 ? '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="15" r="5"/><path d="M9 10 6 3"/><path d="M15 10 18 3"/><path d="M12 13.2l.8 1.6 1.8.2-1.3 1.2.3 1.8-1.6-.9-1.6.9.3-1.8-1.3-1.2 1.8-.2Z" fill="currentColor" stroke="none"/></svg>' : i === 2 ? '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="15" r="5"/><path d="M9 10 6 3"/><path d="M15 10 18 3"/><path d="M12 13.2l.8 1.6 1.8.2-1.3 1.2.3 1.8-1.6-.9-1.6.9.3-1.8-1.3-1.2 1.8-.2Z" fill="currentColor" stroke="none"/></svg>' : (i + 1);
-    const badge = getBadge(r.totalSeconds);
+    const badge = getBadge(r.totalSeconds); // الشارة دائمًا على أساس الرصيد الكلي (إنجاز تراكمي)، حتى بوضع "هذا الأسبوع"
     const streakTag = r.streak >= 2 ? ` <span title="سلسلة أيام"><svg class="ico" viewBox="0 0 24 24"><path d="M12 21c-4 0-6.8-2.6-6.8-6.2 0-3 2-4.7 2.8-7.5.4 1.5 1.4 2.4 2.4 2.2-.4-3.1 1-5.5 3.1-7.1-.6 2.7.4 4.1 1.9 5.6 1.7 1.7 3.4 3.5 3.4 6.8 0 3.6-2.8 6.2-6.8 6.2Z"/><path d="M12 21c-1.8 0-3-1.2-3-2.9 0-1.4.9-2.2 1.3-3.4.2.7.7 1.1 1.2 1 0-1.4.5-2.4 1.4-3.1-.2 1.2.2 1.9.9 2.6.8.8 1.5 1.5 1.5 2.9 0 1.7-1.5 2.9-3.3 2.9Z"/></svg>${r.streak}</span>` : "";
+    const displaySeconds = lbMode === "week" ? (r.weeklySeconds || 0) : (r.totalSeconds || 0);
     return `
       <div class="rank-row ${isMe ? 'me' : ''}">
         <div class="rank-num">${medal}</div>
@@ -1083,22 +1141,57 @@ function renderLeaderboard(snapshot){
           <p class="rank-name">${escapeHtml(r.name || "طالب")}${isMe ? " (أنت)" : ""}${badge ? `<span class="badge-icon" title="${badge.label}">${badge.icon}</span>` : ""}${streakTag}</p>
           <p class="rank-loc">${escapeHtml(r.governorate || "")} • ${escapeHtml(r.country || "")}</p>
         </div>
-        <div class="rank-time">${formatTotal(r.totalSeconds)}</div>
+        <div class="rank-time">${formatTotal(displaySeconds)}</div>
       </div>
     `;
   }).join("");
 }
 
-const leaderboardRef = db.ref('studyLeaderboard').orderByChild('totalSeconds').limitToLast(50);
+let lbMode = "total"; // "total" أو "week"
+let lbGovOnly = false;
+let leaderboardRef = null;
+let leaderboardListener = null;
+let myLatestLbVal = {};
+let lastLbSnapshot = null;
 
-/* تحديث لحظي فوري عند أي تغيير */
-leaderboardRef.on('value', renderLeaderboard, () => {
-  document.getElementById("leaderboardList").innerHTML = '<p class="empty-note">تعذّر تحميل الترتيب.</p>';
-});
+function lbField(){ return lbMode === "week" ? "weeklySeconds" : "totalSeconds"; }
+
+function attachLeaderboardListener(){
+  if (leaderboardRef && leaderboardListener){
+    leaderboardRef.off('value', leaderboardListener);
+  }
+  leaderboardRef = db.ref('studyLeaderboard').orderByChild(lbField()).limitToLast(50);
+  leaderboardListener = leaderboardRef.on('value', (snap) => { lastLbSnapshot = snap; renderLeaderboard(snap); }, () => {
+    document.getElementById("leaderboardList").innerHTML = '<p class="empty-note">تعذّر تحميل الترتيب.</p>';
+  });
+}
+
+window.setLbMode = function(mode){
+  if (mode === lbMode) return;
+  lbMode = mode;
+  document.querySelectorAll("#lbToggle .game-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+  attachLeaderboardListener();
+  updateMyRankBanner(myLatestLbVal[lbField()] || 0);
+};
+
+window.toggleLbGov = function(){
+  const myProfile = getProfile();
+  const govBtn = document.getElementById("lbGovBtn");
+  if (!myProfile || !myProfile.governorate){
+    showSessionNotice("سجّل محافظتك من الصفحة الرئيسية حتى تقدر تشوف ترتيب محافظتك.");
+    return;
+  }
+  lbGovOnly = !lbGovOnly;
+  govBtn.classList.toggle("active", lbGovOnly);
+  govBtn.innerText = lbGovOnly ? `🏠 ${myProfile.governorate}` : "🏠 محافظتي فقط";
+  if (lastLbSnapshot) renderLeaderboard(lastLbSnapshot);
+};
+
+attachLeaderboardListener();
 
 /* تحديث احتياطي كل دقيقة، لضمان بقاء اللائحة محدّثة دائمًا حتى لو انقطع الاتصال اللحظي مؤقتًا */
 setInterval(() => {
-  leaderboardRef.once('value').then(renderLeaderboard).catch(() => {});
+  if (leaderboardRef) leaderboardRef.once('value').then((snap) => { lastLbSnapshot = snap; renderLeaderboard(snap); }).catch(() => {});
 }, 60000);
 
 function escapeHtml(str){
@@ -1106,23 +1199,25 @@ function escapeHtml(str){
 }
 
 /* ================= ترتيبك الشخصي + السلسلة ================= */
-function updateMyRankBanner(myTotalSeconds){
+function updateMyRankBanner(mySeconds){
   const banner = document.getElementById("myRankBanner");
   if (!banner) return;
-  db.ref('studyLeaderboard').orderByChild('totalSeconds').startAt(myTotalSeconds + 1).once('value')
+  db.ref('studyLeaderboard').orderByChild(lbField()).startAt(mySeconds + 1).once('value')
     .then(snap => {
       const rank = snap.numChildren() + 1;
-      banner.innerHTML = `<svg class="ico" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5.5" y="14" width="3" height="6" fill="currentColor" stroke="none"/><rect x="10.5" y="9" width="3" height="11" fill="currentColor" stroke="none"/><rect x="15.5" y="12" width="3" height="8" fill="currentColor" stroke="none"/></svg> ترتيبك الحالي: <b>#${rank}</b>`;
+      const label = lbMode === "week" ? "ترتيبك هذا الأسبوع" : "ترتيبك الحالي";
+      banner.innerHTML = `<svg class="ico" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5.5" y="14" width="3" height="6" fill="currentColor" stroke="none"/><rect x="10.5" y="9" width="3" height="11" fill="currentColor" stroke="none"/><rect x="15.5" y="12" width="3" height="8" fill="currentColor" stroke="none"/></svg> ${label}: <b>#${rank}</b>`;
       banner.style.display = "block";
     })
     .catch(() => {});
 }
 
-function updateStreakInfo(streak){
+function updateStreakInfo(streak, freezeAvailable){
   const el = document.getElementById("streakInfo");
   if (!el) return;
   if (streak >= 2){
-    el.innerText = `🔥 سلسلة ${streak} أيام متتالية — استمر!`;
+    const freezeTag = freezeAvailable ? " 🧊 حماية متوفرة" : "";
+    el.innerText = `🔥 سلسلة ${streak} أيام متتالية — استمر!${freezeTag}`;
     el.style.display = "block";
   } else {
     el.style.display = "none";
@@ -1149,13 +1244,16 @@ authReady.then(async (myUid) => {
       dayIndex: oldData.dayIndex, daySeconds: oldData.daySeconds || 0,
       weekIndex: oldData.weekIndex, weeklySeconds: oldData.weeklySeconds || 0,
       streak: oldData.streak || 0, lastStudyDayIndex: oldData.lastStudyDayIndex,
+      freezeWeekIndex: oldData.freezeWeekIndex, freezeUsed: oldData.freezeUsed || false,
       updatedAt: serverTimestampValue()
     });
   }
   db.ref('studyLeaderboard/' + myUid).on('value', (snap) => {
     const val = snap.val() || {};
-    updateMyRankBanner(val.totalSeconds || 0);
-    updateStreakInfo(val.streak || 0);
+    myLatestLbVal = val;
+    updateMyRankBanner(val[lbField()] || 0);
+    const freezeStillAvailable = (val.freezeWeekIndex !== localWeekIndex(serverNow())) || !val.freezeUsed;
+    updateStreakInfo(val.streak || 0, freezeStillAvailable);
   });
 });
 
