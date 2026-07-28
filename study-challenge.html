@@ -6,6 +6,11 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="تحدي الدراسة">
 <title>تحدي الدراسة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -242,6 +247,14 @@
   .rank-row:nth-child(1) .rank-num{background:#4a3a00; color:#ffd700;}
   .rank-row:nth-child(2) .rank-num{background:#3a3a3a; color:#c8c8c8;}
   .rank-row:nth-child(3) .rank-num{background:#3a2a1a; color:#cd7f32;}
+  .rank-avatar{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(160deg,#1e2430,#101014); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-size:17px;
+  }
+  .rank-row:nth-child(1) .rank-avatar{border-color:#ffd700;}
+  .rank-row:nth-child(2) .rank-avatar{border-color:#c8c8c8;}
+  .rank-row:nth-child(3) .rank-avatar{border-color:#cd7f32;}
   .rank-info{flex:1; text-align:start; overflow:hidden;}
   .rank-name{font-size:var(--fs-10); font-weight:700; margin:0 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;}
   .rank-loc{font-size:var(--fs-04); color:var(--muted); margin:0;}
@@ -1138,6 +1151,7 @@ function renderLeaderboard(snapshot){
     return `
       <div class="rank-row ${isMe ? 'me' : ''}">
         <div class="rank-num">${medal}</div>
+        <div class="rank-avatar">${escapeHtml(r.avatar || "🙂")}</div>
         <div class="rank-info">
           <p class="rank-name">${escapeHtml(r.name || "طالب")}${isMe ? " (أنت)" : ""}${badge ? `<span class="badge-icon" title="${badge.label}">${badge.icon}</span>` : ""}${streakTag}</p>
           <p class="rank-loc">${escapeHtml(r.governorate || "")} • ${escapeHtml(r.country || "")}</p>
@@ -1232,7 +1246,7 @@ authReady.then(async (myUid) => {
   // مهم: لا نصفّر رصيد الطالب أبدًا هنا — نجلب أولًا رصيده القديم (totalSeconds/streak/...) وننقله
   // كاملاً للسجل الجديد، حتى لا تختفي ساعات دراسته بسبب مجرد تغيّر معرّف الدخول.
   if (myProfileOnLoad && myProfileOnLoad.id !== myUid){
-    const migrated = { id: myUid, name: myProfileOnLoad.name, age: myProfileOnLoad.age, country: myProfileOnLoad.country, governorate: myProfileOnLoad.governorate };
+    const migrated = { id: myUid, name: myProfileOnLoad.name, age: myProfileOnLoad.age, country: myProfileOnLoad.country, governorate: myProfileOnLoad.governorate, avatar: myProfileOnLoad.avatar };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(migrated));
     let oldData = {};
     try{
@@ -1240,7 +1254,7 @@ authReady.then(async (myUid) => {
       oldData = oldSnap.val() || {};
     }catch(e){ /* تعذّرت قراءة السجل القديم — نكمل بدون نقل رصيد بدل ما نعلّق الصفحة */ }
     db.ref('studyLeaderboard/' + myUid).update({
-      name: migrated.name, age: migrated.age, country: migrated.country, governorate: migrated.governorate,
+      name: migrated.name, age: migrated.age, country: migrated.country, governorate: migrated.governorate, avatar: migrated.avatar,
       totalSeconds: oldData.totalSeconds || 0,
       dayIndex: oldData.dayIndex, daySeconds: oldData.daySeconds || 0,
       weekIndex: oldData.weekIndex, weeklySeconds: oldData.weeklySeconds || 0,
