@@ -6,6 +6,11 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="المؤقتات">
 <title>المؤقتات</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -249,6 +254,17 @@
     display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; line-height:1;
   }
 
+  /* ---- إنجازات اللاعب (تحدي الدراسة) داخل الملف الشخصي ---- */
+  .stats-card{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:0 0 16px;
+    background:#0d1420; border:1px solid var(--border); border-radius:14px; padding:14px 8px;
+  }
+  .stat-item{display:flex; flex-direction:column; align-items:center; gap:3px; text-align:center;}
+  .stat-icon{font-size:19px; line-height:1;}
+  .stat-value{font-size:var(--fs-07); font-weight:900; color:#fff; font-family:'JetBrains Mono',monospace;}
+  .stat-label{font-size:var(--fs-01); color:var(--muted);}
+  .stats-hint{font-size:var(--fs-03); color:var(--muted); text-align:center; margin:-8px 0 18px; line-height:1.6;}
+
   /* ---- بطاقة اللاعب بالصفحة الرئيسية ---- */
   .player-card{
     display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--border);
@@ -263,6 +279,7 @@
   .player-card .pc-info{flex:1; min-width:0; text-align:start;}
   .player-card .pc-name{font-size:var(--fs-08); font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .player-card .pc-meta{font-size:var(--fs-03); color:var(--muted); margin-top:2px;}
+  .player-card .pc-stats{font-size:var(--fs-03); color:var(--amber); margin-top:4px; display:flex; gap:10px; flex-wrap:wrap;}
   .player-card .pc-edit{
     flex-shrink:0; width:34px; height:34px; border-radius:50%; border:1px solid var(--border);
     background:#0d1420; color:var(--muted); display:flex; align-items:center; justify-content:center; cursor:pointer;
@@ -321,6 +338,7 @@
     <div class="pc-info">
       <div class="pc-name" id="playerCardName"></div>
       <div class="pc-meta" id="playerCardMeta"></div>
+      <div class="pc-stats" id="playerCardStats"></div>
     </div>
     <button type="button" class="pc-edit" onclick="openProfileModal(false)" aria-label="تعديل الملف الشخصي" title="تعديل الملف الشخصي">
       <svg viewBox="0 0 24 24"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
@@ -424,6 +442,25 @@
       <p class="avatar-hint">اختر صورتك من القائمة تحت</p>
       <div class="avatar-grid" id="avatarGrid"></div>
     </div>
+
+    <div class="stats-card" id="statsCard">
+      <div class="stat-item">
+        <span class="stat-icon" id="statBadgeIcon">—</span>
+        <span class="stat-value" id="statBadgeLabel">لا شارة بعد</span>
+        <span class="stat-label">شارتك</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">⏱️</span>
+        <span class="stat-value" id="statHours">0 د</span>
+        <span class="stat-label">وقت التحدي</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">🔥</span>
+        <span class="stat-value" id="statStreak">0</span>
+        <span class="stat-label">سلسلة أيام</span>
+      </div>
+    </div>
+    <p class="stats-hint">هذي إحصائياتك من "تحدي الدراسة" — كل ما تدرس أكثر بالتحدي ترتفع شارتك.</p>
 
     <p class="modal-error" id="profileError">فضلاً عبّئ الاسم والعمر والبلد بشكل صحيح</p>
     <div class="field">
@@ -689,6 +726,59 @@ window.selectAvatar = function(emoji){
   renderAvatarGrid(emoji);
 };
 
+/* ================= إنجازات اللاعب (بيانات "تحدي الدراسة") =================
+   الملف الشخصي هو المسؤول عن كتابة/قراءة studyLeaderboard/{uid}، فنقرأ منه هنا فقط
+   لعرض الشارة ووقت التحدي والسلسلة — بدون التأثير على منطق التحدي نفسه بصفحته. */
+function formatStatHours(totalSeconds){
+  const s = totalSeconds || 0;
+  const hours = Math.floor(s / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  if (hours > 0) return `${hours} س ${minutes} د`;
+  return `${minutes} د`;
+}
+
+function getChallengeBadge(totalSeconds){
+  const hours = (totalSeconds || 0) / 3600;
+  if (hours >= 150) return { icon: "🥇", label: "ذهبية" };
+  if (hours >= 50)  return { icon: "🥈", label: "فضية" };
+  if (hours >= 10)  return { icon: "🥉", label: "برونزية" };
+  return { icon: "—", label: "لا شارة بعد" };
+}
+
+function renderChallengeStats(val){
+  const data = val || {};
+  const totalSeconds = data.totalSeconds || 0;
+  const streak = data.streak || 0;
+  const badge = getChallengeBadge(totalSeconds);
+
+  const statBadgeIcon = document.getElementById("statBadgeIcon");
+  const statBadgeLabel = document.getElementById("statBadgeLabel");
+  const statHours = document.getElementById("statHours");
+  const statStreak = document.getElementById("statStreak");
+  if (statBadgeIcon) statBadgeIcon.innerText = badge.icon;
+  if (statBadgeLabel) statBadgeLabel.innerText = badge.label;
+  if (statHours) statHours.innerText = formatStatHours(totalSeconds);
+  if (statStreak) statStreak.innerText = streak;
+
+  const pcStats = document.getElementById("playerCardStats");
+  if (pcStats){
+    let parts = [];
+    if (badge.icon !== "—") parts.push(`<span>${badge.icon} ${badge.label}</span>`);
+    parts.push(`<span>⏱️ ${formatStatHours(totalSeconds)}</span>`);
+    if (streak >= 2) parts.push(`<span>🔥 ${streak} يوم</span>`);
+    pcStats.innerHTML = parts.join("");
+  }
+}
+
+function watchChallengeStats(){
+  authReady.then((myUid) => {
+    if (!firebaseOK || !myUid) return;
+    db.ref('studyLeaderboard/' + myUid).on('value', (snap) => {
+      renderChallengeStats(snap.val());
+    }, () => { /* تعذّرت القراءة (بدون إنترنت مثلاً) — نترك آخر قيمة معروضة كما هي */ });
+  });
+}
+
 function generateRecoveryCode(){
   let code = "";
   for (let i = 0; i < 8; i++){
@@ -859,6 +949,7 @@ function updateHomeGreeting(){
 }
 
 updateHomeGreeting();
+watchChallengeStats();
 if (!getProfile()){
   openProfileModal(true);
 }
