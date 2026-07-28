@@ -257,6 +257,7 @@
   .game-btn{
     padding:12px 4px; border-radius:10px; border:1px solid var(--border); background:#16161c;
     color:#fff; font-family:'JetBrains Mono',monospace; font-weight:700; cursor:pointer; font-size:var(--fs-08);
+    display:flex; align-items:center; justify-content:center; gap:6px;
   }
   .game-btn.active{border-color:var(--accent); color:var(--accent); background:rgba(72,202,228,.1);}
   body[data-style="flipclock"] .game-btn{ background:#101418; border-color:#1c232b; color:#8aa0b8; }
@@ -572,11 +573,11 @@
       <span id="lbCount">—</span>
     </div>
     <div class="lb-row lb-row-2" id="lbToggle">
-      <button class="game-btn active" data-mode="total" onclick="setLbMode('total')">🏆 الكل</button>
-      <button class="game-btn" data-mode="week" onclick="setLbMode('week')">📅 هذا الأسبوع</button>
+      <button class="game-btn active" data-mode="total" onclick="setLbMode('total')"><svg class="ico" viewBox="0 0 24 24"><path d="M7 4h10v4.2a5 5 0 0 1-10 0Z"/><path d="M7 5.2H4.6A2.4 2.4 0 0 0 4 9.9 4 4 0 0 0 7 11.4"/><path d="M17 5.2h2.4A2.4 2.4 0 0 1 20 9.9 4 4 0 0 1 17 11.4"/><path d="M12 13.2v2.8"/><path d="M9.3 20h5.4"/><path d="M10 16.5h4l1 3.5H9Z"/></svg> الكل</button>
+      <button class="game-btn" data-mode="week" onclick="setLbMode('week')"><svg class="ico" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17"/><path d="M8 3v3"/><path d="M16 3v3"/></svg> هذا الأسبوع</button>
     </div>
     <div class="lb-row lb-row-1">
-      <button class="game-btn" id="lbGovBtn" onclick="toggleLbGov()">🏠 محافظتي فقط</button>
+      <button class="game-btn" id="lbGovBtn" onclick="toggleLbGov()"><svg class="ico" viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9"/></svg> <span id="lbGovLabel">محافظتي فقط</span></button>
     </div>
     <p class="my-rank-banner" id="myRankBanner" style="display:none;"></p>
     <p class="streak-info" id="streakInfo" style="display:none;"></p>
@@ -1183,7 +1184,7 @@ window.toggleLbGov = function(){
   }
   lbGovOnly = !lbGovOnly;
   govBtn.classList.toggle("active", lbGovOnly);
-  govBtn.innerText = lbGovOnly ? `🏠 ${myProfile.governorate}` : "🏠 محافظتي فقط";
+  document.getElementById("lbGovLabel").innerText = lbGovOnly ? myProfile.governorate : "محافظتي فقط";
   if (lastLbSnapshot) renderLeaderboard(lastLbSnapshot);
 };
 
