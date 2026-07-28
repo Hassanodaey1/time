@@ -4,7 +4,7 @@
    لا يتدخل أبداً بطلبات فايربيس أو الخطوط الخارجية — تلك تُترك تمر بشكل طبيعي،
    فإذا ما كان هناك إنترنت، تفشل بمفردها والصفحة تتعامل مع ذلك (رسالة توضيحية).
    ================================================================ */
-const CACHE_NAME = "timers-app-shell-v1";
+const CACHE_NAME = "timers-app-shell-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -15,6 +15,9 @@ const APP_SHELL = [
   "./admin.html",
   "./manifest.json",
   "./favicon.svg",
+  "./apple-touch-icon.png",
+  "./icon-192.png",
+  "./icon-512.png",
   "./timer-sounds.js"
 ];
 
