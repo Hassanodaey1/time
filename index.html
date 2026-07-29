@@ -365,15 +365,21 @@
     position:relative; width:100px; height:100px; display:flex; align-items:center; justify-content:center;
     animation:splashPulse 2.6s ease-in-out infinite;
   }
+  .splash-logo-wrap.frozen{animation:none; transform:scale(1);}
   .splash-logo-wrap svg.splash-logo{width:100px; height:100px; filter:drop-shadow(0 0 22px rgba(255,180,0,.35)); border-radius:22px;}
   @keyframes splashPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.045);}}
 
-  .splash-ring{
-    position:absolute; inset:-9px; border-radius:50%; border:2.5px solid transparent;
-    border-top-color:var(--amber); border-inline-end-color:rgba(255,180,0,.25);
-    animation:splashSpin .9s linear infinite;
+  .splash-hand{
+    transform-origin:32px 35px;
+    animation:splashHandTick 3.2s ease-in-out infinite;
   }
-  @keyframes splashSpin{to{transform:rotate(360deg);}}
+  @keyframes splashHandTick{
+    0%{transform:rotate(0deg); filter:drop-shadow(0 0 0 rgba(255,180,0,0));}
+    38%{transform:rotate(360deg); filter:drop-shadow(0 0 9px rgba(255,180,0,.95));}
+    50%{transform:rotate(360deg); filter:drop-shadow(0 0 9px rgba(255,180,0,.95));}
+    62%{transform:rotate(360deg); filter:drop-shadow(0 0 0 rgba(255,180,0,0));}
+    100%{transform:rotate(360deg); filter:drop-shadow(0 0 0 rgba(255,180,0,0));}
+  }
 
   .splash-eyebrow{font-family:'JetBrains Mono',monospace; font-size:var(--fs-02); letter-spacing:3px;
     color:var(--amber); text-transform:uppercase; margin:0;}
@@ -412,13 +418,14 @@
 <div class="splash-screen" id="splashScreen">
   <p class="splash-eyebrow">مركز المؤقتات</p>
   <div class="splash-logo-wrap">
-    <div class="splash-ring" id="splashRing"></div>
     <svg class="splash-logo" viewBox="0 0 64 64">
       <rect width="64" height="64" rx="14" fill="#0b0e14"/>
       <rect x="26" y="7" width="12" height="5" rx="2.5" fill="#ffb400"/>
       <circle cx="32" cy="35" r="21" fill="none" stroke="#ffb400" stroke-width="4"/>
-      <line x1="32" y1="35" x2="32" y2="21" stroke="#ffb400" stroke-width="4" stroke-linecap="round"/>
-      <line x1="32" y1="35" x2="42" y2="35" stroke="#ffb400" stroke-width="4" stroke-linecap="round"/>
+      <g class="splash-hand">
+        <line x1="32" y1="35" x2="32" y2="21" stroke="#ffb400" stroke-width="4" stroke-linecap="round"/>
+        <line x1="32" y1="35" x2="42" y2="35" stroke="#ffb400" stroke-width="4" stroke-linecap="round"/>
+      </g>
     </svg>
   </div>
   <h1 class="splash-title">مركز المؤقتات</h1>
@@ -465,6 +472,12 @@
     splash.classList.add("hide");
     setTimeout(function(){ splash.style.display = "none"; }, 420);
   };
+  /* تختفي فوراً بدون أي تأثير تلاشي أو حركة إضافية على الشعار */
+  window.hideSplashInstant = function(){
+    var splash = document.getElementById("splashScreen");
+    if (!splash) return;
+    splash.style.display = "none";
+  };
   window.splashContinueGuest = function(){
     markSplashEntered();
     hideSplash();
@@ -475,8 +488,6 @@
   };
 
   function revealButtons(){
-    var ring = document.getElementById("splashRing");
-    if (ring) ring.style.display = "none";
     var status = document.getElementById("splashStatus");
     if (status) status.style.display = "none";
     var online = navigator.onLine;
@@ -484,10 +495,38 @@
     document.getElementById("splashButtons").classList.add("show");
   }
 
+  /* ننتظر وصول عقرب الشعار لموضعه الطبيعي (نهاية الدورة) قبل ما نكمل،
+     حتى ما توقف الحركة بشكل مفاجئ وهي شغالة */
+  var splashHand = document.querySelector(".splash-hand");
+  var pendingAction = null;
+  if (splashHand){
+    splashHand.addEventListener("animationiteration", function(){
+      if (pendingAction){
+        var fn = pendingAction;
+        pendingAction = null;
+        fn();
+      }
+    });
+  }
+  function runAfterHandRests(action){
+    if (!splashHand){ action(); return; }
+    pendingAction = action;
+    /* شبكة أمان: إذا لأي سبب ما اشتغلت الحركة، نكمل بعد دورة كاملة كحد أقصى */
+    setTimeout(function(){
+      if (pendingAction === action){ pendingAction = null; action(); }
+    }, 3300);
+  }
+
   if (hasEnteredBefore()){
     var status = document.getElementById("splashStatus");
     if (status) status.innerText = "جارٍ التحميل...";
-    setTimeout(hideSplash, 650);
+    setTimeout(function(){
+      runAfterHandRests(function(){
+        var wrap = document.querySelector(".splash-logo-wrap");
+        if (wrap) wrap.classList.add("frozen");
+        hideSplashInstant();
+      });
+    }, 650);
   } else {
     setTimeout(revealButtons, 950);
   }
