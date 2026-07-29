@@ -263,6 +263,18 @@
   .board-action-btn.active{border-color:var(--theme-color); color:var(--theme-color);}
 
   .ico{width:1em;height:1em;display:inline-block;vertical-align:-0.15em;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+  /* ================= لمسة تناسق أخيرة: كل الأزرار والنوافذ المنبثقة ================= */
+  .calc-btn, .board-action-btn, .board-size-btn, .retry-btn, .back-link{
+    min-height:44px;
+  }
+  @media (min-width:700px){
+    .calc-modal{max-width:400px;}
+    .board-modal{max-width:640px;}
+  }
+  @media (min-width:1024px){
+    .calc-modal{max-width:440px;}
+    .board-modal{max-width:760px;}
+  }
 </style>
 </head>
 <body>
