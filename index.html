@@ -1199,6 +1199,7 @@ window.closeLogoutConfirm = function(){
 window.confirmLogoutAction = function(){
   closeLogoutConfirm();
   googleSignOut();
+  location.reload();
 };
 
 /* تصفير الحساب: يرجّع تقدّم اللاعب (الساعات، الشارة، السلسلة) للصفر بدون تسجيل خروج ولا حذف بياناته الشخصية (الاسم/العمر/البلد) */
