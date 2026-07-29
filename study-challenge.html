@@ -420,6 +420,22 @@
       animation:screenIn .32s cubic-bezier(.22,.61,.36,1) both;
     }
   }
+  /* ================= لمسة تناسق أخيرة: كل الأزرار والنوافذ المنبثقة ================= */
+  .preset-btn, .game-btn, .calc-btn, .board-action-btn, .board-size-btn, .back-link{
+    min-height:44px;
+  }
+  @media (min-width:700px){
+    .modal{max-width:460px;}
+    .tp-modal{max-width:460px !important;}
+    .calc-modal{max-width:400px;}
+    .board-modal{max-width:640px;}
+  }
+  @media (min-width:1024px){
+    .modal{max-width:520px;}
+    .tp-modal{max-width:500px !important;}
+    .calc-modal{max-width:440px;}
+    .board-modal{max-width:760px;}
+  }
 </style>
 </head>
 <body>
