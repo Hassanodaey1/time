@@ -249,6 +249,19 @@
     .hub-btn:nth-of-type(3){animation-delay:.15s;}
     .hub-btn:nth-of-type(4){animation-delay:.21s;}
   }
+  /* ================= لمسة تناسق أخيرة: كل الأزرار والنوافذ المنبثقة ================= */
+  .hub-btn, .mode-btn, .theme-btn, .toggle-btn, .tp-btn, .time-picker-btn, .back-btn, .card button{
+    min-height:44px;
+  }
+  @media (min-width:700px){
+    .modal{max-width:480px;}
+    .tp-modal{max-width:460px !important;}
+  }
+  @media (min-width:1024px){
+    .modal{max-width:520px;}
+    .tp-modal{max-width:500px !important;}
+    .hub-btn{min-height:50px;}
+  }
 </style>
 </head>
 <body>
