@@ -261,6 +261,9 @@
   }
   .g-action-btn:active{transform:scale(0.96);}
   .g-action-btn.g-switch-btn{color:var(--amber); border-color:rgba(255,180,0,.4);}
+  .g-action-btn.g-danger-btn{color:var(--red); border-color:rgba(255,59,48,.4); width:100%;}
+  .reminder-alert.danger{border-color:var(--red);}
+  button.primary.danger-primary{background:var(--red); color:#fff;}
 
   /* ================= الإعدادات ================= */
   .settings-modal{position:relative;}
@@ -814,9 +817,44 @@
         </div>
       </div>
       <div class="google-account-actions" id="googleAccountActions" style="display:none;">
-        <button type="button" class="g-action-btn" id="googleSignOutBtn" onclick="googleSignOut()">تسجيل الخروج</button>
+        <button type="button" class="g-action-btn" id="googleSignOutBtn" onclick="openLogoutConfirm()">تسجيل الخروج</button>
         <button type="button" class="g-action-btn g-switch-btn" id="switchAccountBtn" onclick="switchGoogleAccount()">تبديل الحساب</button>
       </div>
+    </div>
+
+    <div class="settings-divider"></div>
+
+    <div class="settings-section">
+      <h3 class="settings-section-title">منطقة الخطر</h3>
+      <div class="profile-actions-row">
+        <button type="button" class="g-action-btn g-danger-btn" id="resetAccountBtn" onclick="openResetAccountConfirm()">تصفير الحساب</button>
+        <p class="google-hint">يرجّع كل تقدّمك (الساعات، الشارة، السلسلة اليومية) إلى الصفر كأنك بدأت اللعبة اليوم — بدون ما يسجّل خروجك.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="resetAccountConfirmOverlay">
+  <div class="reminder-alert danger">
+    <div class="bell"><svg class="ico" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></div>
+    <h2>تصفير الحساب</h2>
+    <p>هل أنت متأكد أنك تريد تصفير حسابك؟ رح تفقد كل تقدّمك ورصيدك الحالي بشكل نهائي ولا يمكن التراجع عنه.</p>
+    <p class="modal-error" id="resetAccountError"></p>
+    <div class="controls">
+      <button class="secondary" onclick="closeResetAccountConfirm()">إلغاء</button>
+      <button class="primary danger-primary" id="resetAccountConfirmBtn" onclick="confirmResetAccountAction()">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="logoutConfirmOverlay">
+  <div class="reminder-alert">
+    <div class="bell"><svg class="ico" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></div>
+    <h2>تسجيل الخروج</h2>
+    <p>هل أنت متأكد أنك تريد تسجيل الخروج من هذا الحساب؟</p>
+    <div class="controls">
+      <button class="secondary" onclick="closeLogoutConfirm()">إلغاء</button>
+      <button class="primary" onclick="confirmLogoutAction()">تأكيد</button>
     </div>
   </div>
 </div>
@@ -1149,6 +1187,59 @@ window.splashGoogleSignIn = async function(){
 window.googleSignOut = function(){
   if (!firebaseOK) return;
   firebase.auth().signOut().catch(() => {});
+};
+
+/* تأكيد تسجيل الخروج: يفتح نافذة تنبيه بزري إلغاء/تأكيد قبل تنفيذ الخروج الفعلي */
+window.openLogoutConfirm = function(){
+  document.getElementById("logoutConfirmOverlay").classList.add("show");
+};
+window.closeLogoutConfirm = function(){
+  document.getElementById("logoutConfirmOverlay").classList.remove("show");
+};
+window.confirmLogoutAction = function(){
+  closeLogoutConfirm();
+  googleSignOut();
+};
+
+/* تصفير الحساب: يرجّع تقدّم اللاعب (الساعات، الشارة، السلسلة) للصفر بدون تسجيل خروج ولا حذف بياناته الشخصية (الاسم/العمر/البلد) */
+window.openResetAccountConfirm = function(){
+  const err = document.getElementById("resetAccountError");
+  if (err){ err.style.display = "none"; err.innerText = ""; }
+  document.getElementById("resetAccountConfirmOverlay").classList.add("show");
+};
+window.closeResetAccountConfirm = function(){
+  document.getElementById("resetAccountConfirmOverlay").classList.remove("show");
+};
+window.confirmResetAccountAction = async function(){
+  const err = document.getElementById("resetAccountError");
+  const btn = document.getElementById("resetAccountConfirmBtn");
+
+  if (!firebaseOK || !navigator.onLine){
+    if (err){ err.innerText = "يجب الاتصال بالإنترنت لتصفير حسابك، حاول مرة ثانية."; err.style.display = "block"; }
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+  try{
+    await authReady;
+    const myUid = currentUid;
+    await db.ref('studyLeaderboard/' + myUid).update({
+      totalSeconds: 0,
+      daySeconds: 0,
+      weeklySeconds: 0,
+      streak: 0,
+      dayIndex: null,
+      weekIndex: null,
+      lastStudyDayIndex: null,
+      updatedAt: serverTimestampValue()
+    });
+    closeResetAccountConfirm();
+    updateHomeGreeting();
+  }catch(e){
+    if (err){ err.innerText = "تعذّر تصفير الحساب، حاول مرة ثانية."; err.style.display = "block"; }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 };
 
 /* تبديل الحساب: يفتح مباشرة قائمة اختيار حساب Google حتى يقدر يختار حساب آخر (أو نفس الحساب بجهاز ثاني)
