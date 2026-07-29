@@ -970,7 +970,7 @@ window.doLogin = function(){
 };
 
 window.doLogout = function(){
-  auth.signOut();
+  appConfirm("هل أنت متأكد أنك تريد تسجيل الخروج؟", () => { auth.signOut(); });
 };
 
 auth.onAuthStateChanged((user) => {
