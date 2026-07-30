@@ -670,6 +670,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-functions-compat.js"></script>
 <script>
 /* ================= المؤقت ================= */
 let selectedMinutes = 15;
@@ -730,6 +731,17 @@ function showSessionNotice(text){
 function hideSessionNotice(){
   const el = document.getElementById("sessionNotice");
   if (el) el.style.display = "none";
+}
+
+/* نص تنبيه الوصول للحد اليومي: نضيف اقتراح ربط الحساب بجوجل فقط لمن لسه داخل بحساب مجهول،
+   لأنها اللحظة اللي ممكن يفكر فيها الطالب يتحايل (يمسح بيانات المتصفح) بدل ما يرجع باچر. */
+function dailyCapNoticeText(){
+  let msg = "🚫 وصلت للحد الأقصى اليومي (6 ساعات). رجعلك باچر 💪";
+  const user = firebase.auth().currentUser;
+  if (user && user.isAnonymous){
+    msg += " — ولا تنسى تسجّل دخولك بجوجل من الصفحة الرئيسية عشان رصيدك يصير محفوظ من أي جهاز.";
+  }
+  return msg;
 }
 
 /* ================= نافذة تخصيص الوقت بتصميم اللعبة ================= */
@@ -1001,7 +1013,7 @@ function renderTime(){
 
 window.togglePause = function(){
   if (dailyCapReached && paused){
-    showSessionNotice("🚫 وصلت للحد الأقصى اليومي (6 ساعات). رجعلك باچر 💪");
+    showSessionNotice(dailyCapNoticeText());
     return;
   }
   paused = !paused;
@@ -1047,95 +1059,49 @@ function getBadge(totalSeconds){
   return null;
 }
 
-function bankStudyTime(seconds){
+/* ✅ الحل الجذري: الحساب الكامل (الحد اليومي، السلسلة، حماية السلسلة، الترتيب الأسبوعي)
+   صار يشتغل بالكامل داخل Cloud Function موثوقة (functions/index.js)، مو بالمتصفح.
+   المتصفح هنا بس "يطلب" بنك وقت الدراسة، والسيرفر هو اللي يقرر ويتحقق ويكتب فعليًا.
+   حتى لو فتح طالب Console وحاول يستدعي هذي الدالة بقيم وهمية، السيرفر يتحقق من الوقت
+   الحقيقي المنقضي بنفسه (Date.now() على جوجل، مو أي قيمة من جهازه) ويرفض أي تلاعب. */
+let bankStudyTimeFn = null;
+function getBankStudyTimeFn(){
+  if (!bankStudyTimeFn && firebaseOK && typeof firebase !== "undefined" && firebase.functions){
+    bankStudyTimeFn = firebase.functions().httpsCallable("bankStudyTime");
+  }
+  return bankStudyTimeFn;
+}
+
+async function bankStudyTime(seconds){
   const p = getProfile();
   if (!p || seconds <= 0 || !currentUid) return;
-  const ref = db.ref('studyLeaderboard/' + currentUid);
-  const nowServer = serverNow();
-  const todayIndex = localDayIndex(nowServer);
-  const thisWeekIndex = localWeekIndex(nowServer);
 
-  /* ملاحظة: نقرأ هالأعلام (flags) بعد اكتمال المعاملة فعليًا (onComplete) بدل داخل
-     دالة التحديث نفسها، لأن Firebase ممكن يعيد تنفيذ دالة التحديث أكثر من مرة عند
-     وجود تضارب (Optimistic Concurrency)، وما نبي نكرر رسائل الواجهة بدون داعي. */
-  let flags = {};
+  const fn = getBankStudyTimeFn();
+  if (!fn){
+    showSessionNotice("⚠️ تعذّر حفظ وقت الدراسة، تأكد من الاتصال بالإنترنت.");
+    return;
+  }
 
-  ref.transaction(cur => {
-    cur = cur || {};
-    flags = {};
+  try{
+    const res = await fn({ seconds });
+    const data = (res && res.data) || {};
 
-    /* ---- الحد اليومي (6 ساعات) ---- */
-    let dayIndex = cur.dayIndex;
-    let daySeconds = cur.daySeconds || 0;
-    if (dayIndex !== todayIndex){ dayIndex = todayIndex; daySeconds = 0; }
-
-    const dailyRemaining = DAILY_CAP_SECONDS - daySeconds;
-    if (dailyRemaining <= 0){
-      flags.capReached = true;
-      return; // undefined = نلغي المعاملة، ما فيه شي نكتبه
-    }
-
-    const bankedNow = Math.min(seconds, dailyRemaining);
-    daySeconds += bankedNow;
-    if (bankedNow < seconds) flags.capReached = true;
-
-    /* ---- سلسلة الأيام المتتالية + حماية السلسلة (Streak Freeze) ----
-       كل طالب عنده حماية واحدة تتجدد كل أسبوع: لو فاته يوم واحد بالضبط ما تنكسر سلسلته،
-       تُستهلك الحماية تلقائيًا وتزيد السلسلة بدل ما تصفر لـ1. */
-    let streak = cur.streak || 0;
-    let lastStudyDayIndex = cur.lastStudyDayIndex;
-    let freezeWeekIndex = cur.freezeWeekIndex;
-    let freezeUsed = cur.freezeUsed || false;
-
-    if (freezeWeekIndex !== thisWeekIndex){
-      freezeWeekIndex = thisWeekIndex;
-      freezeUsed = false; // حماية جديدة مع كل أسبوع
-    }
-
-    if (lastStudyDayIndex !== todayIndex){
-      const gap = (lastStudyDayIndex == null) ? null : todayIndex - lastStudyDayIndex;
-      if (gap === 2 && !freezeUsed){
-        streak += 1;
-        freezeUsed = true;
-        flags.freezeConsumed = true;
-      } else {
-        streak = (gap === 1) ? streak + 1 : 1;
-      }
-      lastStudyDayIndex = todayIndex;
-    }
-
-    /* ---- الترتيب الأسبوعي ---- */
-    let weekIndex = cur.weekIndex;
-    let weeklySeconds = cur.weeklySeconds || 0;
-    if (weekIndex !== thisWeekIndex){ weekIndex = thisWeekIndex; weeklySeconds = 0; }
-    weeklySeconds += bankedNow;
-
-    /* تنبيه: transaction() يستبدل القيمة الكاملة بالعقدة (مثل set)، لذا لازم ننشر
-       كل الحقول الحالية (...cur) وإلا بنمسح name/age/country/... بالخطأ. */
-    return {
-      ...cur,
-      totalSeconds: (cur.totalSeconds || 0) + bankedNow,
-      dayIndex, daySeconds,
-      weekIndex, weeklySeconds,
-      streak, lastStudyDayIndex,
-      freezeWeekIndex, freezeUsed,
-      updatedAt: firebase.database.ServerValue.TIMESTAMP
-    };
-  }, (error, committed) => {
-    if (error){
-      console.error("bankStudyTime failed:", error);
-      showSessionNotice("⚠️ تعذّر حفظ وقت الدراسة، تأكد من الاتصال بالإنترنت.");
-      return;
-    }
-    if (flags.capReached){
+    if (data.capReached){
       paused = true;
       dailyCapReached = true;
       document.getElementById("pauseBtn").innerText = "▶️ استئناف";
-      showSessionNotice("🚫 وصلت للحد الأقصى اليومي (6 ساعات). رجعلك باچر 💪");
-    } else if (committed && flags.freezeConsumed){
+      showSessionNotice(dailyCapNoticeText());
+    } else if (data.committed && data.freezeConsumed){
       showSessionNotice("🧊 فاتك يوم أمس، بس حماية السلسلة حفظت سلسلتك — استمر!");
     }
-  }, false);
+  }catch(error){
+    console.error("bankStudyTime failed:", error);
+    if (error && error.code === "functions/failed-precondition"){
+      showSessionNotice("⚠️ احفظ بياناتك الشخصية أول من الصفحة الرئيسية قبل ما تبدأ الجلسة.");
+    } else {
+      showSessionNotice("⚠️ تعذّر حفظ وقت الدراسة، تأكد من الاتصال بالإنترنت.");
+    }
+  }
 }
 
 /* ================= لوحة الترتيب ================= */
