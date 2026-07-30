@@ -1478,17 +1478,21 @@ window.saveProfile = async function(){
     ? document.getElementById("fGovIraq").value
     : document.getElementById("fGovOther").value.trim();
 
+  const profileErrorEl = document.getElementById("profileError");
+  const showProfileError = (msg) => {
+    if (profileErrorEl){ profileErrorEl.innerText = msg; profileErrorEl.style.display = "block"; }
+  };
+
   if (!name || !age || age < 5 || age > 100 || !country || !governorate){
-    document.getElementById("profileError").innerText = "فضلاً عبّئ الاسم والعمر والبلد بشكل صحيح";
-    document.getElementById("profileError").style.display = "block";
+    showProfileError("فضلاً عبّئ الاسم والعمر والبلد بشكل صحيح");
     return;
   }
 
   if (!firebaseOK || !navigator.onLine){
-    document.getElementById("profileError").innerText = "يجب الاتصال بالإنترنت لحفظ بياناتك، حاول مرة ثانية.";
-    document.getElementById("profileError").style.display = "block";
+    showProfileError("يجب الاتصال بالإنترنت لحفظ بياناتك، حاول مرة ثانية.");
     return;
   }
+  if (profileErrorEl) profileErrorEl.style.display = "none";
 
   const saveBtn = document.getElementById("profileSaveBtn");
   if (saveBtn) saveBtn.disabled = true;
@@ -1504,7 +1508,6 @@ window.saveProfile = async function(){
   p.age = age;
   p.country = country;
   p.governorate = governorate;
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
 
   const profileUpdate = {
     name: p.name, age: p.age, country: p.country, governorate: p.governorate,
@@ -1516,34 +1519,36 @@ window.saveProfile = async function(){
       // لاعب جديد كليًا: هذا هو المكان الوحيد المسموح فيه بإنشاء سجل بـ totalSeconds = 0
       profileUpdate.totalSeconds = 0;
       await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
-      document.getElementById("profileOverlay").classList.remove("show");
-      updateHomeGreeting();
-      return;
+    } else {
+      if (existing.id !== myUid){
+        // بروفايل محلي بمعرّف مختلف (مثلاً تغيّر معرّف الدخول المجهول): ننقل رصيده القديم كاملاً بدل تصفيره
+        let oldData = {};
+        try{
+          const oldSnap = await db.ref('studyLeaderboard/' + existing.id).once('value');
+          oldData = oldSnap.val() || {};
+        }catch(e){}
+        profileUpdate.totalSeconds = oldData.totalSeconds || 0;
+        profileUpdate.dayIndex = oldData.dayIndex;
+        profileUpdate.daySeconds = oldData.daySeconds || 0;
+        profileUpdate.weekIndex = oldData.weekIndex;
+        profileUpdate.weeklySeconds = oldData.weeklySeconds || 0;
+        profileUpdate.streak = oldData.streak || 0;
+        profileUpdate.lastStudyDayIndex = oldData.lastStudyDayIndex;
+      }
+      await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
     }
 
-    if (existing.id !== myUid){
-      // بروفايل محلي بمعرّف مختلف (مثلاً تغيّر معرّف الدخول المجهول): ننقل رصيده القديم كاملاً بدل تصفيره
-      let oldData = {};
-      try{
-        const oldSnap = await db.ref('studyLeaderboard/' + existing.id).once('value');
-        oldData = oldSnap.val() || {};
-      }catch(e){}
-      profileUpdate.totalSeconds = oldData.totalSeconds || 0;
-      profileUpdate.dayIndex = oldData.dayIndex;
-      profileUpdate.daySeconds = oldData.daySeconds || 0;
-      profileUpdate.weekIndex = oldData.weekIndex;
-      profileUpdate.weeklySeconds = oldData.weeklySeconds || 0;
-      profileUpdate.streak = oldData.streak || 0;
-      profileUpdate.lastStudyDayIndex = oldData.lastStudyDayIndex;
-    }
-
-    await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
+    // ما نحفظ البروفايل محليًا إلا بعد التأكد إن الحفظ على فايربيس نجح فعلاً —
+    // عشان ما يصير تعارض بين بروفايل محلي "جديد" وبيانات فعلية على السيرفر لو فشلت الكتابة.
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+    document.getElementById("profileOverlay").classList.remove("show");
+    updateHomeGreeting();
+  }catch(e){
+    console.error("saveProfile failed:", e);
+    showProfileError("تعذّر حفظ بياناتك، تأكد من الاتصال بالإنترنت وحاول مرة ثانية.");
   } finally {
     if (saveBtn) saveBtn.disabled = false;
   }
-
-  document.getElementById("profileOverlay").classList.remove("show");
-  updateHomeGreeting();
 };
 
 function setAvatarDisplay(elId, profile){
