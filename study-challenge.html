@@ -1051,12 +1051,18 @@ function bankStudyTime(seconds){
   const p = getProfile();
   if (!p || seconds <= 0 || !currentUid) return;
   const ref = db.ref('studyLeaderboard/' + currentUid);
+  const nowServer = serverNow();
+  const todayIndex = localDayIndex(nowServer);
+  const thisWeekIndex = localWeekIndex(nowServer);
 
-  ref.once('value').then(snap => {
-    const cur = snap.val() || {};
-    const nowServer = serverNow();
-    const todayIndex = localDayIndex(nowServer);
-    const thisWeekIndex = localWeekIndex(nowServer);
+  /* ملاحظة: نقرأ هالأعلام (flags) بعد اكتمال المعاملة فعليًا (onComplete) بدل داخل
+     دالة التحديث نفسها، لأن Firebase ممكن يعيد تنفيذ دالة التحديث أكثر من مرة عند
+     وجود تضارب (Optimistic Concurrency)، وما نبي نكرر رسائل الواجهة بدون داعي. */
+  let flags = {};
+
+  ref.transaction(cur => {
+    cur = cur || {};
+    flags = {};
 
     /* ---- الحد اليومي (6 ساعات) ---- */
     let dayIndex = cur.dayIndex;
@@ -1065,21 +1071,13 @@ function bankStudyTime(seconds){
 
     const dailyRemaining = DAILY_CAP_SECONDS - daySeconds;
     if (dailyRemaining <= 0){
-      paused = true;
-      dailyCapReached = true;
-      document.getElementById("pauseBtn").innerText = "▶️ استئناف";
-      showSessionNotice("🚫 وصلت للحد الأقصى اليومي (6 ساعات). رجعلك باچر 💪");
-      return;
+      flags.capReached = true;
+      return; // undefined = نلغي المعاملة، ما فيه شي نكتبه
     }
 
     const bankedNow = Math.min(seconds, dailyRemaining);
     daySeconds += bankedNow;
-    if (bankedNow < seconds){
-      paused = true;
-      dailyCapReached = true;
-      document.getElementById("pauseBtn").innerText = "▶️ استئناف";
-      showSessionNotice("🚫 وصلت للحد الأقصى اليومي (6 ساعات). رجعلك باچر 💪");
-    }
+    if (bankedNow < seconds) flags.capReached = true;
 
     /* ---- سلسلة الأيام المتتالية + حماية السلسلة (Streak Freeze) ----
        كل طالب عنده حماية واحدة تتجدد كل أسبوع: لو فاته يوم واحد بالضبط ما تنكسر سلسلته،
@@ -1088,7 +1086,6 @@ function bankStudyTime(seconds){
     let lastStudyDayIndex = cur.lastStudyDayIndex;
     let freezeWeekIndex = cur.freezeWeekIndex;
     let freezeUsed = cur.freezeUsed || false;
-    let freezeConsumedNow = false;
 
     if (freezeWeekIndex !== thisWeekIndex){
       freezeWeekIndex = thisWeekIndex;
@@ -1100,15 +1097,11 @@ function bankStudyTime(seconds){
       if (gap === 2 && !freezeUsed){
         streak += 1;
         freezeUsed = true;
-        freezeConsumedNow = true;
+        flags.freezeConsumed = true;
       } else {
         streak = (gap === 1) ? streak + 1 : 1;
       }
       lastStudyDayIndex = todayIndex;
-    }
-
-    if (freezeConsumedNow){
-      showSessionNotice("🧊 فاتك يوم أمس، بس حماية السلسلة حفظت سلسلتك — استمر!");
     }
 
     /* ---- الترتيب الأسبوعي ---- */
@@ -1117,17 +1110,32 @@ function bankStudyTime(seconds){
     if (weekIndex !== thisWeekIndex){ weekIndex = thisWeekIndex; weeklySeconds = 0; }
     weeklySeconds += bankedNow;
 
-    const newTotal = (cur.totalSeconds || 0) + bankedNow;
-
-    ref.update({
-      totalSeconds: newTotal,
+    /* تنبيه: transaction() يستبدل القيمة الكاملة بالعقدة (مثل set)، لذا لازم ننشر
+       كل الحقول الحالية (...cur) وإلا بنمسح name/age/country/... بالخطأ. */
+    return {
+      ...cur,
+      totalSeconds: (cur.totalSeconds || 0) + bankedNow,
       dayIndex, daySeconds,
       weekIndex, weeklySeconds,
       streak, lastStudyDayIndex,
       freezeWeekIndex, freezeUsed,
-      updatedAt: serverTimestampValue()
-    });
-  });
+      updatedAt: firebase.database.ServerValue.TIMESTAMP
+    };
+  }, (error, committed) => {
+    if (error){
+      console.error("bankStudyTime failed:", error);
+      showSessionNotice("⚠️ تعذّر حفظ وقت الدراسة، تأكد من الاتصال بالإنترنت.");
+      return;
+    }
+    if (flags.capReached){
+      paused = true;
+      dailyCapReached = true;
+      document.getElementById("pauseBtn").innerText = "▶️ استئناف";
+      showSessionNotice("🚫 وصلت للحد الأقصى اليومي (6 ساعات). رجعلك باچر 💪");
+    } else if (committed && flags.freezeConsumed){
+      showSessionNotice("🧊 فاتك يوم أمس، بس حماية السلسلة حفظت سلسلتك — استمر!");
+    }
+  }, false);
 }
 
 /* ================= لوحة الترتيب ================= */
@@ -1268,21 +1276,29 @@ authReady.then(async (myUid) => {
   // كاملاً للسجل الجديد، حتى لا تختفي ساعات دراسته بسبب مجرد تغيّر معرّف الدخول.
   if (myProfileOnLoad && myProfileOnLoad.id !== myUid){
     const migrated = { id: myUid, name: myProfileOnLoad.name, age: myProfileOnLoad.age, country: myProfileOnLoad.country, governorate: myProfileOnLoad.governorate, avatar: myProfileOnLoad.avatar };
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(migrated));
     let oldData = {};
     try{
       const oldSnap = await db.ref('studyLeaderboard/' + myProfileOnLoad.id).once('value');
       oldData = oldSnap.val() || {};
     }catch(e){ /* تعذّرت قراءة السجل القديم — نكمل بدون نقل رصيد بدل ما نعلّق الصفحة */ }
-    db.ref('studyLeaderboard/' + myUid).update({
-      name: migrated.name, age: migrated.age, country: migrated.country, governorate: migrated.governorate, avatar: migrated.avatar,
-      totalSeconds: oldData.totalSeconds || 0,
-      dayIndex: oldData.dayIndex, daySeconds: oldData.daySeconds || 0,
-      weekIndex: oldData.weekIndex, weeklySeconds: oldData.weeklySeconds || 0,
-      streak: oldData.streak || 0, lastStudyDayIndex: oldData.lastStudyDayIndex,
-      freezeWeekIndex: oldData.freezeWeekIndex, freezeUsed: oldData.freezeUsed || false,
-      updatedAt: serverTimestampValue()
-    });
+    try{
+      await db.ref('studyLeaderboard/' + myUid).update({
+        name: migrated.name, age: migrated.age, country: migrated.country, governorate: migrated.governorate, avatar: migrated.avatar,
+        totalSeconds: oldData.totalSeconds || 0,
+        dayIndex: oldData.dayIndex, daySeconds: oldData.daySeconds || 0,
+        weekIndex: oldData.weekIndex, weeklySeconds: oldData.weeklySeconds || 0,
+        streak: oldData.streak || 0, lastStudyDayIndex: oldData.lastStudyDayIndex,
+        freezeWeekIndex: oldData.freezeWeekIndex, freezeUsed: oldData.freezeUsed || false,
+        updatedAt: serverTimestampValue()
+      });
+      // ما نبدّل مؤشر البروفايل المحلي للمعرّف الجديد إلا بعد تأكد نجاح نقل الرصيد فعليًا —
+      // لو غيّرناه قبل التأكد وفشلت الكتابة، بيصير الرصيد القديم "يتيم" (ما حد يقدر يوصله) بينما
+      // البروفايل المحلي الجديد ما عنده رصيد على السيرفر أصلاً.
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(migrated));
+    }catch(e){
+      console.error("profile migration failed:", e);
+      showSessionNotice("⚠️ تعذّر نقل رصيدك القديم، تأكد من الاتصال بالإنترنت وأعد فتح الصفحة.");
+    }
   }
   db.ref('studyLeaderboard/' + myUid).on('value', (snap) => {
     const val = snap.val() || {};
