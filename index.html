@@ -874,6 +874,16 @@
       </div>
     </div>
 
+    <div class="settings-divider" id="recoveryCodeDivider" style="display:none;"></div>
+
+    <div class="settings-section" id="recoveryCodeSection" style="display:none;">
+      <h3 class="settings-section-title">استرجاع الحساب بدون Google</h3>
+      <div class="profile-actions-row">
+        <button type="button" class="g-action-btn" id="recoveryCodeBtn" onclick="openRecoveryCode()">🔑 كود استرجاع الحساب</button>
+        <p class="google-hint">ما تبي تسجّل دخول بجوجل؟ أنشئ كود احتياطي واحتفظ فيه بمكان آمن. لو غيّرت الجهاز أو انمسحت بيانات المتصفح، أعطِ الكود للمشرف عشان يرجّع لك تقدّمك.</p>
+      </div>
+    </div>
+
     <div class="settings-divider"></div>
 
     <div class="settings-section">
@@ -882,6 +892,33 @@
         <button type="button" class="g-action-btn g-danger-btn" id="resetAccountBtn" onclick="openResetAccountConfirm()">تصفير الحساب</button>
         <p class="google-hint">يرجّع كل تقدّمك (الساعات، الشارة، السلسلة اليومية) إلى الصفر كأنك بدأت اللعبة اليوم — بدون ما يسجّل خروجك.</p>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="recoveryCodeOverlay" onclick="if(event.target===this) closeRecoveryCode()">
+  <div class="reminder-alert">
+    <div class="bell">🔑</div>
+    <h2>كود استرجاع حسابك</h2>
+    <p class="modal-error" id="recoveryCodeError"></p>
+    <div id="recoveryCodeDisplay" style="font-size:28px; letter-spacing:3px; font-weight:800; text-align:center; padding:16px 0; direction:ltr; unicode-bidi:plaintext;"></div>
+    <p class="google-hint" style="text-align:center;">صوّر هالكود أو اكتبه بمكان آمن. لو ضاع الوصول لهذا الجهاز، أعطه للمشرف حتى يرجّعلك رصيدك.</p>
+    <div class="controls">
+      <button class="secondary" onclick="closeRecoveryCode()">إغلاق</button>
+      <button class="primary" id="copyRecoveryCodeBtn" onclick="copyRecoveryCode()">نسخ الكود</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="protectProgressOverlay" onclick="if(event.target===this) closeProtectProgressPrompt()">
+  <div class="reminder-alert">
+    <div class="bell">🔒</div>
+    <h2>احمِ تقدّمك</h2>
+    <p>حسابك الآن محفوظ على هذا الجهاز/المتصفح بس. لو غيّرت الجهاز أو مسحت بيانات المتصفح، ممكن تفقد رصيدك.
+       سجّل دخولك بحساب Google الآن (يأخذ ثانية وحدة) عشان يرجعلك رصيدك تلقائيًا من أي جهاز مستقبلًا.</p>
+    <div class="controls">
+      <button class="secondary" onclick="closeProtectProgressPrompt()">لاحقًا</button>
+      <button class="primary" onclick="protectProgressSignIn()">سجّل دخول بجوجل الآن</button>
     </div>
   </div>
 </div>
@@ -1287,15 +1324,39 @@ window.switchGoogleAccount = function(){
   return runGoogleAuth("settingsError", document.getElementById("switchAccountBtn"), "switch");
 };
 
+/* ================= تنبيه لمرة وحدة: تشجيع الربط بجوجل بعد إنشاء حساب مجهول جديد =================
+   ما نجبر أحد يسجّل دخول بجوجل، بس نلفت نظره لطيف إنه لو ما ربط حسابه، رصيده مربوط بهذا الجهاز/المتصفح
+   بس، ولو انمسحت بياناته بيفقد تقدّمه. يظهر مرة وحدة فقط لكل حساب جديد. */
+const PROTECT_PROMPT_KEY = "studyChallengeProtectPromptShown";
+function maybeShowProtectProgressPrompt(){
+  const user = firebase.auth().currentUser;
+  if (!user || !user.isAnonymous) return; // أصلًا مرتبط بجوجل، ما يحتاج التنبيه
+  try{ if (localStorage.getItem(PROTECT_PROMPT_KEY)) return; }catch(e){}
+  try{ localStorage.setItem(PROTECT_PROMPT_KEY, "1"); }catch(e){}
+  document.getElementById("protectProgressOverlay").classList.add("show");
+}
+window.closeProtectProgressPrompt = function(){
+  document.getElementById("protectProgressOverlay").classList.remove("show");
+};
+window.protectProgressSignIn = async function(){
+  const ok = await runGoogleAuth(null, null, "link");
+  if (ok) closeProtectProgressPrompt();
+};
+
 function updateGoogleUI(){
   const user = firebase.auth().currentUser;
   const wrap = document.getElementById("googleAreaWrap");
   const status = document.getElementById("googleAccountStatus");
   const actions = document.getElementById("googleAccountActions");
+  const recoverySection = document.getElementById("recoveryCodeSection");
+  const recoveryDivider = document.getElementById("recoveryCodeDivider");
   if (!user || user.isAnonymous){
     if (wrap) wrap.style.display = "block";
     if (status) status.style.display = "none";
     if (actions) actions.style.display = "none";
+    // كود الاسترجاع بديل احتياطي فقط لمن ما يبي يسجّل دخول بجوجل
+    if (recoverySection) recoverySection.style.display = "block";
+    if (recoveryDivider) recoveryDivider.style.display = "block";
     return;
   }
   if (wrap) wrap.style.display = "none";
@@ -1305,7 +1366,103 @@ function updateGoogleUI(){
     if (emailEl) emailEl.innerText = user.email || user.displayName || "حسابك";
   }
   if (actions) actions.style.display = "flex";
+  // حساب Google أصلًا موثوق ويرجع تلقائي من أي جهاز — ما فيه داعي لكود احتياطي
+  if (recoverySection) recoverySection.style.display = "none";
+  if (recoveryDivider) recoveryDivider.style.display = "none";
 }
+
+/* ================= كود استرجاع الحساب (بديل لمن ما يسجّل دخول بجوجل) ================= */
+const RECOVERY_CODE_KEY = "studyChallengeRecoveryCode";
+// بدون 0/1/O/I/L تفاديًا للّبس عند كتابة الكود يدويًا
+const RECOVERY_CODE_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+
+function randomRecoveryCode(){
+  let s = "";
+  for (let i = 0; i < 8; i++){
+    if (i === 4) s += "-";
+    s += RECOVERY_CODE_CHARS[Math.floor(Math.random() * RECOVERY_CODE_CHARS.length)];
+  }
+  return s;
+}
+
+function getSavedRecoveryCode(){
+  try{ return localStorage.getItem(RECOVERY_CODE_KEY); }catch(e){ return null; }
+}
+
+window.openRecoveryCode = async function(){
+  const errEl = document.getElementById("recoveryCodeError");
+  const displayEl = document.getElementById("recoveryCodeDisplay");
+  if (errEl){ errEl.style.display = "none"; errEl.innerText = ""; }
+  document.getElementById("recoveryCodeOverlay").classList.add("show");
+
+  // لو سبق أنشأ كود بهذا الجهاز، نعرضه نفسه بدل ما ننشئ كود جديد في كل مرة
+  const existing = getSavedRecoveryCode();
+  if (existing){
+    displayEl.innerText = existing;
+    return;
+  }
+
+  if (!firebaseOK || !navigator.onLine){
+    displayEl.innerText = "";
+    if (errEl){ errEl.innerText = "يجب الاتصال بالإنترنت لإنشاء كود الاسترجاع."; errEl.style.display = "block"; }
+    return;
+  }
+
+  displayEl.innerText = "جارٍ الإنشاء...";
+  await authReady;
+  const myUid = currentUid;
+  const p = getProfile();
+
+  // فرصة تصادم كودين عشوائيين ضئيلة جدًا، لكن لو صارت (قاعدة الأمان ترفض الكتابة فوق كود موجود)
+  // نجرب كود ثاني بدل ما نفشل مباشرة.
+  for (let attempt = 0; attempt < 5; attempt++){
+    const code = randomRecoveryCode();
+    try{
+      await db.ref('recoveryCodes/' + code).set({
+        uid: myUid,
+        name: (p && p.name) || "",
+        createdAt: serverTimestampValue()
+      });
+      try{ localStorage.setItem(RECOVERY_CODE_KEY, code); }catch(e){}
+      displayEl.innerText = code;
+      return;
+    }catch(e){ /* نجرب كود ثاني */ }
+  }
+
+  displayEl.innerText = "";
+  if (errEl){ errEl.innerText = "تعذّر إنشاء الكود، تأكد من الاتصال بالإنترنت وحاول مرة ثانية."; errEl.style.display = "block"; }
+};
+
+window.closeRecoveryCode = function(){
+  document.getElementById("recoveryCodeOverlay").classList.remove("show");
+};
+
+window.copyRecoveryCode = function(){
+  const code = (document.getElementById("recoveryCodeDisplay").innerText || "").trim();
+  if (!code || code.indexOf("جارٍ") !== -1) return;
+  const btn = document.getElementById("copyRecoveryCodeBtn");
+  const showCopied = () => {
+    if (!btn) return;
+    const original = btn.innerText;
+    btn.innerText = "✅ تم النسخ";
+    setTimeout(() => { btn.innerText = original; }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(showCopied).catch(() => {});
+  } else {
+    try{
+      const ta = document.createElement("textarea");
+      ta.value = code;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      showCopied();
+    }catch(e){}
+  }
+};
 
 /* لما يتبدّل المعرّف الفعلي (بعد signInWithCredential لحساب مرتبط من جهاز ثاني)،
    بيانات فايربيس بهذا المعرّف هي الصحيحة دايمًا — نعتمدها ونحدّث كل الواجهة والاستماع المباشر للإحصائيات. */
@@ -1543,6 +1700,7 @@ window.saveProfile = async function(){
     localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
     document.getElementById("profileOverlay").classList.remove("show");
     updateHomeGreeting();
+    if (isBrandNewPlayer) maybeShowProtectProgressPrompt();
   }catch(e){
     console.error("saveProfile failed:", e);
     showProfileError("تعذّر حفظ بياناتك، تأكد من الاتصال بالإنترنت وحاول مرة ثانية.");
