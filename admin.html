@@ -1983,4 +1983,86 @@ window.searchRecoveryTarget = function(code, oldUid){
     snapshot.forEach(child => {
       if (child.key === oldUid) return;
       const v = child.val();
-      if (v.name && v.name.indexOf(name) !
+      if (v.name && v.name.indexOf(name) !== -1) matches.push({ id: child.key, ...v });
+    });
+
+    if (matches.length === 0){
+      listEl.innerHTML = `<p class="hint">ما لقيت سجل بهاد الاسم.</p>`;
+      return;
+    }
+
+    matches.forEach((m, idx) => {
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border, #2a3a4a); font-size:var(--fs-06);";
+      row.innerHTML = `
+        <input type="radio" name="recoveryTargetPick" value="${idx}" ${idx === 0 ? "checked" : ""}>
+        <span>${escapeHtml(m.name)} (${escapeHtml(m.age)}، ${escapeHtml(m.country)}، ${escapeHtml(m.governorate)}) — رصيده الحالي: <b>${formatHoursShort(m.totalSeconds)}</b></span>
+      `;
+      listEl.appendChild(row);
+    });
+
+    window._recoveryMatches = matches;
+
+    const confirmRow = document.createElement("div");
+    confirmRow.className = "toggle-row";
+    confirmRow.style.marginTop = "14px";
+    confirmRow.innerHTML = `<button class="toggle-btn" id="recoveryConfirmBtn"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg> استرجاع لهاد الحساب</button>`;
+    confirmRow.querySelector("#recoveryConfirmBtn").addEventListener("click", () => confirmRecoveryMerge(code, oldUid));
+    listEl.appendChild(confirmRow);
+  }).catch((error) => {
+    listEl.innerHTML = "";
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.style.color = "#ff3b30";
+    p.innerText = "فشل البحث: " + error.message;
+    listEl.appendChild(p);
+  });
+};
+
+window.confirmRecoveryMerge = function(code, oldUid){
+  const picked = document.querySelector('input[name="recoveryTargetPick"]:checked');
+  if (!picked) return;
+  const target = (window._recoveryMatches || [])[parseInt(picked.value, 10)];
+  if (!target) return;
+  const msg = document.getElementById("recoveryLookupStatusMsg");
+
+  appConfirm(`متأكد إنك بدك ترجّع رصيد الحساب القديم لـ"${target.name}"؟ الحساب القديم ورمز الاسترجاع رح ينحذفوا بعدها.`, () => {
+    db.ref('studyLeaderboard/' + oldUid).once('value').then(snap => {
+      const o = { id: oldUid, ...(snap.val() || {}) };
+      const n = target;
+      const updates = {};
+      updates[n.id + '/totalSeconds'] = Math.max(o.totalSeconds || 0, n.totalSeconds || 0);
+      updates[n.id + '/daySeconds'] = Math.max(o.daySeconds || 0, n.daySeconds || 0);
+      if (o.dayIndex != null) updates[n.id + '/dayIndex'] = o.dayIndex;
+      updates[n.id + '/weeklySeconds'] = Math.max(o.weeklySeconds || 0, n.weeklySeconds || 0);
+      if (o.weekIndex != null) updates[n.id + '/weekIndex'] = o.weekIndex;
+      updates[n.id + '/streak'] = Math.max(o.streak || 0, n.streak || 0);
+      if (o.lastStudyDayIndex != null) updates[n.id + '/lastStudyDayIndex'] = o.lastStudyDayIndex;
+      updates[n.id + '/updatedAt'] = firebase.database.ServerValue.TIMESTAMP;
+      updates[oldUid] = null;
+      return db.ref('studyLeaderboard').update(updates);
+    }).then(() => {
+      return db.ref('recoveryCodes/' + code).remove();
+    }).then(() => {
+      msg.style.color = "#2ecc71";
+      msg.innerText = "تم استرجاع الحساب بنجاح.";
+      document.getElementById("recoveryLookupResult").innerHTML = "";
+      document.getElementById("recoveryCodeInput").value = "";
+    }).catch((error) => {
+      msg.style.color = "#ff3b30";
+      msg.innerText = "فشل الاسترجاع: " + error.message;
+    });
+  });
+};
+
+
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
