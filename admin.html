@@ -239,6 +239,16 @@
     font-family:'Tajawal',sans-serif;
   }
 
+  .hub-btn.announce .icon{background:rgba(255,180,0,.12); color:var(--amber);}
+  .stu-top{background:var(--panel-2); border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin:0 0 14px;}
+  .stu-top h3{margin:0 0 6px; font-size:var(--fs-04); font-weight:900; color:#fff;}
+  .stu-top-row{display:flex; align-items:center; gap:10px; padding:6px 0; font-size:var(--fs-04); border-top:1px dashed var(--border);}
+  .stu-top-row:first-of-type{border-top:none;}
+  .stu-top-row .rk{min-width:22px; font-family:'JetBrains Mono',monospace; color:var(--muted);}
+  .stu-top-row .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .stu-top-row .tm{color:var(--amber); font-weight:900; flex-shrink:0;}
+  textarea.ann-input{width:100%; min-height:110px; padding:13px 14px; border-radius:10px; border:1px solid var(--border); background:var(--panel-2); color:#fff; font-family:'Tajawal',sans-serif; font-size:var(--fs-08); resize:vertical; line-height:1.7;}
+  textarea.ann-input:focus{outline:2px solid var(--amber); border-color:transparent;}
   #logoutBtnHub{
     display:block; width:100%; margin-top:28px; padding:14px; border-radius:10px;
     border:1px solid var(--red); background:rgba(255,59,48,.12); color:var(--red);
@@ -267,7 +277,7 @@
     to{opacity:1; transform:translateY(0);}
   }
   @media (prefers-reduced-motion: no-preference){
-    #hubView:not(.hidden), #mainTimerPanel:not(.hidden), #challengePanel:not(.hidden), #studyChallengePanel:not(.hidden), #themesPatternsPanel:not(.hidden), #studentsPanel:not(.hidden){
+    #hubView:not(.hidden), #mainTimerPanel:not(.hidden), #challengePanel:not(.hidden), #studyChallengePanel:not(.hidden), #themesPatternsPanel:not(.hidden), #studentsPanel:not(.hidden), #announcementPanel:not(.hidden){
       animation:screenIn .32s cubic-bezier(.22,.61,.36,1) both;
     }
     .hub-btn{ animation:itemIn .38s cubic-bezier(.22,.61,.36,1) backwards; }
@@ -352,6 +362,12 @@
   <button type="button" class="hub-btn students" onclick="showPanel('students')">
     <span class="icon"><svg class="ico" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.6c2.8 0 5 1.8 5 4.4"/></svg></span>
     <span class="txt"><b>إدارة الطلاب</b><small>بحث، تعديل اسم أو رصيد، تصفير أو حذف سجل طالب</small></span>
+    <span class="arrow">‹</span>
+  </button>
+
+  <button type="button" class="hub-btn announce" onclick="showPanel('announcement')">
+    <span class="icon"><svg class="ico" viewBox="0 0 24 24"><path d="M4 10v4a1 1 0 0 0 1 1h2l5 4V5L7 9H5a1 1 0 0 0-1 1Z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></svg></span>
+    <span class="txt"><b>رسالة الإعلان</b><small>نص يظهر لكل الطلاب في الصفحة الرئيسية</small></span>
     <span class="arrow">‹</span>
   </button>
 
@@ -488,6 +504,7 @@
   <p class="hint" style="margin-bottom:10px;">اضغط على أي طالب لتعديل اسمه أو رصيده، أو تصفير رصيده، أو حذف سجله نهائياً.</p>
 
   <div class="stu-stats" id="stuStats"></div>
+  <div class="stu-top" id="stuTop" style="display:none;"></div>
 
   <div class="field">
     <label>بحث (اسم، محافظة، دولة)</label>
@@ -498,6 +515,22 @@
   </div>
   <div id="studentsList"></div>
   <div id="studentsStatusMsg" class="hint" style="margin-top:12px;"></div>
+</div>
+
+<!-- لوحة رسالة الإعلان -->
+<div class="card hidden" id="announcementPanel">
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع</button>
+  <p class="eyebrow">رسالة الإعلان</p>
+  <h1>إعلان للطلاب</h1>
+  <p class="hint" style="margin-bottom:12px;">النص الذي تكتبه يظهر في أعلى الصفحة الرئيسية لكل الطلاب. يقدر الطالب يغلقه، ويرجع يظهر له فقط عند تغيير النص.</p>
+  <label>نص الإعلان</label>
+  <textarea class="ann-input" id="announcementText" maxlength="280" placeholder="مثال: تحدي الأسبوع يبدأ الجمعة، استعدوا!"></textarea>
+  <p class="hint" id="announcementCount" style="margin:6px 0 0; text-align:end;">0 / 280</p>
+  <div class="toggle-row">
+    <button type="button" class="toggle-btn" onclick="publishAnnouncement()"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg> نشر</button>
+    <button type="button" class="toggle-btn" onclick="clearAnnouncement()"><svg class="ico" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor" stroke="none"/></svg> إخفاء</button>
+  </div>
+  <div id="announcementStatusMsg" class="hint" style="margin-top:12px;"></div>
 </div>
 
 <!-- لوحة الثيمات والأنماط الموحدة -->
@@ -836,6 +869,7 @@ function hideAllPanels(){
   document.getElementById("studyChallengePanel").classList.add("hidden");
   document.getElementById("themesPatternsPanel").classList.add("hidden");
   document.getElementById("studentsPanel").classList.add("hidden");
+  document.getElementById("announcementPanel").classList.add("hidden");
 }
 
 window.showHub = function(){
@@ -849,6 +883,10 @@ window.showPanel = function(name){
   else if (name === "challenge") document.getElementById("challengePanel").classList.remove("hidden");
   else if (name === "studyChallenge") document.getElementById("studyChallengePanel").classList.remove("hidden");
   else if (name === "themesPatterns") document.getElementById("themesPatternsPanel").classList.remove("hidden");
+  else if (name === "announcement"){
+    document.getElementById("announcementPanel").classList.remove("hidden");
+    loadAnnouncementState();
+  }
   else if (name === "students"){
     document.getElementById("studentsPanel").classList.remove("hidden");
     loadStudents();
@@ -1637,6 +1675,8 @@ window.loadStudents = function(){
         totalSeconds: Number(v.totalSeconds) || 0,
         weeklySeconds: Number(v.weeklySeconds) || 0,
         weekIndex: v.weekIndex,
+        dayIndex: v.dayIndex,
+        daySeconds: Number(v.daySeconds) || 0,
         streak: Number(v.streak) || 0
       });
     });
@@ -1659,9 +1699,11 @@ function renderStudents(){
   const currentWeek = Math.floor((Date.now() + STU_LOCAL_UTC_OFFSET_MS) / 604800000);
   const activeWeek = studentsCache.filter(s => s.weekIndex === currentWeek && s.weeklySeconds > 0).length;
   const totalHours = studentsCache.reduce((sum, s) => sum + s.totalSeconds, 0) / 3600;
+  const currentDay = Math.floor((Date.now() + STU_LOCAL_UTC_OFFSET_MS) / 86400000);
+  const activeToday = studentsCache.filter(s => s.dayIndex === currentDay && s.daySeconds > 0).length;
 
   statsEl.innerHTML = "";
-  [[studentsCache.length, "طالب مسجّل"], [activeWeek, "نشِط هذا الأسبوع"], [Math.round(totalHours), "مجموع الساعات"]].forEach(([num, label]) => {
+  [[studentsCache.length, "طالب مسجّل"], [activeToday, "نشِط اليوم"], [activeWeek, "نشِط هذا الأسبوع"], [Math.round(totalHours), "مجموع الساعات"]].forEach(([num, label]) => {
     const box = document.createElement("div");
     box.className = "stu-stat";
     const b = document.createElement("b"); b.textContent = String(num);
@@ -1669,6 +1711,23 @@ function renderStudents(){
     box.appendChild(b); box.appendChild(sp);
     statsEl.appendChild(box);
   });
+
+  const topEl = document.getElementById("stuTop");
+  topEl.innerHTML = "";
+  const top5 = studentsCache.filter(s => s.totalSeconds > 0).slice(0, 5);
+  if (top5.length){
+    const h = document.createElement("h3"); h.textContent = "أعلى 5 طلاب (الرصيد الكلي)";
+    topEl.appendChild(h);
+    top5.forEach(s => {
+      const r = document.createElement("div"); r.className = "stu-top-row";
+      const rk = document.createElement("span"); rk.className = "rk"; rk.textContent = "#" + s.rank;
+      const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = s.name || "بدون اسم";
+      const tm = document.createElement("span"); tm.className = "tm"; tm.textContent = formatHoursShort(s.totalSeconds);
+      r.appendChild(rk); r.appendChild(nm); r.appendChild(tm);
+      topEl.appendChild(r);
+    });
+    topEl.style.display = "";
+  } else { topEl.style.display = "none"; }
 
   const matches = studentsCache.filter(s => !q ||
     (s.name + " " + s.governorate + " " + s.country).toLowerCase().indexOf(q) !== -1);
@@ -1826,6 +1885,47 @@ document.getElementById("stuEditResetBtn").addEventListener("click", stuReset);
 document.getElementById("stuEditDeleteBtn").addEventListener("click", stuDelete);
 document.getElementById("stuEditCloseBtn").addEventListener("click", closeStudentEditor);
 
+/* ================= رسالة الإعلان ================= */
+const ANN_PATH = 'studyChallengeSettings/announcement';
+function annMsg(text, color){
+  const el = document.getElementById("announcementStatusMsg");
+  el.style.color = color || "#8b8d99";
+  el.textContent = text || "";
+}
+function updateAnnCount(){
+  const n = document.getElementById("announcementText").value.length;
+  document.getElementById("announcementCount").textContent = n + " / 280";
+}
+document.getElementById("announcementText").addEventListener("input", updateAnnCount);
+
+function loadAnnouncementState(){
+  annMsg("جارٍ التحميل...");
+  db.ref(ANN_PATH).once('value').then(snap => {
+    const d = snap.val();
+    document.getElementById("announcementText").value = (d && d.text) || "";
+    updateAnnCount();
+    if (d && d.active && d.text) annMsg("الإعلان ظاهر الآن للطلاب.", "#2ecc71");
+    else annMsg("لا يوجد إعلان ظاهر حاليًا.");
+  }).catch(error => annMsg("تعذّر التحميل: " + error.message, "#ff3b30"));
+}
+
+window.publishAnnouncement = function(){
+  const text = document.getElementById("announcementText").value.trim();
+  if (!text){ annMsg("اكتب نص الإعلان أول.", "#ff3b30"); return; }
+  if (text.length > 280){ annMsg("النص أطول من 280 حرف.", "#ff3b30"); return; }
+  annMsg("جارٍ النشر...");
+  db.ref(ANN_PATH).set({ text: text, active: true, updatedAt: firebase.database.ServerValue.TIMESTAMP })
+    .then(() => annMsg("تم نشر الإعلان — سيظهر للطلاب في الصفحة الرئيسية.", "#2ecc71"))
+    .catch(error => annMsg("فشل النشر: " + error.message, "#ff3b30"));
+};
+
+window.clearAnnouncement = function(){
+  annMsg("جارٍ الإخفاء...");
+  db.ref(ANN_PATH + '/active').set(false)
+    .then(() => annMsg("تم إخفاء الإعلان عن الطلاب.", "#8b8d99"))
+    .catch(error => annMsg("فشل الإخفاء: " + error.message, "#ff3b30"));
+};
+
 window.lookupRecoveryCode = function(){
   const raw = document.getElementById("recoveryCodeInput").value.trim().toUpperCase();
   const resultEl = document.getElementById("recoveryLookupResult");
@@ -1883,86 +1983,4 @@ window.searchRecoveryTarget = function(code, oldUid){
     snapshot.forEach(child => {
       if (child.key === oldUid) return;
       const v = child.val();
-      if (v.name && v.name.indexOf(name) !== -1) matches.push({ id: child.key, ...v });
-    });
-
-    if (matches.length === 0){
-      listEl.innerHTML = `<p class="hint">ما لقيت سجل بهاد الاسم.</p>`;
-      return;
-    }
-
-    matches.forEach((m, idx) => {
-      const row = document.createElement("div");
-      row.style.cssText = "display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border, #2a3a4a); font-size:var(--fs-06);";
-      row.innerHTML = `
-        <input type="radio" name="recoveryTargetPick" value="${idx}" ${idx === 0 ? "checked" : ""}>
-        <span>${escapeHtml(m.name)} (${escapeHtml(m.age)}، ${escapeHtml(m.country)}، ${escapeHtml(m.governorate)}) — رصيده الحالي: <b>${formatHoursShort(m.totalSeconds)}</b></span>
-      `;
-      listEl.appendChild(row);
-    });
-
-    window._recoveryMatches = matches;
-
-    const confirmRow = document.createElement("div");
-    confirmRow.className = "toggle-row";
-    confirmRow.style.marginTop = "14px";
-    confirmRow.innerHTML = `<button class="toggle-btn" id="recoveryConfirmBtn"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg> استرجاع لهاد الحساب</button>`;
-    confirmRow.querySelector("#recoveryConfirmBtn").addEventListener("click", () => confirmRecoveryMerge(code, oldUid));
-    listEl.appendChild(confirmRow);
-  }).catch((error) => {
-    listEl.innerHTML = "";
-    const p = document.createElement("p");
-    p.className = "hint";
-    p.style.color = "#ff3b30";
-    p.innerText = "فشل البحث: " + error.message;
-    listEl.appendChild(p);
-  });
-};
-
-window.confirmRecoveryMerge = function(code, oldUid){
-  const picked = document.querySelector('input[name="recoveryTargetPick"]:checked');
-  if (!picked) return;
-  const target = (window._recoveryMatches || [])[parseInt(picked.value, 10)];
-  if (!target) return;
-  const msg = document.getElementById("recoveryLookupStatusMsg");
-
-  appConfirm(`متأكد إنك بدك ترجّع رصيد الحساب القديم لـ"${target.name}"؟ الحساب القديم ورمز الاسترجاع رح ينحذفوا بعدها.`, () => {
-    db.ref('studyLeaderboard/' + oldUid).once('value').then(snap => {
-      const o = { id: oldUid, ...(snap.val() || {}) };
-      const n = target;
-      const updates = {};
-      updates[n.id + '/totalSeconds'] = Math.max(o.totalSeconds || 0, n.totalSeconds || 0);
-      updates[n.id + '/daySeconds'] = Math.max(o.daySeconds || 0, n.daySeconds || 0);
-      if (o.dayIndex != null) updates[n.id + '/dayIndex'] = o.dayIndex;
-      updates[n.id + '/weeklySeconds'] = Math.max(o.weeklySeconds || 0, n.weeklySeconds || 0);
-      if (o.weekIndex != null) updates[n.id + '/weekIndex'] = o.weekIndex;
-      updates[n.id + '/streak'] = Math.max(o.streak || 0, n.streak || 0);
-      if (o.lastStudyDayIndex != null) updates[n.id + '/lastStudyDayIndex'] = o.lastStudyDayIndex;
-      updates[n.id + '/updatedAt'] = firebase.database.ServerValue.TIMESTAMP;
-      updates[oldUid] = null;
-      return db.ref('studyLeaderboard').update(updates);
-    }).then(() => {
-      return db.ref('recoveryCodes/' + code).remove();
-    }).then(() => {
-      msg.style.color = "#2ecc71";
-      msg.innerText = "تم استرجاع الحساب بنجاح.";
-      document.getElementById("recoveryLookupResult").innerHTML = "";
-      document.getElementById("recoveryCodeInput").value = "";
-    }).catch((error) => {
-      msg.style.color = "#ff3b30";
-      msg.innerText = "فشل الاسترجاع: " + error.message;
-    });
-  });
-};
-
-
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
-  });
-}
-</script>
-</body>
-</html>
+      if (v.name && v.name.indexOf(name) !
