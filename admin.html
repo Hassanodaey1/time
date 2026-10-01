@@ -1978,6 +1978,7 @@ function renderRecoveryResult(code, oldRecord){
   resultEl.querySelector("#recoverySearchBtn").addEventListener("click", () => searchRecoveryTarget(code, oldRecord.id));
 }
 
+
 window.searchRecoveryTarget = function(code, oldUid){
   const name = document.getElementById("recoveryTargetSearch").value.trim();
   const listEl = document.getElementById("recoveryTargetList");
@@ -2072,4 +2073,3 @@ if ("serviceWorker" in navigator) {
 </script>
 </body>
 </html>
-
