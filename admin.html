@@ -692,6 +692,13 @@ if (!firebaseOK){
 }
 
 /* ================= نافذة تنبيه/تأكيد بتصميم العبة (بديل alert/confirm) ================= */
+/* تعقيم أي نص قادم من الطلاب (الاسم، المحافظة...) قبل وضعه داخل innerHTML — يمنع حقن أكواد HTML/JS */
+function escapeHtml(str){
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 let appDialogResolver = null;
 function appAlert(message){
   showAppDialog(message, false);
@@ -956,8 +963,13 @@ window.setMode = function(mode, isUserClick){
   }
 };
 
+["loginEmail", "loginPass"].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("keydown", (e) => { if (e.key === "Enter") window.doLogin(); });
+});
+
 window.doLogin = function(){
-  const email = document.getElementById("loginEmail").value;
+  const email = document.getElementById("loginEmail").value.trim();
   const pass = document.getElementById("loginPass").value;
   const loginStatus = document.getElementById("loginStatus");
   loginStatus.style.color = "#8b8d99";
@@ -970,12 +982,24 @@ window.doLogin = function(){
 };
 
 window.doLogout = function(){
-  appConfirm("هل أنت متأكد أنك تريد تسجيل الخروج؟", () => { auth.signOut(); location.reload(); });
+  appConfirm("هل أنت متأكد أنك تريد تسجيل الخروج؟", () => { Promise.resolve(auth.signOut()).catch(() => {}).then(() => location.reload()); });
 };
 
+function isAdminAccount(user){
+  /* الطلاب يدخلون بحساب مجهول أو Google من الصفحة الرئيسية وجلستهم مشتركة مع نفس الموقع،
+     لذلك لا نعتبر أي مستخدم مسجّل أدمن — فقط حساب البريد/كلمة المرور. (الحماية الحقيقية تبقى في قواعد فايربيس) */
+  return !!user && !user.isAnonymous && (user.providerData || []).some(p => p.providerId === "password");
+}
 auth.onAuthStateChanged((user) => {
   const loginView = document.getElementById("loginView");
   const tally = document.getElementById("tally");
+  if (user && !isAdminAccount(user)){
+    Promise.resolve(auth.signOut()).catch(() => {});
+    hideAllPanels();
+    loginView.classList.remove("hidden");
+    tally.classList.remove("live");
+    return;
+  }
   if (user){
     loginView.classList.add("hidden");
     tally.classList.add("live");
@@ -1448,7 +1472,7 @@ window.scanLegacyRecords = function(){
       row.style.cssText = "display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border, #2a3a4a); font-size:var(--fs-06);";
       row.innerHTML = `
         <input type="checkbox" checked data-idx="${idx}" class="legacyMergeCheck" style="width:18px; height:18px; flex-shrink:0;">
-        <span>${pair.old.name} (${pair.old.age}، ${pair.old.governorate}) — قديم: <b>${formatHoursShort(pair.old.totalSeconds)}</b> ← جديد: <b>${formatHoursShort(pair.modern.totalSeconds)}</b></span>
+        <span>${escapeHtml(pair.old.name)} (${escapeHtml(pair.old.age)}، ${escapeHtml(pair.old.governorate)}) — قديم: <b>${formatHoursShort(pair.old.totalSeconds)}</b> ← جديد: <b>${formatHoursShort(pair.modern.totalSeconds)}</b></span>
       `;
       listEl.appendChild(row);
     });
@@ -1456,7 +1480,8 @@ window.scanLegacyRecords = function(){
     const confirmRow = document.createElement("div");
     confirmRow.className = "toggle-row";
     confirmRow.style.marginTop = "14px";
-    confirmRow.innerHTML = `<button class="toggle-btn" onclick="mergeLegacyRecords()"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg> دمج المحدد</button>`;
+    confirmRow.innerHTML = `<button class="toggle-btn" id="legacyMergeBtn"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg> دمج المحدد</button>`;
+    confirmRow.querySelector("#legacyMergeBtn").addEventListener("click", mergeLegacyRecords);
     listEl.appendChild(confirmRow);
   }).catch((error) => {
     msg.style.color = "#ff3b30";
@@ -1534,17 +1559,18 @@ function renderRecoveryResult(code, oldRecord){
   const resultEl = document.getElementById("recoveryLookupResult");
   resultEl.innerHTML = `
     <div class="hint" style="padding:10px 0;">
-      الحساب القديم: <b>${oldRecord.name || "؟"}</b> — رصيده: <b>${formatHoursShort(oldRecord.totalSeconds)}</b>
+      الحساب القديم: <b>${escapeHtml(oldRecord.name || "؟")}</b> — رصيده: <b>${formatHoursShort(oldRecord.totalSeconds)}</b>
     </div>
     <div class="field">
       <label>ابحث عن حسابه الجديد بالاسم</label>
       <input type="text" id="recoveryTargetSearch" placeholder="اكتب الاسم كما هو الآن">
     </div>
     <div class="toggle-row">
-      <button class="toggle-btn" onclick="searchRecoveryTarget('${code}', '${oldRecord.id}')"><svg class="ico" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg> بحث عن السجل الجديد</button>
+      <button class="toggle-btn" id="recoverySearchBtn"><svg class="ico" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg> بحث عن السجل الجديد</button>
     </div>
     <div id="recoveryTargetList"></div>
   `;
+  resultEl.querySelector("#recoverySearchBtn").addEventListener("click", () => searchRecoveryTarget(code, oldRecord.id));
 }
 
 window.searchRecoveryTarget = function(code, oldUid){
@@ -1571,7 +1597,7 @@ window.searchRecoveryTarget = function(code, oldUid){
       row.style.cssText = "display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border, #2a3a4a); font-size:var(--fs-06);";
       row.innerHTML = `
         <input type="radio" name="recoveryTargetPick" value="${idx}" ${idx === 0 ? "checked" : ""}>
-        <span>${m.name} (${m.age}، ${m.country}، ${m.governorate}) — رصيده الحالي: <b>${formatHoursShort(m.totalSeconds)}</b></span>
+        <span>${escapeHtml(m.name)} (${escapeHtml(m.age)}، ${escapeHtml(m.country)}، ${escapeHtml(m.governorate)}) — رصيده الحالي: <b>${formatHoursShort(m.totalSeconds)}</b></span>
       `;
       listEl.appendChild(row);
     });
@@ -1581,15 +1607,24 @@ window.searchRecoveryTarget = function(code, oldUid){
     const confirmRow = document.createElement("div");
     confirmRow.className = "toggle-row";
     confirmRow.style.marginTop = "14px";
-    confirmRow.innerHTML = `<button class="toggle-btn" onclick="confirmRecoveryMerge('${code}', '${oldUid}')"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg> استرجاع لهاد الحساب</button>`;
+    confirmRow.innerHTML = `<button class="toggle-btn" id="recoveryConfirmBtn"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg> استرجاع لهاد الحساب</button>`;
+    confirmRow.querySelector("#recoveryConfirmBtn").addEventListener("click", () => confirmRecoveryMerge(code, oldUid));
     listEl.appendChild(confirmRow);
+  }).catch((error) => {
+    listEl.innerHTML = "";
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.style.color = "#ff3b30";
+    p.innerText = "فشل البحث: " + error.message;
+    listEl.appendChild(p);
   });
 };
 
 window.confirmRecoveryMerge = function(code, oldUid){
   const picked = document.querySelector('input[name="recoveryTargetPick"]:checked');
   if (!picked) return;
-  const target = window._recoveryMatches[parseInt(picked.value, 10)];
+  const target = (window._recoveryMatches || [])[parseInt(picked.value, 10)];
+  if (!target) return;
   const msg = document.getElementById("recoveryLookupStatusMsg");
 
   appConfirm(`متأكد إنك بدك ترجّع رصيد الحساب القديم لـ"${target.name}"؟ الحساب القديم ورمز الاسترجاع رح ينحذفوا بعدها.`, () => {
