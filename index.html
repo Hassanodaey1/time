@@ -128,6 +128,11 @@
   .bento-card.water .bento-badge{background:rgba(125,134,152,.15); color:var(--muted);}
   .bento-card.water.on .bento-badge{background:rgba(72,202,228,.15); color:#48cae4;}
 
+  .announce-banner{display:none; align-items:flex-start; gap:10px; background:rgba(255,180,0,.08); border:1px solid var(--amber); border-radius:16px; padding:12px 14px; margin:0 0 14px;}
+  .announce-banner.show{display:flex;}
+  .announce-banner .an-ico{color:var(--amber); font-size:var(--fs-12); flex-shrink:0; margin-top:2px;}
+  .announce-banner .an-text{flex:1; min-width:0; color:#fff; font-size:var(--fs-06); line-height:1.7; white-space:pre-wrap; word-break:break-word;}
+  .announce-banner .an-close{background:none; border:none; color:var(--muted); font-size:var(--fs-12); cursor:pointer; padding:0 4px; line-height:1; flex-shrink:0;}
   .loading{text-align:center; color:var(--muted); font-size:var(--fs-04); font-family:'JetBrains Mono',monospace; margin-bottom:10px;}
   .home-greeting{text-align:center; color:var(--muted); font-size:var(--fs-06); font-family:'Tajawal',sans-serif; margin:-16px 0 18px;}
 
@@ -607,6 +612,12 @@
     </button>
   </div>
 
+  <div class="announce-banner" id="announceBanner" role="status">
+    <span class="an-ico"><svg class="ico" viewBox="0 0 24 24"><path d="M4 10v4a1 1 0 0 0 1 1h2l5 4V5L7 9H5a1 1 0 0 0-1 1Z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></svg></span>
+    <span class="an-text" id="announceText"></span>
+    <button type="button" class="an-close" id="announceClose" aria-label="إغلاق">×</button>
+  </div>
+
   <p class="net-banner" id="netBanner"><svg class="ico" viewBox="0 0 24 24"><path d="M4 9a12 12 0 0 1 16 0"/><path d="M7 12.5a7.5 7.5 0 0 1 10 0"/><path d="M10 16a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg> لا يوجد اتصال بالإنترنت — الأقسام التي تحتاج مزامنة مباشرة معطّلة مؤقتًا</p>
 
   <p class="loading" id="challengeLoading">جارٍ التحقق من حالة التحدي...</p>
@@ -1033,6 +1044,24 @@ if (firebaseOK){
       item.classList.remove("active");
       statusEl.innerText = "غير مفعّل";
     }
+  });
+
+  db.ref('studyChallengeSettings/announcement').on('value', (snapshot) => {
+    const d = snapshot.val();
+    const banner = document.getElementById("announceBanner");
+    if (!d || !d.active || !d.text){ banner.classList.remove("show"); return; }
+    const stamp = String(d.updatedAt || d.text.length);
+    let dismissed = null;
+    try{ dismissed = localStorage.getItem("announceDismissed"); }catch(e){}
+    if (dismissed === stamp){ banner.classList.remove("show"); return; }
+    document.getElementById("announceText").textContent = d.text;
+    banner.dataset.stamp = stamp;
+    banner.classList.add("show");
+  });
+  document.getElementById("announceClose").addEventListener("click", () => {
+    const banner = document.getElementById("announceBanner");
+    try{ localStorage.setItem("announceDismissed", banner.dataset.stamp || ""); }catch(e){}
+    banner.classList.remove("show");
   });
 
   db.ref('studyChallengeSettings/active').on('value', (snapshot) => {
