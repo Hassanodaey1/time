@@ -1685,12 +1685,12 @@ window.saveProfile = async function(){
           oldData = oldSnap.val() || {};
         }catch(e){}
         profileUpdate.totalSeconds = oldData.totalSeconds || 0;
-        profileUpdate.dayIndex = oldData.dayIndex;
+        profileUpdate.dayIndex = oldData.dayIndex != null ? oldData.dayIndex : null;
         profileUpdate.daySeconds = oldData.daySeconds || 0;
-        profileUpdate.weekIndex = oldData.weekIndex;
+        profileUpdate.weekIndex = oldData.weekIndex != null ? oldData.weekIndex : null;
         profileUpdate.weeklySeconds = oldData.weeklySeconds || 0;
         profileUpdate.streak = oldData.streak || 0;
-        profileUpdate.lastStudyDayIndex = oldData.lastStudyDayIndex;
+        profileUpdate.lastStudyDayIndex = oldData.lastStudyDayIndex != null ? oldData.lastStudyDayIndex : null;
       }
       await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
     }
@@ -1713,7 +1713,11 @@ function setAvatarDisplay(elId, profile){
   const el = document.getElementById(elId);
   if (!el) return;
   if (profile && profile.photoURL){
-    el.innerHTML = '<img src="' + profile.photoURL + '" alt="">';
+    el.innerHTML = "";
+    const img = document.createElement("img");
+    img.alt = "";
+    img.src = profile.photoURL;
+    el.appendChild(img);
   } else {
     el.innerText = (profile && profile.avatar) || DEFAULT_AVATAR;
   }
