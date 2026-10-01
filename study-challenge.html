@@ -670,7 +670,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-functions-compat.js"></script>
 <script>
 /* ================= المؤقت ================= */
 let selectedMinutes = 15;
@@ -856,6 +855,31 @@ function serverTimestampValue(){
     }
   }catch(e){}
   return Date.now();
+}
+
+/* ================= الاتصال بالـ Worker (study-bank) =================
+   كل عملية تمس رصيد الدراسة (الحفظ، التصفير) تمر عبر السيرفر الموثوق على Cloudflare،
+   ويتحقق من هوية الطالب بتوكن تسجيل الدخول. القواعد في فايربيس تمنع الكتابة المباشرة على الرصيد. */
+const WORKER_URL = "https://study-bank.hassan1odaey.workers.dev";
+async function callWorker(path, body){
+  if (!firebaseOK || typeof firebase === "undefined") throw new Error("firebase-not-ready");
+  const user = firebase.auth().currentUser;
+  if (!user) throw new Error("no-user");
+  const token = await user.getIdToken();
+  const res = await fetch(WORKER_URL + path, {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+    body: JSON.stringify(body || {})
+  });
+  let data = {};
+  try{ data = await res.json(); }catch(e){}
+  if (!res.ok){
+    const err = new Error((data && data.error) || ("http-" + res.status));
+    err.code = (data && data.error) || ("http-" + res.status);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
 }
 try{
   if (typeof firebase === "undefined") throw new Error("firebase-not-loaded");
@@ -1064,27 +1088,17 @@ function getBadge(totalSeconds){
    المتصفح هنا بس "يطلب" بنك وقت الدراسة، والسيرفر هو اللي يقرر ويتحقق ويكتب فعليًا.
    حتى لو فتح طالب Console وحاول يستدعي هذي الدالة بقيم وهمية، السيرفر يتحقق من الوقت
    الحقيقي المنقضي بنفسه (Date.now() على جوجل، مو أي قيمة من جهازه) ويرفض أي تلاعب. */
-let bankStudyTimeFn = null;
-function getBankStudyTimeFn(){
-  if (!bankStudyTimeFn && firebaseOK && typeof firebase !== "undefined" && firebase.functions){
-    bankStudyTimeFn = firebase.functions().httpsCallable("bankStudyTime");
-  }
-  return bankStudyTimeFn;
-}
-
 async function bankStudyTime(seconds){
   const p = getProfile();
   if (!p || seconds <= 0 || !currentUid) return;
 
-  const fn = getBankStudyTimeFn();
-  if (!fn){
+  if (!firebaseOK){
     showSessionNotice("⚠️ تعذّر حفظ وقت الدراسة، تأكد من الاتصال بالإنترنت.");
     return;
   }
 
   try{
-    const res = await fn({ seconds });
-    const data = (res && res.data) || {};
+    const data = await callWorker("/bank", { seconds });
 
     if (data.capReached){
       paused = true;
@@ -1096,7 +1110,7 @@ async function bankStudyTime(seconds){
     }
   }catch(error){
     console.error("bankStudyTime failed:", error);
-    if (error && error.code === "functions/failed-precondition"){
+    if (error && error.status === 412){
       showSessionNotice("⚠️ احفظ بياناتك الشخصية أول من الصفحة الرئيسية قبل ما تبدأ الجلسة.");
     } else {
       showSessionNotice("⚠️ تعذّر حفظ وقت الدراسة، تأكد من الاتصال بالإنترنت.");
@@ -1242,28 +1256,19 @@ authReady.then(async (myUid) => {
   // كاملاً للسجل الجديد، حتى لا تختفي ساعات دراسته بسبب مجرد تغيّر معرّف الدخول.
   if (myProfileOnLoad && myProfileOnLoad.id !== myUid){
     const migrated = { id: myUid, name: myProfileOnLoad.name, age: myProfileOnLoad.age, country: myProfileOnLoad.country, governorate: myProfileOnLoad.governorate, avatar: myProfileOnLoad.avatar };
-    let oldData = {};
     try{
-      const oldSnap = await db.ref('studyLeaderboard/' + myProfileOnLoad.id).once('value');
-      oldData = oldSnap.val() || {};
-    }catch(e){ /* تعذّرت قراءة السجل القديم — نكمل بدون نقل رصيد بدل ما نعلّق الصفحة */ }
-    try{
-      await db.ref('studyLeaderboard/' + myUid).update({
-        name: migrated.name, age: migrated.age, country: migrated.country, governorate: migrated.governorate, avatar: migrated.avatar,
-        totalSeconds: oldData.totalSeconds || 0,
-        dayIndex: oldData.dayIndex != null ? oldData.dayIndex : null, daySeconds: oldData.daySeconds || 0,
-        weekIndex: oldData.weekIndex != null ? oldData.weekIndex : null, weeklySeconds: oldData.weeklySeconds || 0,
-        streak: oldData.streak || 0, lastStudyDayIndex: oldData.lastStudyDayIndex != null ? oldData.lastStudyDayIndex : null,
-        freezeWeekIndex: oldData.freezeWeekIndex != null ? oldData.freezeWeekIndex : null, freezeUsed: oldData.freezeUsed || false,
-        updatedAt: serverTimestampValue()
-      });
-      // ما نبدّل مؤشر البروفايل المحلي للمعرّف الجديد إلا بعد تأكد نجاح نقل الرصيد فعليًا —
-      // لو غيّرناه قبل التأكد وفشلت الكتابة، بيصير الرصيد القديم "يتيم" (ما حد يقدر يوصله) بينما
-      // البروفايل المحلي الجديد ما عنده رصيد على السيرفر أصلاً.
+      // الرصيد صار يُكتب من السيرفر فقط، فلا ننقله من المتصفح. ننشئ سجلاً فارغاً فقط إن لم يكن للمعرّف الحالي سجل.
+      // استرجاع الرصيد القديم يتم بربط الحساب بجوجل أو برمز الاسترجاع.
+      const ownSnap = await db.ref('studyLeaderboard/' + myUid).once('value');
+      if (!ownSnap.exists()){
+        const rec = { name: migrated.name, age: migrated.age, country: migrated.country, governorate: migrated.governorate, totalSeconds: 0, updatedAt: serverTimestampValue() };
+        if (migrated.avatar) rec.avatar = migrated.avatar;
+        await db.ref('studyLeaderboard/' + myUid).update(rec);
+      }
       localStorage.setItem(PROFILE_KEY, JSON.stringify(migrated));
     }catch(e){
       console.error("profile migration failed:", e);
-      showSessionNotice("⚠️ تعذّر نقل رصيدك القديم، تأكد من الاتصال بالإنترنت وأعد فتح الصفحة.");
+      showSessionNotice("⚠️ تعذّر تجهيز حسابك، تأكد من الاتصال بالإنترنت وأعد فتح الصفحة.");
     }
   }
   db.ref('studyLeaderboard/' + myUid).on('value', (snap) => {
