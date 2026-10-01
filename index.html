@@ -986,6 +986,31 @@ function serverTimestampValue(){
   }catch(e){}
   return Date.now();
 }
+
+/* ================= الاتصال بالـ Worker (study-bank) =================
+   كل عملية تمس رصيد الدراسة (الحفظ، التصفير) تمر عبر السيرفر الموثوق على Cloudflare،
+   ويتحقق من هوية الطالب بتوكن تسجيل الدخول. القواعد في فايربيس تمنع الكتابة المباشرة على الرصيد. */
+const WORKER_URL = "https://study-bank.hassan1odaey.workers.dev";
+async function callWorker(path, body){
+  if (!firebaseOK || typeof firebase === "undefined") throw new Error("firebase-not-ready");
+  const user = firebase.auth().currentUser;
+  if (!user) throw new Error("no-user");
+  const token = await user.getIdToken();
+  const res = await fetch(WORKER_URL + path, {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+    body: JSON.stringify(body || {})
+  });
+  let data = {};
+  try{ data = await res.json(); }catch(e){}
+  if (!res.ok){
+    const err = new Error((data && data.error) || ("http-" + res.status));
+    err.code = (data && data.error) || ("http-" + res.status);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
 try{
   if (typeof firebase === "undefined") throw new Error("firebase-not-loaded");
   firebase.initializeApp(firebaseConfig);
@@ -1328,16 +1353,7 @@ window.confirmResetAccountAction = async function(){
   try{
     await authReady;
     const myUid = currentUid;
-    await db.ref('studyLeaderboard/' + myUid).update({
-      totalSeconds: 0,
-      daySeconds: 0,
-      weeklySeconds: 0,
-      streak: 0,
-      dayIndex: null,
-      weekIndex: null,
-      lastStudyDayIndex: null,
-      updatedAt: serverTimestampValue()
-    });
+    await callWorker('/reset');
     closeResetAccountConfirm();
     updateHomeGreeting();
   }catch(e){
@@ -1707,19 +1723,14 @@ window.saveProfile = async function(){
       await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
     } else {
       if (existing.id !== myUid){
-        // بروفايل محلي بمعرّف مختلف (مثلاً تغيّر معرّف الدخول المجهول): ننقل رصيده القديم كاملاً بدل تصفيره
-        let oldData = {};
+        // بروفايل محلي بمعرّف مختلف (مثلاً تغيّر معرّف الدخول المجهول): الرصيد لا يُنقل من المتصفح،
+        // نكتفي بإنشاء سجل فارغ إن لم يكن للمعرّف الحالي سجل (الاسترجاع يتم بجوجل أو برمز الاسترجاع).
+        let ownExists = false;
         try{
-          const oldSnap = await db.ref('studyLeaderboard/' + existing.id).once('value');
-          oldData = oldSnap.val() || {};
+          const ownSnap = await db.ref('studyLeaderboard/' + myUid).once('value');
+          ownExists = ownSnap.exists();
         }catch(e){}
-        profileUpdate.totalSeconds = oldData.totalSeconds || 0;
-        profileUpdate.dayIndex = oldData.dayIndex != null ? oldData.dayIndex : null;
-        profileUpdate.daySeconds = oldData.daySeconds || 0;
-        profileUpdate.weekIndex = oldData.weekIndex != null ? oldData.weekIndex : null;
-        profileUpdate.weeklySeconds = oldData.weeklySeconds || 0;
-        profileUpdate.streak = oldData.streak || 0;
-        profileUpdate.lastStudyDayIndex = oldData.lastStudyDayIndex != null ? oldData.lastStudyDayIndex : null;
+        if (!ownExists) profileUpdate.totalSeconds = 0;
       }
       await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
     }
