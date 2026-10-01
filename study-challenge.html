@@ -1251,10 +1251,10 @@ authReady.then(async (myUid) => {
       await db.ref('studyLeaderboard/' + myUid).update({
         name: migrated.name, age: migrated.age, country: migrated.country, governorate: migrated.governorate, avatar: migrated.avatar,
         totalSeconds: oldData.totalSeconds || 0,
-        dayIndex: oldData.dayIndex, daySeconds: oldData.daySeconds || 0,
-        weekIndex: oldData.weekIndex, weeklySeconds: oldData.weeklySeconds || 0,
-        streak: oldData.streak || 0, lastStudyDayIndex: oldData.lastStudyDayIndex,
-        freezeWeekIndex: oldData.freezeWeekIndex, freezeUsed: oldData.freezeUsed || false,
+        dayIndex: oldData.dayIndex != null ? oldData.dayIndex : null, daySeconds: oldData.daySeconds || 0,
+        weekIndex: oldData.weekIndex != null ? oldData.weekIndex : null, weeklySeconds: oldData.weeklySeconds || 0,
+        streak: oldData.streak || 0, lastStudyDayIndex: oldData.lastStudyDayIndex != null ? oldData.lastStudyDayIndex : null,
+        freezeWeekIndex: oldData.freezeWeekIndex != null ? oldData.freezeWeekIndex : null, freezeUsed: oldData.freezeUsed || false,
         updatedAt: serverTimestampValue()
       });
       // ما نبدّل مؤشر البروفايل المحلي للمعرّف الجديد إلا بعد تأكد نجاح نقل الرصيد فعليًا —
