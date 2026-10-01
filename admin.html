@@ -1849,6 +1849,9 @@ function stuReset(){
       dayIndex: null, weekIndex: null, lastStudyDayIndex: null,
       updatedAt: firebase.database.ServerValue.TIMESTAMP
     }).then(() => {
+      /* نمسح حالة الـ Worker (عدّاد اليوم والسلسلة) حتى لا تعود السلسلة القديمة. فشل المسح لا يوقف التصفير. */
+      return db.ref('studyState/' + s.id).remove().catch(() => {});
+    }).then(() => {
       s.totalSeconds = 0; s.weeklySeconds = 0; s.streak = 0; s.weekIndex = null;
       studentsCache.sort((a, b) => b.totalSeconds - a.totalSeconds);
       studentsCache.forEach((x, i) => { x.rank = i + 1; });
@@ -1868,6 +1871,9 @@ function stuDelete(){
     stuBusy(true);
     stuEditMsg("جارٍ الحذف...");
     db.ref('studyLeaderboard/' + s.id).remove().then(() => {
+      /* نمسح حالة الـ Worker لهذا الطالب أيضاً. فشل المسح لا يوقف الحذف. */
+      return db.ref('studyState/' + s.id).remove().catch(() => {});
+    }).then(() => {
       studentsCache = studentsCache.filter(x => x.id !== s.id);
       studentsCache.forEach((x, i) => { x.rank = i + 1; });
       renderStudents();
@@ -2066,3 +2072,4 @@ if ("serviceWorker" in navigator) {
 </script>
 </body>
 </html>
+
