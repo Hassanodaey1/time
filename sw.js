@@ -6,7 +6,7 @@
    ================================================================ */
 /* رقم الإصدار: لازم يترفع (v3, v4, ...) كل مرة تتحدث فيها أي صفحة أو ملف مذكور بـ APP_SHELL،
    وإلا المستخدمين اللي مثبتين التطبيق راح يضلوا شغالين بنسخة قديمة مخزّنة أوفلاين. */
-const CACHE_NAME = "timers-app-shell-v3";
+const CACHE_NAME = "timers-app-shell-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -26,10 +26,12 @@ const APP_SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
+  /* نخزّن كل ملف على حدة: لو ملف واحد غير موجود (مثلاً أيقونة) لا يفشل تخزين بقية الملفات.
+     (cache.addAll كان يفشل كله إذا ملف واحد فقط رجع 404.) */
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .catch(() => {}) // لا نمنع التثبيت حتى لو تعذّر تخزين كل الملفات
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(APP_SHELL.map((url) => cache.add(url)))
+    ).catch(() => {})
   );
   self.skipWaiting();
 });
