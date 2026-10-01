@@ -1722,16 +1722,15 @@ window.saveProfile = async function(){
       profileUpdate.totalSeconds = 0;
       await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
     } else {
-      if (existing.id !== myUid){
-        // بروفايل محلي بمعرّف مختلف (مثلاً تغيّر معرّف الدخول المجهول): الرصيد لا يُنقل من المتصفح،
-        // نكتفي بإنشاء سجل فارغ إن لم يكن للمعرّف الحالي سجل (الاسترجاع يتم بجوجل أو برمز الاسترجاع).
-        let ownExists = false;
-        try{
-          const ownSnap = await db.ref('studyLeaderboard/' + myUid).once('value');
-          ownExists = ownSnap.exists();
-        }catch(e){}
-        if (!ownExists) profileUpdate.totalSeconds = 0;
-      }
+      // الرصيد لا يُنقل من المتصفح. إن لم يكن للمعرّف الحالي سجل على السيرفر (معرّف مختلف، أو سجل محذوف)
+      // ننشئه برصيد صفر حتى يقبله فايربيس. أما السجل الموجود فنعدّل بياناته فقط ولا نلمس رصيده.
+      // (الاسترجاع يتم بربط جوجل أو برمز الاسترجاع.)
+      let ownExists = false;
+      try{
+        const ownSnap = await db.ref('studyLeaderboard/' + myUid).once('value');
+        ownExists = ownSnap.exists();
+      }catch(e){}
+      if (!ownExists) profileUpdate.totalSeconds = 0;
       await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
     }
 
