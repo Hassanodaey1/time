@@ -212,6 +212,33 @@
   .hub-btn .txt small{display:block; font-size:var(--fs-03); color:var(--muted); margin-top:3px; font-weight:400;}
   .hub-btn .arrow{font-size:var(--fs-11); color:var(--muted); flex-shrink:0; opacity:.6;}
 
+  .hub-btn.students .icon{background:rgba(46,204,113,.14); color:var(--green); box-shadow:inset 0 0 0 1px rgba(46,204,113,.18);}
+  .hub-btn.students:hover{border-color:var(--green);}
+
+  /* ===== لوحة إدارة الطلاب ===== */
+  .stu-stats{display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 14px;}
+  .stu-stat{flex:1; min-width:96px; background:var(--panel-2); border:1px solid var(--border); border-radius:12px; padding:10px 8px; text-align:center;}
+  .stu-stat b{display:block; font-size:var(--fs-09); font-weight:900; color:var(--amber); font-family:'JetBrains Mono',monospace;}
+  .stu-stat span{display:block; font-size:var(--fs-02); color:var(--muted); margin-top:2px;}
+  .stu-row{
+    display:flex; align-items:center; gap:11px; width:100%; margin-top:8px; padding:11px 12px;
+    border-radius:12px; border:1px solid var(--border); background:var(--panel-2); color:#fff;
+    font-family:'Tajawal',sans-serif; cursor:pointer; text-align:start;
+  }
+  .stu-row:hover{border-color:var(--amber);}
+  .stu-row .rk{min-width:26px; font-family:'JetBrains Mono',monospace; font-size:var(--fs-04); color:var(--muted); text-align:center;}
+  .stu-row .av{font-size:var(--fs-11); flex-shrink:0;}
+  .stu-row .nm{flex:1; min-width:0;}
+  .stu-row .nm b{display:block; font-size:var(--fs-06); font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .stu-row .nm small{display:block; font-size:var(--fs-02); color:var(--muted); margin-top:2px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .stu-row .tm{font-size:var(--fs-04); font-weight:900; color:var(--amber); flex-shrink:0; text-align:end;}
+  .stu-row .tm small{display:block; font-size:var(--fs-01); color:var(--muted); font-weight:400;}
+  button.danger{
+    width:100%; padding:13px; border:1px solid var(--red); border-radius:10px;
+    background:rgba(255,59,48,.12); color:var(--red); font-weight:900; font-size:var(--fs-06); cursor:pointer;
+    font-family:'Tajawal',sans-serif;
+  }
+
   #logoutBtnHub{
     display:block; width:100%; margin-top:28px; padding:14px; border-radius:10px;
     border:1px solid var(--red); background:rgba(255,59,48,.12); color:var(--red);
@@ -240,7 +267,7 @@
     to{opacity:1; transform:translateY(0);}
   }
   @media (prefers-reduced-motion: no-preference){
-    #hubView:not(.hidden), #mainTimerPanel:not(.hidden), #challengePanel:not(.hidden), #studyChallengePanel:not(.hidden), #themesPatternsPanel:not(.hidden){
+    #hubView:not(.hidden), #mainTimerPanel:not(.hidden), #challengePanel:not(.hidden), #studyChallengePanel:not(.hidden), #themesPatternsPanel:not(.hidden), #studentsPanel:not(.hidden){
       animation:screenIn .32s cubic-bezier(.22,.61,.36,1) both;
     }
     .hub-btn{ animation:itemIn .38s cubic-bezier(.22,.61,.36,1) backwards; }
@@ -248,6 +275,7 @@
     .hub-btn:nth-of-type(2){animation-delay:.09s;}
     .hub-btn:nth-of-type(3){animation-delay:.15s;}
     .hub-btn:nth-of-type(4){animation-delay:.21s;}
+    .hub-btn:nth-of-type(5){animation-delay:.27s;}
   }
   /* ================= لمسة تناسق أخيرة: كل الأزرار والنوافذ المنبثقة ================= */
   .hub-btn, .mode-btn, .theme-btn, .toggle-btn, .tp-btn, .time-picker-btn, .back-btn, .card button{
@@ -318,6 +346,12 @@
   <button type="button" class="hub-btn themes" onclick="showPanel('themesPatterns')">
     <span class="icon"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c1.4 0 2.2-.9 2.2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.9 1.9-1.9H17a4 4 0 0 0 4-4c0-4.1-4-7.5-9-7.5Z"/><circle cx="8" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="10.5" r="1" fill="currentColor" stroke="none"/></svg></span>
     <span class="txt"><b>الثيمات والأنماط</b><small>لون الأرقام لكل المؤقتات + شكل كل مؤقت على حدة</small></span>
+    <span class="arrow">‹</span>
+  </button>
+
+  <button type="button" class="hub-btn students" onclick="showPanel('students')">
+    <span class="icon"><svg class="ico" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.6c2.8 0 5 1.8 5 4.4"/></svg></span>
+    <span class="txt"><b>إدارة الطلاب</b><small>بحث، تعديل اسم أو رصيد، تصفير أو حذف سجل طالب</small></span>
     <span class="arrow">‹</span>
   </button>
 
@@ -446,6 +480,26 @@
   <div id="recoveryLookupStatusMsg" class="hint"></div>
 </div>
 
+<!-- لوحة إدارة الطلاب -->
+<div class="card hidden" id="studentsPanel">
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع</button>
+  <p class="eyebrow">إدارة الطلاب</p>
+  <h1>سجلات تحدي الدراسة</h1>
+  <p class="hint" style="margin-bottom:10px;">اضغط على أي طالب لتعديل اسمه أو رصيده، أو تصفير رصيده، أو حذف سجله نهائياً.</p>
+
+  <div class="stu-stats" id="stuStats"></div>
+
+  <div class="field">
+    <label>بحث (اسم، محافظة، دولة)</label>
+    <input type="text" id="stuSearchInput" placeholder="اكتب للبحث..." autocomplete="off">
+  </div>
+  <div class="toggle-row">
+    <button type="button" class="toggle-btn" onclick="loadStudents()">تحديث القائمة</button>
+  </div>
+  <div id="studentsList"></div>
+  <div id="studentsStatusMsg" class="hint" style="margin-top:12px;"></div>
+</div>
+
 <!-- لوحة الثيمات والأنماط الموحدة -->
 <div class="card hidden" id="themesPatternsPanel">
   <button type="button" class="back-btn" onclick="showHub()">‹ رجوع</button>
@@ -538,6 +592,29 @@
 
   <div class="divider"></div>
   <p class="hint">أي اختيار هنا يُحفظ ويُطبّق فورًا — لا حاجة لأي زر إضافي.</p></div>
+
+<!-- نافذة تعديل طالب -->
+<div class="overlay" id="studentEditOverlay">
+  <div class="modal" style="text-align:start;">
+    <h2 id="stuEditTitle" style="margin:0 0 4px; font-size:var(--fs-09); font-weight:900; color:#fff;"></h2>
+    <p class="hint" id="stuEditMeta" style="margin:0 0 14px;"></p>
+    <div class="field">
+      <label>الاسم</label>
+      <input type="text" id="stuEditName" maxlength="40">
+    </div>
+    <div class="field">
+      <label>الرصيد الكلي (بالساعات)</label>
+      <input type="number" id="stuEditHours" min="0" step="0.1" inputmode="decimal">
+    </div>
+    <div id="stuEditMsg" class="hint" style="min-height:18px; margin-top:8px;"></div>
+    <button type="button" class="primary" id="stuEditSaveBtn" style="margin-top:12px;">حفظ التعديلات</button>
+    <div class="app-dialog-actions" style="margin-top:10px;">
+      <button type="button" class="secondary" id="stuEditResetBtn">تصفير الرصيد</button>
+      <button type="button" class="danger" id="stuEditDeleteBtn">حذف السجل</button>
+    </div>
+    <button type="button" class="secondary" id="stuEditCloseBtn" style="margin-top:10px;">إغلاق</button>
+  </div>
+</div>
 
 <div class="overlay" id="appDialogOverlay">
   <div class="modal">
@@ -758,6 +835,7 @@ function hideAllPanels(){
   document.getElementById("challengePanel").classList.add("hidden");
   document.getElementById("studyChallengePanel").classList.add("hidden");
   document.getElementById("themesPatternsPanel").classList.add("hidden");
+  document.getElementById("studentsPanel").classList.add("hidden");
 }
 
 window.showHub = function(){
@@ -771,6 +849,10 @@ window.showPanel = function(name){
   else if (name === "challenge") document.getElementById("challengePanel").classList.remove("hidden");
   else if (name === "studyChallenge") document.getElementById("studyChallengePanel").classList.remove("hidden");
   else if (name === "themesPatterns") document.getElementById("themesPatternsPanel").classList.remove("hidden");
+  else if (name === "students"){
+    document.getElementById("studentsPanel").classList.remove("hidden");
+    loadStudents();
+  }
 };
 
 /* ============ الثيمات والأنماط (تُحفظ فورًا) ============ */
@@ -1526,6 +1608,223 @@ window.mergeLegacyRecords = function(){
     });
   });
 };
+
+/* ================= إدارة الطلاب ================= */
+let studentsCache = [];
+let editingStudentId = null;
+const STU_LOCAL_UTC_OFFSET_MS = 3 * 60 * 60 * 1000; // نفس حد الأسبوع المستخدم في تصفير الترتيب (توقيت بغداد)
+
+function stuSetStatus(text, color){
+  const el = document.getElementById("studentsStatusMsg");
+  el.style.color = color || "#8b8d99";
+  el.textContent = text || "";
+}
+
+window.loadStudents = function(){
+  const listEl = document.getElementById("studentsList");
+  stuSetStatus("جارٍ تحميل الطلاب...");
+  db.ref('studyLeaderboard').once('value').then(snapshot => {
+    const all = [];
+    snapshot.forEach(child => {
+      const v = child.val() || {};
+      all.push({
+        id: child.key,
+        name: v.name || "",
+        age: v.age,
+        country: v.country || "",
+        governorate: v.governorate || "",
+        avatar: v.avatar || "",
+        totalSeconds: Number(v.totalSeconds) || 0,
+        weeklySeconds: Number(v.weeklySeconds) || 0,
+        weekIndex: v.weekIndex,
+        streak: Number(v.streak) || 0
+      });
+    });
+    all.sort((a, b) => b.totalSeconds - a.totalSeconds);
+    all.forEach((s, i) => { s.rank = i + 1; });
+    studentsCache = all;
+    stuSetStatus("");
+    renderStudents();
+  }).catch(error => {
+    listEl.innerHTML = "";
+    stuSetStatus("فشل تحميل الطلاب: " + error.message, "#ff3b30");
+  });
+};
+
+function renderStudents(){
+  const statsEl = document.getElementById("stuStats");
+  const listEl = document.getElementById("studentsList");
+  const q = (document.getElementById("stuSearchInput").value || "").trim().toLowerCase();
+
+  const currentWeek = Math.floor((Date.now() + STU_LOCAL_UTC_OFFSET_MS) / 604800000);
+  const activeWeek = studentsCache.filter(s => s.weekIndex === currentWeek && s.weeklySeconds > 0).length;
+  const totalHours = studentsCache.reduce((sum, s) => sum + s.totalSeconds, 0) / 3600;
+
+  statsEl.innerHTML = "";
+  [[studentsCache.length, "طالب مسجّل"], [activeWeek, "نشِط هذا الأسبوع"], [Math.round(totalHours), "مجموع الساعات"]].forEach(([num, label]) => {
+    const box = document.createElement("div");
+    box.className = "stu-stat";
+    const b = document.createElement("b"); b.textContent = String(num);
+    const sp = document.createElement("span"); sp.textContent = label;
+    box.appendChild(b); box.appendChild(sp);
+    statsEl.appendChild(box);
+  });
+
+  const matches = studentsCache.filter(s => !q ||
+    (s.name + " " + s.governorate + " " + s.country).toLowerCase().indexOf(q) !== -1);
+
+  listEl.innerHTML = "";
+  if (matches.length === 0){
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.style.marginTop = "12px";
+    p.textContent = studentsCache.length === 0 ? "لا توجد سجلات بعد." : "لا توجد نتائج مطابقة.";
+    listEl.appendChild(p);
+    return;
+  }
+
+  const MAX_ROWS = 50;
+  matches.slice(0, MAX_ROWS).forEach(s => {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "stu-row";
+
+    const rk = document.createElement("span"); rk.className = "rk"; rk.textContent = "#" + s.rank;
+    const av = document.createElement("span"); av.className = "av"; av.textContent = s.avatar || "🙂";
+    const nm = document.createElement("span"); nm.className = "nm";
+    const nb = document.createElement("b"); nb.textContent = s.name || "بدون اسم";
+    const ns = document.createElement("small");
+    ns.textContent = [s.governorate, s.country].filter(Boolean).join(" • ") || "—";
+    nm.appendChild(nb); nm.appendChild(ns);
+    const tm = document.createElement("span"); tm.className = "tm";
+    tm.textContent = formatHoursShort(s.totalSeconds);
+    const ts = document.createElement("small");
+    ts.textContent = s.streak >= 2 ? ("سلسلة " + s.streak + " يوم") : "";
+    tm.appendChild(ts);
+
+    row.appendChild(rk); row.appendChild(av); row.appendChild(nm); row.appendChild(tm);
+    row.addEventListener("click", () => openStudentEditor(s.id));
+    listEl.appendChild(row);
+  });
+
+  if (matches.length > MAX_ROWS){
+    const more = document.createElement("p");
+    more.className = "hint";
+    more.style.marginTop = "10px";
+    more.textContent = "يظهر أول " + MAX_ROWS + " من " + matches.length + " نتيجة — استخدم البحث لتضييق القائمة.";
+    listEl.appendChild(more);
+  }
+}
+
+function stuEditMsg(text, color){
+  const el = document.getElementById("stuEditMsg");
+  el.style.color = color || "#8b8d99";
+  el.textContent = text || "";
+}
+
+function closeStudentEditor(){
+  document.getElementById("studentEditOverlay").classList.remove("show");
+  editingStudentId = null;
+}
+
+function openStudentEditor(id){
+  const s = studentsCache.find(x => x.id === id);
+  if (!s) return;
+  editingStudentId = id;
+  document.getElementById("stuEditTitle").textContent = s.name || "بدون اسم";
+  document.getElementById("stuEditMeta").textContent =
+    "الترتيب #" + s.rank + " • العمر: " + (s.age != null ? s.age : "—") + " • هذا الأسبوع: " + formatHoursShort(s.weeklySeconds);
+  document.getElementById("stuEditName").value = s.name;
+  document.getElementById("stuEditHours").value = (s.totalSeconds / 3600).toFixed(2);
+  stuEditMsg("");
+  document.getElementById("studentEditOverlay").classList.add("show");
+}
+
+function stuBusy(busy){
+  ["stuEditSaveBtn", "stuEditResetBtn", "stuEditDeleteBtn"].forEach(id => {
+    document.getElementById(id).disabled = busy;
+  });
+}
+
+function stuSave(){
+  const s = studentsCache.find(x => x.id === editingStudentId);
+  if (!s) return;
+  const name = document.getElementById("stuEditName").value.trim();
+  const hours = parseFloat(document.getElementById("stuEditHours").value);
+
+  if (!name || name.length > 40){ stuEditMsg("الاسم مطلوب ولا يزيد عن 40 حرفاً.", "#ff3b30"); return; }
+  if (isNaN(hours) || hours < 0 || hours > 20000){ stuEditMsg("أدخل رصيداً صحيحاً بين 0 و 20000 ساعة.", "#ff3b30"); return; }
+
+  const newSeconds = Math.round(hours * 3600);
+  const update = {};
+  if (name !== s.name) update.name = name;
+  // لا نلمس الرصيد إلا إذا تغيّر فعلاً (تجنّباً لتغيير بسيط بسبب تقريب الساعات)
+  if (Math.abs(newSeconds - s.totalSeconds) >= 36) update.totalSeconds = newSeconds;
+
+  if (Object.keys(update).length === 0){ stuEditMsg("لم يتغيّر شيء."); return; }
+  update.updatedAt = firebase.database.ServerValue.TIMESTAMP;
+
+  stuBusy(true);
+  stuEditMsg("جارٍ الحفظ...");
+  db.ref('studyLeaderboard/' + s.id).update(update).then(() => {
+    if (update.name !== undefined) s.name = update.name;
+    if (update.totalSeconds !== undefined) s.totalSeconds = update.totalSeconds;
+    studentsCache.sort((a, b) => b.totalSeconds - a.totalSeconds);
+    studentsCache.forEach((x, i) => { x.rank = i + 1; });
+    renderStudents();
+    stuSetStatus("تم حفظ تعديلات \"" + s.name + "\".", "#2ecc71");
+    closeStudentEditor();
+  }).catch(error => {
+    stuEditMsg("فشل الحفظ: " + error.message, "#ff3b30");
+  }).then(() => stuBusy(false));
+}
+
+function stuReset(){
+  const s = studentsCache.find(x => x.id === editingStudentId);
+  if (!s) return;
+  appConfirm("تصفير رصيد \"" + s.name + "\" بالكامل (الكلي والأسبوعي واليومي والسلسلة)؟ لا يمكن التراجع.", () => {
+    stuBusy(true);
+    stuEditMsg("جارٍ التصفير...");
+    db.ref('studyLeaderboard/' + s.id).update({
+      totalSeconds: 0, daySeconds: 0, weeklySeconds: 0, streak: 0,
+      dayIndex: null, weekIndex: null, lastStudyDayIndex: null,
+      updatedAt: firebase.database.ServerValue.TIMESTAMP
+    }).then(() => {
+      s.totalSeconds = 0; s.weeklySeconds = 0; s.streak = 0; s.weekIndex = null;
+      studentsCache.sort((a, b) => b.totalSeconds - a.totalSeconds);
+      studentsCache.forEach((x, i) => { x.rank = i + 1; });
+      renderStudents();
+      stuSetStatus("تم تصفير رصيد \"" + s.name + "\".", "#2ecc71");
+      closeStudentEditor();
+    }).catch(error => {
+      stuEditMsg("فشل التصفير: " + error.message, "#ff3b30");
+    }).then(() => stuBusy(false));
+  });
+}
+
+function stuDelete(){
+  const s = studentsCache.find(x => x.id === editingStudentId);
+  if (!s) return;
+  appConfirm("حذف سجل \"" + s.name + "\" نهائياً من الترتيب؟ لا يمكن التراجع.", () => {
+    stuBusy(true);
+    stuEditMsg("جارٍ الحذف...");
+    db.ref('studyLeaderboard/' + s.id).remove().then(() => {
+      studentsCache = studentsCache.filter(x => x.id !== s.id);
+      studentsCache.forEach((x, i) => { x.rank = i + 1; });
+      renderStudents();
+      stuSetStatus("تم حذف سجل \"" + s.name + "\".", "#2ecc71");
+      closeStudentEditor();
+    }).catch(error => {
+      stuEditMsg("فشل الحذف: " + error.message, "#ff3b30");
+    }).then(() => stuBusy(false));
+  });
+}
+
+document.getElementById("stuSearchInput").addEventListener("input", renderStudents);
+document.getElementById("stuEditSaveBtn").addEventListener("click", stuSave);
+document.getElementById("stuEditResetBtn").addEventListener("click", stuReset);
+document.getElementById("stuEditDeleteBtn").addEventListener("click", stuDelete);
+document.getElementById("stuEditCloseBtn").addEventListener("click", closeStudentEditor);
 
 window.lookupRecoveryCode = function(){
   const raw = document.getElementById("recoveryCodeInput").value.trim().toUpperCase();
