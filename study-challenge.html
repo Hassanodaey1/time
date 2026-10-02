@@ -1329,10 +1329,13 @@ function chErrText(e){
     "bad-code": "الرمز غير صحيح (6 خانات).",
     "join-closed": "أُغلق الانضمام لهذا التحدي (متاح خلال أول 24 ساعة).",
     "full": "التحدي ممتلئ (10 أعضاء).",
-    "bad-name": "اكتب اسماً للتحدي."
+    "bad-name": "اكتب اسماً للتحدي.",
+    "not-found": "السيرفر لم يُحدَّث بعد (انشر الـ Worker الجديد على Cloudflare).",
+    "unauthenticated": "فشل التحقق من الحساب، أعد فتح الصفحة وحاول مجددًا."
   };
   const code = e && (e.code || e.message);
-  return m[code] || "تعذّر الاتصال، تأكد من الإنترنت وحاول مجددًا.";
+  /* نُظهر رمز الخطأ الحقيقي بين قوسين لتسهيل معرفة السبب */
+  return m[code] || ("تعذّر الاتصال، تأكد من الإنترنت وحاول مجددًا." + (code ? " [" + code + "]" : ""));
 }
 function chShowErr(el, text){ el.textContent = text; el.style.display = "block"; }
 
