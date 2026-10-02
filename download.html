@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>تحميل تطبيق المؤقتات</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#000; --panel:#131316; --amber:#ffb400; --muted:#8b8d99; --border:#26262d; --green:#2ecc71; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; }
+  body{
+    background:var(--bg); color:#f2f4f8; font-family:'Tajawal',sans-serif; min-height:100vh;
+    padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(32px + env(safe-area-inset-bottom,0px));
+    background-image:radial-gradient(ellipse at 50% -10%, rgba(255,180,0,.12), transparent 55%);
+  }
+  .wrap{ max-width:460px; margin:0 auto; }
+  .hero{ text-align:center; padding:12px 0 22px; }
+  .hero img{ width:96px; height:96px; border-radius:24px; box-shadow:0 8px 30px rgba(255,180,0,.18); }
+  .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--amber); margin-top:16px; }
+  h1{ margin:6px 0 4px; font-size:28px; font-weight:900; }
+  .sub{ color:var(--muted); font-size:14px; margin:0; }
+  .card{ background:var(--panel); border:1px solid var(--border); border-radius:20px; padding:18px; margin-top:14px; }
+  .card h2{ margin:0 0 12px; font-size:16px; font-weight:700; }
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    border:0; border-radius:14px; padding:15px 18px; font-family:inherit; font-size:16px; font-weight:700;
+    text-decoration:none; cursor:pointer;
+  }
+  .btn.primary{ background:var(--amber); color:#1a1200; }
+  .btn.ghost{ background:transparent; color:var(--amber); border:1px solid var(--amber); margin-top:10px; }
+  .btn[hidden]{ display:none; }
+  .meta{ text-align:center; color:var(--muted); font-size:12px; margin-top:10px; font-family:'JetBrains Mono',monospace; }
+  ol{ margin:0; padding:0 22px 0 0; color:#d9dbe3; font-size:14.5px; line-height:1.9; }
+  ol li::marker{ color:var(--amber); font-weight:700; }
+  .note{ display:flex; gap:10px; align-items:flex-start; font-size:13.5px; color:#d9dbe3; line-height:1.8; }
+  .note b{ color:var(--amber); }
+  .ok{ color:var(--green); text-align:center; font-weight:700; margin:10px 0 0; font-size:14px; }
+  .ios{ display:none; }
+  .is-ios .ios{ display:block; }
+  .is-ios .android-only{ display:none; }
+  a.back{ display:block; text-align:center; color:var(--muted); font-size:13px; margin-top:22px; text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <img src="icon-192.png" alt="">
+    <div class="eyebrow">TIMERS CENTER</div>
+    <h1>تطبيق المؤقتات</h1>
+    <p class="sub">مؤقت الطالب وتحدي الدراسة، كتطبيق على جوالك</p>
+  </div>
+
+  <!-- أندرويد -->
+  <div class="card android-only">
+    <h2>تحميل لأندرويد</h2>
+    <a class="btn primary" id="apkBtn"
+       href="https://github.com/Hassanodaey1/time/releases/download/v1.0/almuaqqitat-signed.apk">
+      ⬇️ حمّل التطبيق (APK)
+    </a>
+    <button class="btn ghost" id="installBtn" hidden>📲 أو ثبّته مباشرة من المتصفح</button>
+    <div class="ok" id="installedMsg" hidden>✅ التطبيق مثبّت على جهازك</div>
+    <div class="meta">ANDROID · 1.2 MB · v1.0</div>
+  </div>
+
+  <div class="card android-only">
+    <h2>خطوات التثبيت</h2>
+    <ol>
+      <li>اضغط زر «حمّل التطبيق»، وانتظر انتهاء التنزيل.</li>
+      <li>افتح الملف من إشعار التنزيل أو من تطبيق «الملفات».</li>
+      <li>إن طلب منك الجوال السماح بالتثبيت من هذا المصدر، اضغط «إعدادات» وفعّل السماح، ثم ارجع واضغط «تثبيت».</li>
+      <li>افتح التطبيق من أيقونة «المؤقتات» على شاشتك.</li>
+    </ol>
+  </div>
+
+  <div class="card android-only">
+    <div class="note">
+      <span>🛡️</span>
+      <span><b>رسالة «مصدر غير معروف»:</b> هذا طبيعي لأن التطبيق يُحمَّل من الموقع مباشرة وليس من متجر Google Play. التطبيق من إعداد الأستاذ حسن ولا يطلب أي صلاحيات خاصة. وإن ظهرت رسالة من Play Protect فاختر «تثبيت على أي حال».</span>
+    </div>
+  </div>
+
+  <!-- آيفون -->
+  <div class="card ios">
+    <h2>التثبيت على آيفون</h2>
+    <ol>
+      <li>افتح هذه الصفحة في متصفح <b>Safari</b>.</li>
+      <li>اضغط زر المشاركة (المربع والسهم للأعلى).</li>
+      <li>اختر «إضافة إلى الشاشة الرئيسية».</li>
+      <li>اضغط «إضافة»، وستظهر الأيقونة بين تطبيقاتك.</li>
+    </ol>
+  </div>
+
+  <a class="back" href="index.html">← الدخول للموقع بدون تثبيت</a>
+</div>
+
+<script>
+(function(){
+  var ua = navigator.userAgent || "";
+  var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (isIOS) document.documentElement.classList.add("is-ios");
+
+  var installBtn = document.getElementById("installBtn");
+  var installedMsg = document.getElementById("installedMsg");
+  var deferred = null;
+
+  var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  if (standalone) installedMsg.hidden = false;
+
+  window.addEventListener("beforeinstallprompt", function(e){
+    e.preventDefault();
+    deferred = e;
+    installBtn.hidden = false;
+  });
+  installBtn.addEventListener("click", function(){
+    if (!deferred) return;
+    deferred.prompt();
+    deferred.userChoice.finally(function(){ deferred = null; installBtn.hidden = true; });
+  });
+  window.addEventListener("appinstalled", function(){
+    installBtn.hidden = true;
+    installedMsg.hidden = false;
+  });
+})();
+</script>
+</body>
+</html>
