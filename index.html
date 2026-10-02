@@ -351,6 +351,64 @@
   .stat-label{font-size:var(--fs-01); color:var(--muted);}
   .stats-hint{font-size:var(--fs-03); color:var(--muted); text-align:center; margin:-8px 0 18px; line-height:1.6;}
 
+
+  /* ================= صفحة الملف الشخصي (النسخة الجديدة) ================= */
+  .profile-modal.pv2{padding:0; overflow-x:hidden;}
+  .pv2 .pv-banner{
+    position:relative; height:112px; border-bottom:1px solid var(--border);
+    background:linear-gradient(135deg, rgba(255,180,0,.30), rgba(167,139,250,.22) 60%, rgba(255,59,48,.14)), #10131a;
+  }
+  .pv2 .pv-banner::after{
+    content:""; position:absolute; inset:0; opacity:.6;
+    background-image:radial-gradient(circle at 20% 30%, rgba(255,255,255,.08) 0 2px, transparent 3px), radial-gradient(circle at 70% 60%, rgba(255,255,255,.07) 0 2px, transparent 3px);
+    background-size:46px 46px, 62px 62px;
+  }
+  .pv2 .modal-close-btn{z-index:3; background:rgba(0,0,0,.5);}
+  .pv2 .pv-head{display:flex; flex-direction:column; align-items:center; margin-top:-48px; padding:0 20px; position:relative; z-index:2;}
+  .pv2 .avatar-preview{
+    width:96px; height:96px; font-size:46px; border:3px solid var(--amber);
+    box-shadow:0 0 0 4px var(--panel), 0 10px 26px rgba(255,180,0,.22);
+  }
+  .pv2 #pvAvatarEmoji{width:100%; height:100%; display:flex; align-items:center; justify-content:center; border-radius:50%; overflow:hidden;}
+  .pv2 .pv-name{font-size:var(--fs-13); margin-top:14px;}
+  .pv-chips{display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:8px;}
+  .pv-chip{
+    display:inline-flex; align-items:center; gap:5px; font-size:var(--fs-03); color:var(--muted);
+    background:#0d1420; border:1px solid var(--border); border-radius:20px; padding:4px 10px;
+  }
+  .pv2 .pv-body{padding:16px 20px 22px;}
+  .pv-level{
+    display:flex; align-items:center; gap:12px; background:#0d1420; border:1px solid var(--border);
+    border-radius:14px; padding:12px; margin-bottom:12px;
+  }
+  .pv-lvl-badge{position:relative; width:54px; height:58px; flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .pv-lvl-badge svg{position:absolute; inset:0; width:100%; height:100%; fill:rgba(255,180,0,.12); stroke:var(--amber); stroke-width:1.6; stroke-linejoin:round;}
+  .pv-lvl-badge span{position:relative; font-family:'JetBrains Mono',monospace; font-weight:900; font-size:var(--fs-13); color:var(--amber);}
+  .pv-lvl-info{flex:1; min-width:0;}
+  .pv-lvl-top{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .pv-lvl-title{font-size:var(--fs-08); font-weight:900; color:#fff;}
+  .pv-lvl-next{font-size:var(--fs-01); color:var(--muted);}
+  .pv-xp{height:8px; background:#1a2130; border-radius:6px; overflow:hidden; margin-top:8px; border:1px solid var(--border);}
+  .pv-xp-fill{height:100%; width:0; border-radius:6px; background:linear-gradient(90deg,var(--amber),#ffd36b); transition:width .6s cubic-bezier(.22,.61,.36,1);}
+  .pv-xp-note{font-size:var(--fs-02); color:var(--muted); margin-top:6px;}
+  .pv-sec-title{display:flex; justify-content:space-between; align-items:center; font-size:var(--fs-06); font-weight:900; color:#fff; margin:4px 0 10px;}
+  .pv-sec-title span:last-child{font-size:var(--fs-02); color:var(--muted); font-family:'JetBrains Mono',monospace; font-weight:700;}
+  .pv-badges{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px;}
+  .pv-badge{
+    display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center;
+    background:#0d1420; border:1px solid var(--border); border-radius:12px; padding:10px 4px;
+  }
+  .pv-badge .b-ico{
+    width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:19px; background:rgba(255,255,255,.04); color:var(--muted);
+  }
+  .pv-badge .b-name{font-size:var(--fs-01); font-weight:700; color:var(--muted); line-height:1.3;}
+  .pv-badge .b-req{font-size:var(--fs-01); color:var(--muted); opacity:.75;}
+  .pv-badge.locked{opacity:.45; filter:grayscale(1);}
+  .pv-badge.earned{border-color:var(--bc); background:linear-gradient(180deg, rgba(255,255,255,.04), #0d1420);}
+  .pv-badge.earned .b-ico{color:var(--bc); background:rgba(255,255,255,.06); box-shadow:0 0 0 1px var(--bc) inset;}
+  .pv-badge.earned .b-name{color:#fff;}
+
   /* ---- بطاقة اللاعب بالصفحة الرئيسية ---- */
   .player-card{
     display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--border);
@@ -791,17 +849,19 @@
 </div>
 
 <div class="overlay" id="profileViewOverlay" onclick="if(event.target===this) closeProfileView()">
-  <div class="profile-modal settings-modal">
+  <div class="profile-modal settings-modal pv2">
+    <div class="pv-banner"></div>
     <button type="button" class="modal-close-btn" onclick="closeProfileView()" aria-label="إغلاق">✕</button>
-    <h2>ملفك الشخصي</h2>
 
-    <div class="avatar-section">
-      <div class="pv-avatar-wrap" onclick="togglePvAvatarActions()">
-        <div class="avatar-preview" style="border-color:var(--border); box-shadow:none;">
+    <div class="pv-head">
+      <div class="pv-avatar-wrap" onclick="togglePvAvatarActions()" role="button" aria-label="تغيير الصورة">
+        <div class="avatar-preview">
           <span id="pvAvatarEmoji">🙂</span>
+          <span class="edit-badge"><svg class="ico" style="width:13px;height:13px" viewBox="0 0 24 24"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
         </div>
       </div>
       <p class="pv-name" id="pvName">—</p>
+      <div class="pv-chips" id="pvChips"></div>
       <div class="pv-avatar-actions" id="pvAvatarActions">
         <button type="button" class="g-action-btn" onclick="openAvatarGridOverlay()">الأفتارات</button>
         <button type="button" class="g-action-btn g-switch-btn" onclick="triggerAvatarPhotoUpload()">صورة شخصية</button>
@@ -810,25 +870,45 @@
       <p class="modal-error" id="avatarPhotoError"></p>
     </div>
 
-    <div class="stats-card" id="pvStatsCard">
-      <div class="stat-item">
-        <span class="stat-icon" id="pvStatBadgeIcon">—</span>
-        <span class="stat-value" id="pvStatBadgeLabel">لا شارة بعد</span>
-        <span class="stat-label">شارتك</span>
+    <div class="pv-body">
+      <div class="pv-level">
+        <div class="pv-lvl-badge">
+          <svg viewBox="0 0 24 24"><path d="M12 2.5l8 3v6.2c0 5-3.4 8.4-8 9.8-4.6-1.4-8-4.8-8-9.8V5.5Z"/></svg>
+          <span id="pvLvlNum">1</span>
+        </div>
+        <div class="pv-lvl-info">
+          <div class="pv-lvl-top">
+            <span class="pv-lvl-title" id="pvLvlTitle">مبتدئ</span>
+            <span class="pv-lvl-next" id="pvLvlNext"></span>
+          </div>
+          <div class="pv-xp"><div class="pv-xp-fill" id="pvXpFill"></div></div>
+          <div class="pv-xp-note" id="pvXpNote"></div>
+        </div>
       </div>
-      <div class="stat-item">
-        <span class="stat-icon">⏱️</span>
-        <span class="stat-value" id="pvStatHours">0 د</span>
-        <span class="stat-label">وقت التحدي</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-icon">🔥</span>
-        <span class="stat-value" id="pvStatStreak">0</span>
-        <span class="stat-label">سلسلة أيام</span>
-      </div>
-    </div>
 
-    <button class="primary" onclick="closeProfileView(); openProfileModal(false);"><svg class="ico" viewBox="0 0 24 24"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> تعديل المعلومات الشخصية</button>
+      <div class="stats-card" id="pvStatsCard">
+        <div class="stat-item">
+          <span class="stat-icon" style="color:var(--amber)"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.5V12l3 2"/></svg></span>
+          <span class="stat-value" id="pvStatHours">0 د</span>
+          <span class="stat-label">وقت التحدي</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-icon" style="color:var(--purple)"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg></span>
+          <span class="stat-value" id="pvStatWeek">0 د</span>
+          <span class="stat-label">هذا الأسبوع</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-icon" style="color:#ff6b3d"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3c1 3.2 4.6 5.2 4.6 9.6a4.6 4.6 0 0 1-9.2 0c0-1.8.8-3 1.8-4 .2 1.4.8 2.2 1.6 2.4C10.6 8.2 10.8 5.4 12 3Z"/></svg></span>
+          <span class="stat-value" id="pvStatStreak">0</span>
+          <span class="stat-label">سلسلة أيام</span>
+        </div>
+      </div>
+
+      <div class="pv-sec-title"><span>الإنجازات</span><span id="pvBadgeCount">0/0</span></div>
+      <div class="pv-badges" id="pvBadges"></div>
+
+      <button class="primary" onclick="closeProfileView(); openProfileModal(false);"><svg class="ico" viewBox="0 0 24 24"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> تعديل المعلومات الشخصية</button>
+    </div>
   </div>
 </div>
 
@@ -1218,6 +1298,131 @@ function renderChallengeStats(val){
     if (streak >= 2) parts.push(`<span>🔥 ${streak} يوم</span>`);
     pcStats.innerHTML = parts.join("");
   }
+
+  pvLastVal = data;
+  renderProfileView();
+}
+
+/* ================= صفحة الملف الشخصي: المستوى والشارات =================
+   كل شيء هنا "عرض فقط" ويُحسب من totalSeconds والسلسلة (وكلاهما يكتبهما السيرفر الموثوق فقط)،
+   فلا يمكن للطالب رفع مستواه أو فتح شارة بالتلاعب من المتصفح. */
+const PV_ICONS = {
+  clock: '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.5V12l3 2"/></svg>',
+  medal: '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="15" r="5"/><path d="M9 10 6 3"/><path d="M15 10 18 3"/><path d="M12 13.2l.8 1.6 1.8.2-1.3 1.2.3 1.8-1.6-.9-1.6.9.3-1.8-1.3-1.2 1.8-.2Z" fill="currentColor" stroke="none"/></svg>',
+  flame: '<svg class="ico" viewBox="0 0 24 24"><path d="M12 3c1 3.2 4.6 5.2 4.6 9.6a4.6 4.6 0 0 1-9.2 0c0-1.8.8-3 1.8-4 .2 1.4.8 2.2 1.6 2.4C10.6 8.2 10.8 5.4 12 3Z"/></svg>',
+  star:  '<svg class="ico" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8Z"/></svg>',
+  pin:   '<svg class="ico" viewBox="0 0 24 24"><path d="M12 21s6.5-5.6 6.5-11a6.5 6.5 0 0 0-13 0c0 5.4 6.5 11 6.5 11Z"/><circle cx="12" cy="10" r="2.3"/></svg>',
+  user:  '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.6 3.6-5.4 7-5.4s6.2 1.8 7 5.4"/></svg>'
+};
+const PV_BADGES = [
+  { name: "البداية",     req: "ساعة",      type: "hours",  val: 1,   icon: "clock", color: "#48cae4" },
+  { name: "برونزية",     req: "10 ساعات",  type: "hours",  val: 10,  icon: "medal", color: "#cd7f32" },
+  { name: "فضية",        req: "50 ساعة",   type: "hours",  val: 50,  icon: "medal", color: "#c0c8d4" },
+  { name: "ذهبية",       req: "150 ساعة",  type: "hours",  val: 150, icon: "medal", color: "#ffb400" },
+  { name: "3 أيام",      req: "سلسلة 3",   type: "streak", val: 3,   icon: "flame", color: "#ff9f43" },
+  { name: "أسبوع",       req: "سلسلة 7",   type: "streak", val: 7,   icon: "flame", color: "#ff6b3d" },
+  { name: "شهر",         req: "سلسلة 30",  type: "streak", val: 30,  icon: "flame", color: "#ff3b30" },
+  { name: "المستوى 10",  req: "مستوى 10",  type: "level",  val: 10,  icon: "star",  color: "#a78bfa" }
+];
+const PV_MAX_LEVEL = 50;
+
+/* المستوى n يبدأ عند n*(n-1) ساعة: 2 س ← م2، 6 س ← م3، 12 س ← م4، 20 س ← م5 ... */
+function pvLevelInfo(totalSeconds){
+  const h = Math.max(0, (totalSeconds || 0) / 3600);
+  let lvl = Math.floor((1 + Math.sqrt(1 + 4 * h)) / 2);
+  if (lvl > PV_MAX_LEVEL) lvl = PV_MAX_LEVEL;
+  const floorH = lvl * (lvl - 1), ceilH = lvl * (lvl + 1);
+  const maxed = lvl >= PV_MAX_LEVEL;
+  const pct = maxed ? 100 : Math.max(0, Math.min(100, ((h - floorH) / (ceilH - floorH)) * 100));
+  return { lvl, pct, maxed, remainSec: maxed ? 0 : Math.max(0, (ceilH - h) * 3600) };
+}
+function pvLevelTitle(l){
+  if (l >= 20) return "أسطورة";
+  if (l >= 12) return "خبير";
+  if (l >= 8)  return "محترف";
+  if (l >= 5)  return "متمكن";
+  if (l >= 3)  return "مجتهد";
+  return "مبتدئ";
+}
+
+let pvLastVal = null;
+function renderProfileView(){
+  const data = pvLastVal || {};
+  const p = getProfile();
+  const total = data.totalSeconds || 0;
+  const streak = data.streak || 0;
+
+  /* الرأس: الاسم والصورة والمعلومات */
+  setAvatarDisplay("pvAvatarEmoji", p);
+  const nameEl = document.getElementById("pvName");
+  if (nameEl) nameEl.textContent = p ? p.name : "";
+  const chips = document.getElementById("pvChips");
+  if (chips){
+    chips.innerHTML = "";
+    const addChip = (iconKey, text) => {
+      if (!text) return;
+      const c = document.createElement("span");
+      c.className = "pv-chip";
+      c.innerHTML = PV_ICONS[iconKey];
+      c.appendChild(document.createTextNode(text));
+      chips.appendChild(c);
+    };
+    if (p){
+      addChip("pin", [p.governorate, p.country].filter(Boolean).join(" - "));
+      if (p.age) addChip("user", p.age + " سنة");
+    }
+  }
+
+  /* المستوى */
+  const L = pvLevelInfo(total);
+  document.getElementById("pvLvlNum").textContent = L.lvl;
+  document.getElementById("pvLvlTitle").textContent = pvLevelTitle(L.lvl);
+  document.getElementById("pvLvlNext").textContent = L.maxed ? "أعلى مستوى" : ("المستوى " + (L.lvl + 1));
+  document.getElementById("pvXpFill").style.width = L.pct.toFixed(1) + "%";
+  document.getElementById("pvXpNote").textContent = L.maxed
+    ? "وصلت لأعلى مستوى، أنت أسطورة!"
+    : ("باقي " + formatStatHours(L.remainSec) + " للمستوى التالي");
+
+  /* الإحصاءات (الأسبوعي لا يُعرض إلا إذا كان لنفس الأسبوع الحالي بتوقيت بغداد) */
+  const wk = Math.floor((Date.now() + 3 * 3600 * 1000) / 604800000);
+  const weekly = (data.weekIndex === wk) ? (data.weeklySeconds || 0) : 0;
+  const hEl = document.getElementById("pvStatHours");
+  const wEl = document.getElementById("pvStatWeek");
+  const sEl = document.getElementById("pvStatStreak");
+  if (hEl) hEl.textContent = formatStatHours(total);
+  if (wEl) wEl.textContent = formatStatHours(weekly);
+  if (sEl) sEl.textContent = streak;
+
+  /* أفضل سلسلة: نحتفظ بأعلى قيمة رأيناها بهذا الجهاز حتى لا تختفي شارة السلسلة عند انكسارها */
+  let bestStreak = streak;
+  try{
+    const key = "pv_best_streak_" + ((typeof currentUid !== "undefined" && currentUid) ? currentUid : "me");
+    const stored = parseInt(localStorage.getItem(key) || "0", 10) || 0;
+    bestStreak = Math.max(streak, stored);
+    if (bestStreak > stored) localStorage.setItem(key, String(bestStreak));
+  }catch(e){}
+
+  /* الشارات */
+  const grid = document.getElementById("pvBadges");
+  if (grid){
+    grid.innerHTML = "";
+    let earnedCount = 0;
+    PV_BADGES.forEach((b) => {
+      const ok = b.type === "hours" ? (total / 3600) >= b.val
+               : b.type === "streak" ? bestStreak >= b.val
+               : L.lvl >= b.val;
+      if (ok) earnedCount++;
+      const el = document.createElement("div");
+      el.className = "pv-badge " + (ok ? "earned" : "locked");
+      el.style.setProperty("--bc", b.color);
+      el.innerHTML = '<span class="b-ico">' + PV_ICONS[b.icon] + '</span><span class="b-name"></span><span class="b-req"></span>';
+      el.querySelector(".b-name").textContent = b.name;
+      el.querySelector(".b-req").textContent = b.req;
+      grid.appendChild(el);
+    });
+    const cnt = document.getElementById("pvBadgeCount");
+    if (cnt) cnt.textContent = earnedCount + "/" + PV_BADGES.length;
+  }
 }
 
 let currentStatsUid = null;
@@ -1544,6 +1749,7 @@ window.openProfileView = function(){
   setAvatarDisplay("pvAvatarEmoji", p);
   const pvName = document.getElementById("pvName");
   if (pvName) pvName.innerText = p ? p.name : "";
+  renderProfileView();
   const actions = document.getElementById("pvAvatarActions");
   if (actions) actions.classList.remove("show");
   const err = document.getElementById("avatarPhotoError");
