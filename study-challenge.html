@@ -314,6 +314,36 @@
   .modal .primary{width:100%; margin-top:6px;}
   .modal-error{color:var(--red); font-size:var(--fs-07); text-align:center; margin:-8px 0 12px; display:none;}
 
+
+  /* ================= تحديات الأصدقاء ================= */
+  .ch-card{background:#16161c; border:1px solid var(--border); border-radius:14px; padding:12px; margin-bottom:10px;}
+  .ch-card.ended{opacity:.88;}
+  .ch-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;}
+  .ch-name{font-size:var(--fs-11); font-weight:900; color:#fff; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .ch-chip{font-size:var(--fs-04); font-weight:700; padding:3px 9px; border-radius:20px; background:rgba(46,204,113,.12); color:var(--green); white-space:nowrap; flex-shrink:0;}
+  .ch-card.ended .ch-chip{background:rgba(255,255,255,.06); color:var(--muted);}
+  .ch-row{display:flex; align-items:center; gap:8px; padding:6px 0;}
+  .ch-rank{width:20px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:var(--fs-05); color:var(--muted); font-weight:900; flex-shrink:0;}
+  .ch-row.lead .ch-rank{color:#ffd700;}
+  .ch-av{font-size:16px; width:28px; height:28px; border-radius:50%; background:#101014; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .ch-mid{flex:1; min-width:0;}
+  .ch-mname{font-size:var(--fs-08); font-weight:700; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:start;}
+  .ch-row.me .ch-mname{color:var(--accent);}
+  .ch-bar{height:6px; background:#101014; border-radius:6px; margin-top:5px; overflow:hidden;}
+  .ch-bar i{display:block; height:100%; background:var(--accent); border-radius:6px; min-width:2px;}
+  .ch-row.lead .ch-bar i{background:#ffd700;}
+  .ch-time{font-family:'JetBrains Mono',monospace; font-size:var(--fs-06); color:var(--muted); flex-shrink:0;}
+  .ch-win{display:flex; align-items:center; gap:8px; background:rgba(255,215,0,.08); border:1px solid rgba(255,215,0,.35); border-radius:10px; padding:8px 10px; margin-bottom:6px; font-size:var(--fs-08); color:#ffd700; font-weight:700;}
+  .ch-foot{display:flex; gap:8px; margin-top:10px;}
+  .ch-foot button{flex:1; padding:9px 6px; border-radius:10px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'Tajawal',sans-serif; font-size:var(--fs-07); font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;}
+  .ch-foot button.code{color:var(--accent); border-color:rgba(255,180,0,.4); font-family:'JetBrains Mono',monospace; letter-spacing:2px;}
+  .ch-dur{display:grid; grid-template-columns:repeat(5,1fr); gap:6px;}
+  .ch-dur button{padding:10px 0; border-radius:10px; border:1px solid var(--border); background:#16161c; color:var(--muted); font-weight:700; font-size:var(--fs-08); font-family:'Tajawal',sans-serif; cursor:pointer;}
+  .ch-dur button.active{border-color:var(--accent); color:var(--accent); background:rgba(255,180,0,.1);}
+  .ch-hint{font-size:var(--fs-05); color:var(--muted); margin:10px 0 0; text-align:center; line-height:1.7;}
+  .ch-toast{position:fixed; bottom:calc(84px + var(--safe-b)); left:50%; transform:translateX(-50%); background:#1b1b22; border:1px solid var(--border); color:#fff; padding:10px 16px; border-radius:12px; font-size:var(--fs-08); z-index:40; max-width:88%; text-align:center;}
+  #chCodeInput{text-align:center; letter-spacing:6px; font-family:'JetBrains Mono',monospace; text-transform:uppercase;}
+
   /* ================= الحاسبة العلمية العائمة ================= */
   .calc-fab{
     position:fixed; bottom:calc(18px + var(--safe-b)); inset-inline-end:calc(18px + var(--safe-l)); width:50px; height:50px; border-radius:50%;
@@ -619,6 +649,18 @@
       <p class="empty-note">جارٍ تحميل الترتيب...</p>
     </div>
   </div>
+
+  <div class="card leaderboard-card" id="friendsCard">
+    <div class="leaderboard-title">
+      <h2><svg class="ico" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.9-4.8 5.5-4.8s4.9 1.6 5.5 4.8"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.4c2.6-.2 4.5 1.3 5 4.1"/></svg> تحديات الأصدقاء</h2>
+      <span id="chCount">—</span>
+    </div>
+    <div class="lb-row lb-row-2">
+      <button class="game-btn" onclick="openChCreate()"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg> إنشاء تحدي</button>
+      <button class="game-btn" onclick="openChJoin()"><svg class="ico" viewBox="0 0 24 24"><circle cx="8" cy="12" r="3.5"/><path d="M11.5 12H21M17 12v3M20 12v2.5"/></svg> انضمام برمز</button>
+    </div>
+    <div id="chList"><p class="empty-note">جارٍ التحميل...</p></div>
+  </div>
 </div>
 
 <div class="wrap" id="inactiveWrap" style="display:none;">
@@ -638,6 +680,41 @@
     <button class="primary" style="margin-top:6px;" onclick="location.reload()"><svg class="ico" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.6-5.7"/><path d="M20 12a8 8 0 0 1-13.6 5.7"/><path d="M17.6 3.6v3.2h-3.2"/><path d="M6.4 20.4v-3.2h3.2"/></svg> إعادة المحاولة</button>
     <br>
     <a href="index.html" style="display:inline-block; margin-top:10px; color:var(--accent); font-weight:700; text-decoration:none; font-size:var(--fs-09);">‹ رجوع للصفحة الرئيسية</a>
+  </div>
+</div>
+
+<div class="overlay" id="chCreateOverlay" onclick="if(event.target===this) closeChCreate()">
+  <div class="modal">
+    <h2>إنشاء تحدي أصدقاء</h2>
+    <div class="field">
+      <label>اسم التحدي</label>
+      <input type="text" id="chNameInput" maxlength="30" placeholder="مثال: شلة الرياضيات">
+    </div>
+    <div class="field">
+      <label>المدة (بالأيام)</label>
+      <div class="ch-dur" id="chDur">
+        <button type="button" data-d="1" onclick="setChDays(1)">1</button>
+        <button type="button" data-d="3" onclick="setChDays(3)">3</button>
+        <button type="button" data-d="7" class="active" onclick="setChDays(7)">7</button>
+        <button type="button" data-d="14" onclick="setChDays(14)">14</button>
+        <button type="button" data-d="30" onclick="setChDays(30)">30</button>
+      </div>
+    </div>
+    <p class="modal-error" id="chCreateError"></p>
+    <button class="primary" id="chCreateBtn" onclick="submitChCreate()">إنشاء التحدي</button>
+    <p class="ch-hint">يبدأ التحدي فور الإنشاء، وينضم أصدقاؤك برمز الدعوة خلال أول 24 ساعة (حتى 10 أعضاء). تُحتسب فقط ثواني الدراسة المعتمدة بعد انضمام كل طالب.</p>
+  </div>
+</div>
+
+<div class="overlay" id="chJoinOverlay" onclick="if(event.target===this) closeChJoin()">
+  <div class="modal">
+    <h2>الانضمام لتحدي</h2>
+    <div class="field">
+      <label>رمز الدعوة (6 خانات)</label>
+      <input type="text" id="chCodeInput" maxlength="6" placeholder="••••••" autocapitalize="characters" autocomplete="off">
+    </div>
+    <p class="modal-error" id="chJoinError"></p>
+    <button class="primary" id="chJoinBtn" onclick="submitChJoin()">انضمام</button>
   </div>
 </div>
 
@@ -1221,6 +1298,188 @@ setInterval(() => {
 function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 }
+
+/* ================= تحديات الأصدقاء =================
+   الإنشاء والانضمام والخروج تمر عبر الـ Worker. النقاط تُضاف هناك فقط من الثواني المعتمدة،
+   وهنا نقرأ البيانات ونعرضها (القواعد تسمح لعضو التحدي فقط بالقراءة). */
+const CH_CACHE = {};
+const chListeners = {};
+let chDays = 7;
+
+function chToast(msg){
+  const t = document.createElement("div");
+  t.className = "ch-toast";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+function chRemainText(endAt){
+  const ms = endAt - Date.now();
+  if (ms <= 0) return "انتهى";
+  const d = Math.floor(ms / 86400000), h = Math.floor((ms % 86400000) / 3600000), m = Math.floor((ms % 3600000) / 60000);
+  if (d >= 1) return "باقي " + d + " يوم" + (h ? " و" + h + " س" : "");
+  if (h >= 1) return "باقي " + h + " س " + m + " د";
+  return "باقي " + Math.max(1, m) + " د";
+}
+function chErrText(e){
+  const m = {
+    "no-profile": "سجّل ملفك الشخصي من الصفحة الرئيسية أولاً.",
+    "too-many": "وصلت للحد الأقصى: 5 تحديات نشطة.",
+    "no-such-challenge": "الرمز غير صحيح.",
+    "bad-code": "الرمز غير صحيح (6 خانات).",
+    "join-closed": "أُغلق الانضمام لهذا التحدي (متاح خلال أول 24 ساعة).",
+    "full": "التحدي ممتلئ (10 أعضاء).",
+    "bad-name": "اكتب اسماً للتحدي."
+  };
+  const code = e && (e.code || e.message);
+  return m[code] || "تعذّر الاتصال، تأكد من الإنترنت وحاول مجددًا.";
+}
+function chShowErr(el, text){ el.textContent = text; el.style.display = "block"; }
+
+function startChallenges(uid){
+  if (!firebaseOK) return;
+  db.ref("userChallenges/" + uid).on("value", (snap) => {
+    const idx = snap.val() || {};
+    Object.keys(chListeners).forEach(cid => {
+      if (!(cid in idx)){ chListeners[cid].off(); delete chListeners[cid]; delete CH_CACHE[cid]; }
+    });
+    Object.keys(idx).forEach(cid => {
+      if (chListeners[cid]) return;
+      const ref = db.ref("challenges/" + cid);
+      chListeners[cid] = ref;
+      ref.on("value", (s) => {
+        if (s.exists()) CH_CACHE[cid] = s.val(); else delete CH_CACHE[cid];
+        renderChallenges();
+      }, () => {});
+    });
+    renderChallenges();
+  }, () => {});
+}
+
+const CH_ICO_SHARE = '<svg class="ico" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.2 10.9l7.6-3.8M8.2 13.1l7.6 3.8"/></svg>';
+const CH_ICO_EXIT = '<svg class="ico" viewBox="0 0 24 24"><path d="M10 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H10"/><path d="M15 8l4 4-4 4M19 12H9"/></svg>';
+const CH_ICO_CUP = '<svg class="ico" viewBox="0 0 24 24"><path d="M7 4h10v4.2a5 5 0 0 1-10 0Z"/><path d="M7 5.2H4.6A2.4 2.4 0 0 0 4 9.9 4 4 0 0 0 7 11.4"/><path d="M17 5.2h2.4A2.4 2.4 0 0 1 20 9.9 4 4 0 0 1 17 11.4"/><path d="M12 13.2v2.8"/><path d="M9.3 20h5.4"/></svg>';
+
+function chCardHtml(c){
+  const now = Date.now();
+  const ended = c.endAt <= now;
+  const members = Object.keys(c.members || {}).map(uid => ({
+    uid, name: c.members[uid].name, avatar: c.members[uid].avatar,
+    score: (c.scores && c.scores[uid]) || 0
+  })).sort((a, b) => b.score - a.score);
+  const max = Math.max(1, members.length ? members[0].score : 1);
+
+  let win = "";
+  if (ended && members.length && members[0].score > 0){
+    const tie = members[1] && members[1].score === members[0].score;
+    win = `<div class="ch-win">${CH_ICO_CUP} ${tie ? "انتهى بالتعادل" : "الفائز: " + escapeHtml(members[0].name || "طالب")}</div>`;
+  }
+  const rows = members.map((m, i) => `
+    <div class="ch-row ${m.uid === currentUid ? "me" : ""} ${i === 0 && m.score > 0 ? "lead" : ""}">
+      <span class="ch-rank">${i + 1}</span>
+      <span class="ch-av">${escapeHtml(m.avatar || "🙂")}</span>
+      <div class="ch-mid">
+        <div class="ch-mname">${escapeHtml(m.name || "طالب")}${m.uid === currentUid ? " (أنت)" : ""}</div>
+        <div class="ch-bar"><i style="width:${Math.round((m.score / max) * 100)}%"></i></div>
+      </div>
+      <span class="ch-time">${formatTotal(m.score)}</span>
+    </div>`).join("");
+
+  const joinable = !ended && now <= c.joinUntil && members.length < 10;
+  const foot = `<div class="ch-foot">
+      ${joinable ? `<button type="button" class="code" onclick="shareChallenge('${c.cid}')">${escapeHtml(c.code)} ${CH_ICO_SHARE}</button>` : ""}
+      <button type="button" onclick="leaveChallenge('${c.cid}')">${CH_ICO_EXIT} ${ended ? "إخفاء" : "خروج"}</button>
+    </div>`;
+  return `
+    <div class="ch-card ${ended ? "ended" : ""}">
+      <div class="ch-top"><span class="ch-name">${escapeHtml(c.name || "تحدي")}</span><span class="ch-chip">${chRemainText(c.endAt)}</span></div>
+      ${win}${rows}${foot}
+    </div>`;
+}
+
+function renderChallenges(){
+  const list = document.getElementById("chList");
+  if (!list) return;
+  const now = Date.now();
+  const all = Object.keys(CH_CACHE).map(cid => Object.assign({ cid }, CH_CACHE[cid]));
+  const active = all.filter(c => c.endAt > now).sort((a, b) => a.endAt - b.endAt);
+  const done = all.filter(c => c.endAt <= now).sort((a, b) => b.endAt - a.endAt).slice(0, 5);
+  const cnt = document.getElementById("chCount");
+  if (cnt) cnt.innerText = active.length + " نشط";
+  if (!all.length){
+    list.innerHTML = '<p class="empty-note">لا توجد تحديات بعد. أنشئ تحدياً وادعُ أصدقاءك برمز، ومن يدرس أكثر يفوز!</p>';
+    return;
+  }
+  list.innerHTML = active.concat(done).map(chCardHtml).join("");
+}
+setInterval(renderChallenges, 60000);
+authReady.then((uid) => startChallenges(uid));
+
+window.openChCreate = function(){
+  document.getElementById("chNameInput").value = "";
+  document.getElementById("chCreateError").style.display = "none";
+  setChDays(7);
+  document.getElementById("chCreateOverlay").classList.add("show");
+};
+window.closeChCreate = function(){ document.getElementById("chCreateOverlay").classList.remove("show"); };
+window.setChDays = function(d){
+  chDays = d;
+  document.querySelectorAll("#chDur button").forEach(b => b.classList.toggle("active", Number(b.dataset.d) === d));
+};
+window.submitChCreate = async function(){
+  const name = document.getElementById("chNameInput").value.trim();
+  const err = document.getElementById("chCreateError");
+  err.style.display = "none";
+  if (!name){ chShowErr(err, chErrText({ code: "bad-name" })); return; }
+  const btn = document.getElementById("chCreateBtn");
+  btn.disabled = true;
+  try{
+    const r = await callWorker("/challenge/create", { name, days: chDays });
+    closeChCreate();
+    chToast("تم إنشاء التحدي. رمز الدعوة: " + r.code);
+  }catch(e){ chShowErr(err, chErrText(e)); }
+  finally{ btn.disabled = false; }
+};
+
+window.openChJoin = function(){
+  document.getElementById("chCodeInput").value = "";
+  document.getElementById("chJoinError").style.display = "none";
+  document.getElementById("chJoinOverlay").classList.add("show");
+};
+window.closeChJoin = function(){ document.getElementById("chJoinOverlay").classList.remove("show"); };
+window.submitChJoin = async function(){
+  const code = document.getElementById("chCodeInput").value.trim().toUpperCase();
+  const err = document.getElementById("chJoinError");
+  err.style.display = "none";
+  if (code.length !== 6){ chShowErr(err, chErrText({ code: "bad-code" })); return; }
+  const btn = document.getElementById("chJoinBtn");
+  btn.disabled = true;
+  try{
+    const r = await callWorker("/challenge/join", { code });
+    closeChJoin();
+    chToast(r && r.already ? "أنت منضم لهذا التحدي مسبقًا." : "انضممت للتحدي، بالتوفيق!");
+  }catch(e){ chShowErr(err, chErrText(e)); }
+  finally{ btn.disabled = false; }
+};
+
+window.shareChallenge = async function(cid){
+  const c = CH_CACHE[cid];
+  if (!c) return;
+  const text = "انضم لتحدي «" + c.name + "» في مؤقت الطالب\nرمز الدعوة: " + c.code + "\n" + location.href.split("#")[0];
+  try{
+    if (navigator.share){ await navigator.share({ text }); return; }
+    await navigator.clipboard.writeText(text);
+    chToast("تم نسخ الدعوة. أرسلها لأصدقائك.");
+  }catch(e){ /* أغلق المستخدم نافذة المشاركة */ }
+};
+window.leaveChallenge = async function(cid){
+  const c = CH_CACHE[cid];
+  const ended = c && c.endAt <= Date.now();
+  const msg = ended ? "إخفاء هذا التحدي من قائمتك؟" : "الخروج من التحدي سيزيلك من الترتيب. متأكد؟";
+  if (!confirm(msg)) return;
+  try{ await callWorker("/challenge/leave", { cid }); }
+  catch(e){ chToast("تعذّر تنفيذ العملية، حاول مجددًا."); }
+};
 
 /* ================= ترتيبك الشخصي + السلسلة ================= */
 function updateMyRankBanner(mySeconds){
