@@ -1742,7 +1742,8 @@ window.saveProfile = async function(){
     if (isBrandNewPlayer) maybeShowProtectProgressPrompt();
   }catch(e){
     console.error("saveProfile failed:", e);
-    showProfileError("تعذّر حفظ بياناتك، تأكد من الاتصال بالإنترنت وحاول مرة ثانية.");
+    var errCode = (e && (e.code || e.message)) ? String(e.code || e.message).slice(0, 80) : "";
+    showProfileError("تعذّر حفظ بياناتك، تأكد من الاتصال بالإنترنت وحاول مرة ثانية." + (errCode ? " (" + errCode + ")" : ""));
   } finally {
     if (saveBtn) saveBtn.disabled = false;
   }
