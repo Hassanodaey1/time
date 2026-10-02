@@ -276,6 +276,31 @@
   .hub-item .count{font-family:'JetBrains Mono',monospace; font-size:var(--fs-05); font-weight:900; padding:3px 9px; border-radius:20px; background:var(--accent); color:#06222d; flex-shrink:0;}
   .hub-item .arrow{font-size:var(--fs-16); color:var(--muted); flex-shrink:0; opacity:.6;}
 
+
+  /* ---- إحصاءات متقدمة (تبويبات، بطاقات، توزيع المواد) ---- */
+  .rp-tabs{display:flex; gap:6px; background:#0d0d12; border:1px solid var(--border); border-radius:12px; padding:4px; margin:0 0 16px;}
+  .rp-tab{
+    flex:1; padding:9px 4px; border:none; border-radius:9px; background:transparent; color:var(--muted);
+    font-size:var(--fs-08); font-weight:700; cursor:pointer; font-family:'Tajawal',sans-serif;
+  }
+  .rp-tab.active{background:#9a8cff; color:#120d33; font-weight:900;}
+  .rp-cmp{display:inline-flex; align-items:center; gap:4px; margin-top:8px; font-size:var(--fs-06); font-weight:700; padding:3px 10px; border-radius:20px;}
+  .rp-cmp.up{color:var(--green); background:rgba(46,204,113,.12);}
+  .rp-cmp.down{color:#ff6b6b; background:rgba(255,107,107,.12);}
+  .rp-cmp.same{color:var(--muted); background:rgba(255,255,255,.05);}
+  .rp-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:0 0 18px;}
+  .rp-stat{background:#0d0d12; border:1px solid var(--border); border-radius:12px; padding:12px 6px; text-align:center;}
+  .rp-stat b{display:block; font-family:'JetBrains Mono',monospace; font-size:var(--fs-09); color:#fff; font-weight:700;}
+  .rp-stat span{display:block; font-size:var(--fs-04); color:var(--muted); margin-top:4px;}
+  .rp-stack{display:flex; height:12px; border-radius:8px; overflow:hidden; background:#16161c; margin:0 0 14px; gap:2px;}
+  .rp-stack i{display:block; height:100%; min-width:3px;}
+  .rp-dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-inline-end:8px; vertical-align:middle;}
+  .rp-pct{font-family:'JetBrains Mono',monospace; font-size:var(--fs-05); color:var(--muted); margin-inline-start:8px;}
+  .report-days-chart.dense{gap:2px;}
+  .report-days-chart.dense .day-bar-track{max-width:9px;}
+  .report-days-chart.dense .day-bar-label{font-size:var(--fs-02); white-space:nowrap;}
+  .day-bar-col{min-width:0;}
+
   /* ================= وسم المادة (شرائح الاختيار) ================= */
   .subject-label{font-size:var(--fs-07); color:var(--muted); margin:0 0 8px; text-align:start;}
   .subject-chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;}
@@ -717,8 +742,8 @@
   <button class="hub-item report" onclick="showView('report')">
     <span class="icon"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5.5" y="14" width="3" height="6" fill="currentColor" stroke="none"/><rect x="10.5" y="9" width="3" height="11" fill="currentColor" stroke="none"/><rect x="15.5" y="12" width="3" height="8" fill="currentColor" stroke="none"/></svg></span>
     <span class="txt">
-      <p class="title">التقرير الأسبوعي</p>
-      <p class="desc">وين راح وقتك آخر 7 أيام، لكل مادة</p>
+      <p class="title">الإحصاءات</p>
+      <p class="desc">وين راح وقتك: أسبوع، شهر، أو الكل، لكل مادة</p>
     </span>
     <span class="arrow">‹</span>
   </button>
@@ -825,19 +850,34 @@
 
 <div class="card hidden" id="reportCard">
   <button class="back-btn" onclick="showView('hub')">‹ رجوع</button>
-  <p class="eyebrow"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5.5" y="14" width="3" height="6" fill="currentColor" stroke="none"/><rect x="10.5" y="9" width="3" height="11" fill="currentColor" stroke="none"/><rect x="15.5" y="12" width="3" height="8" fill="currentColor" stroke="none"/></svg> التقرير الأسبوعي</p>
+  <p class="eyebrow"><svg class="ico" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5.5" y="14" width="3" height="6" fill="currentColor" stroke="none"/><rect x="10.5" y="9" width="3" height="11" fill="currentColor" stroke="none"/><rect x="15.5" y="12" width="3" height="8" fill="currentColor" stroke="none"/></svg> الإحصاءات</p>
   <h1>وين راح وقتك؟</h1>
+
+  <div class="rp-tabs" id="rpTabs">
+    <button type="button" class="rp-tab active" data-r="week" onclick="setReportRange('week')">الأسبوع</button>
+    <button type="button" class="rp-tab" data-r="month" onclick="setReportRange('month')">الشهر</button>
+    <button type="button" class="rp-tab" data-r="all" onclick="setReportRange('all')">الكل</button>
+  </div>
 
   <div class="report-total-box">
     <span class="report-total-num" id="reportTotalNum">0 د</span>
-    <span class="report-total-label">إجمالي آخر 7 أيام</span>
+    <span class="report-total-label" id="reportTotalLabel">إجمالي آخر 7 أيام</span>
+    <span class="rp-cmp same hidden" id="reportCmp"></span>
+  </div>
+
+  <div class="rp-grid" id="reportGrid">
+    <div class="rp-stat"><b id="rpAvg">0 د</b><span>المعدل اليومي</span></div>
+    <div class="rp-stat"><b id="rpBest">—</b><span id="rpBestLbl">أفضل يوم</span></div>
+    <div class="rp-stat"><b id="rpActive">0</b><span>أيام دراسة</span></div>
   </div>
 
   <p class="empty-note hidden" id="reportEmptyMsg">ماكو جلسات مسجّلة بعد. خلّي مؤقت يخلص أو اضغط "إنهاء الجلسة" بعد ما تدرس شوي، وبيبدأ التقرير يتكوّن 📈</p>
 
+  <p class="report-section-title">توزيع المواد</p>
+  <div class="rp-stack" id="reportStack"></div>
   <div id="reportSubjectsList" class="report-subjects-list"></div>
 
-  <p class="report-section-title">توزيع الأيام</p>
+  <p class="report-section-title" id="reportChartTitle">توزيع الأيام</p>
   <div id="reportDaysChart" class="report-days-chart"></div>
 </div>
 
@@ -1701,16 +1741,47 @@ function localDateStr(d){
   return `${y}-${m}-${day}`;
 }
 
+/* ===== مجاميع يومية لكل مادة (تبقى للأبد وحجمها صغير، بعكس سجل الجلسات المحدود بـ 500) ===== */
+const DAILY_KEY = "studentStatsDaily";
+function loadDaily(){
+  try{
+    const raw = localStorage.getItem(DAILY_KEY);
+    if (raw){
+      const o = JSON.parse(raw);
+      if (o && typeof o === "object") return o;
+    }
+  }catch(e){}
+  /* أول مرة: نبني المجاميع من سجل الجلسات القديم حتى لا يضيع شيء مما سُجّل سابقًا */
+  const daily = {};
+  try{
+    const log = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "[]");
+    log.forEach(e => {
+      if (!e || !e.date) return;
+      const d = daily[e.date] || (daily[e.date] = {});
+      const s = e.subject || "عام";
+      d[s] = (d[s] || 0) + (e.seconds || 0);
+    });
+  }catch(e){}
+  try{ localStorage.setItem(DAILY_KEY, JSON.stringify(daily)); }catch(e){}
+  return daily;
+}
+
 function logStudySession(subject, seconds, type){
   seconds = Math.round(seconds || 0);
   if (seconds < MIN_LOGGED_SECONDS) return;
+  subject = subject || "عام";
   try{
+    const daily = loadDaily();           /* نحمّلها أولاً حتى يتم الترحيل قبل إضافة هذه الجلسة */
     const raw = localStorage.getItem(SESSIONS_KEY);
     const log = raw ? JSON.parse(raw) : [];
     const now = new Date();
-    log.push({ subject: subject || "عام", seconds, type: type || "timer", date: localDateStr(now), ts: now.getTime() });
+    const dateKey = localDateStr(now);
+    log.push({ subject, seconds, type: type || "timer", date: dateKey, ts: now.getTime() });
     while (log.length > 500) log.shift(); /* نحتفظ بآخر 500 جلسة بس */
     localStorage.setItem(SESSIONS_KEY, JSON.stringify(log));
+    const day = daily[dateKey] || (daily[dateKey] = {});
+    day[subject] = (day[subject] || 0) + seconds;
+    localStorage.setItem(DAILY_KEY, JSON.stringify(daily));
   }catch(e){}
 }
 
@@ -1724,67 +1795,176 @@ function formatHM(totalSeconds){
 
 const WEEKDAY_NAMES = ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
 
-function renderReport(){
-  let log = [];
-  try{ log = JSON.parse(localStorage.getItem(SESSIONS_KEY) || "[]"); }catch(e){ log = []; }
+const RP_COLORS = ["#9a8cff", "#48cae4", "#ffb400", "#2ecc71", "#ff6b6b", "#f78fb3", "#ff9f43", "#7bed9f"];
+const MONTH_NAMES = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+let reportRange = "week";
 
-  const days = [];
-  const today = new Date();
-  for (let i = 6; i >= 0; i--){
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    days.push({ key: localDateStr(d), label: WEEKDAY_NAMES[d.getDay()], total: 0 });
+function subjectColor(name){
+  const list = getSubjects();
+  let idx = list.indexOf(name);
+  if (idx < 0){
+    idx = 0;
+    for (let i = 0; i < name.length; i++) idx = (idx * 31 + name.charCodeAt(i)) >>> 0;
   }
-  const dayIndexByKey = {};
-  days.forEach((d, idx) => dayIndexByKey[d.key] = idx);
+  return RP_COLORS[idx % RP_COLORS.length];
+}
 
-  const weekStartKey = days[0].key;
+window.setReportRange = function(r){
+  reportRange = r;
+  document.querySelectorAll("#rpTabs .rp-tab").forEach(t => t.classList.toggle("active", t.dataset.r === r));
+  renderReport();
+};
+
+/* مفاتيح الأيام (YYYY-MM-DD) من اليوم رجوعًا n يومًا، بالترتيب من الأقدم للأحدث */
+function dayKeysBack(n, offset){
+  const keys = [];
+  const base = new Date();
+  for (let i = n - 1 + (offset || 0); i >= (offset || 0); i--){
+    const d = new Date(base);
+    d.setDate(d.getDate() - i);
+    keys.push({ key: localDateStr(d), date: d });
+  }
+  return keys;
+}
+function sumDay(daily, key){
+  const o = daily[key];
+  if (!o) return 0;
+  let t = 0;
+  for (const s in o) t += o[s] || 0;
+  return t;
+}
+
+function renderReport(){
+  const daily = loadDaily();
+
+  /* نحدد الأيام داخل النطاق المختار */
+  let n;
+  if (reportRange === "week") n = 7;
+  else if (reportRange === "month") n = 30;
+  else {
+    const keys = Object.keys(daily).sort();
+    if (!keys.length) n = 7;
+    else {
+      const first = new Date(keys[0] + "T00:00:00");
+      n = Math.max(7, Math.floor((Date.now() - first.getTime()) / 86400000) + 1);
+    }
+  }
+  const days = dayKeysBack(n);
+
   const subjectTotals = {};
-  let grandTotal = 0;
-
-  log.forEach(entry => {
-    if (entry.date < weekStartKey) return; /* خارج آخر 7 أيام */
-    if (dayIndexByKey[entry.date] === undefined) return;
-    days[dayIndexByKey[entry.date]].total += entry.seconds;
-    subjectTotals[entry.subject] = (subjectTotals[entry.subject] || 0) + entry.seconds;
-    grandTotal += entry.seconds;
+  let grand = 0, active = 0, best = { key: null, total: 0 };
+  days.forEach(d => {
+    const o = daily[d.key];
+    d.total = 0;
+    if (o){
+      for (const s in o){
+        const v = o[s] || 0;
+        d.total += v;
+        subjectTotals[s] = (subjectTotals[s] || 0) + v;
+      }
+    }
+    grand += d.total;
+    if (d.total > 0) active++;
+    if (d.total > best.total) best = { key: d.key, total: d.total, date: d.date };
   });
 
-  document.getElementById("reportTotalNum").innerText = grandTotal > 0 ? formatHM(grandTotal) : "0 د";
+  /* الإجمالي والمقارنة بالفترة السابقة (للأسبوع والشهر فقط) */
+  document.getElementById("reportTotalNum").innerText = grand > 0 ? formatHM(grand) : "0 د";
+  document.getElementById("reportTotalLabel").innerText =
+    reportRange === "week" ? "إجمالي آخر 7 أيام" : reportRange === "month" ? "إجمالي آخر 30 يوم" : "إجمالي كل الوقت";
+  const cmpEl = document.getElementById("reportCmp");
+  if (reportRange === "all"){
+    cmpEl.classList.add("hidden");
+  } else {
+    const prev = dayKeysBack(n, n).reduce((t, d) => t + sumDay(daily, d.key), 0);
+    if (prev <= 0 && grand <= 0){
+      cmpEl.classList.add("hidden");
+    } else if (prev <= 0){
+      cmpEl.className = "rp-cmp up"; cmpEl.innerText = "▲ فترة جديدة"; cmpEl.classList.remove("hidden");
+    } else {
+      const pct = Math.round(((grand - prev) / prev) * 100);
+      cmpEl.className = "rp-cmp " + (pct > 0 ? "up" : pct < 0 ? "down" : "same");
+      cmpEl.innerText = (pct > 0 ? "▲ " : pct < 0 ? "▼ " : "= ") + Math.abs(pct) + "% عن الفترة السابقة";
+      cmpEl.classList.remove("hidden");
+    }
+  }
 
+  /* البطاقات */
+  document.getElementById("rpAvg").innerText = grand > 0 ? formatHM(Math.round(grand / n)) : "0 د";
+  document.getElementById("rpActive").innerText = active + "/" + n;
+  document.getElementById("rpBest").innerText = best.total > 0 ? formatHM(best.total) : "—";
+  document.getElementById("rpBestLbl").innerText = best.total > 0
+    ? ("أفضل يوم (" + WEEKDAY_NAMES[best.date.getDay()] + " " + best.date.getDate() + ")")
+    : "أفضل يوم";
+
+  /* توزيع المواد: شريط مقسّم + قائمة بالنسب */
   const emptyMsg = document.getElementById("reportEmptyMsg");
   const subjectsList = document.getElementById("reportSubjectsList");
-  const daysChart = document.getElementById("reportDaysChart");
-
-  if (grandTotal <= 0){
+  const stack = document.getElementById("reportStack");
+  if (grand <= 0){
     emptyMsg.classList.remove("hidden");
     subjectsList.innerHTML = "";
+    stack.innerHTML = "";
+    stack.style.display = "none";
   } else {
     emptyMsg.classList.add("hidden");
-    const sortedSubjects = Object.keys(subjectTotals).sort((a, b) => subjectTotals[b] - subjectTotals[a]);
-    const maxSubjectSeconds = subjectTotals[sortedSubjects[0]] || 1;
-    subjectsList.innerHTML = sortedSubjects.map(subj => {
+    stack.style.display = "flex";
+    const sorted = Object.keys(subjectTotals).sort((x, y) => subjectTotals[y] - subjectTotals[x]);
+    stack.innerHTML = sorted.map(s =>
+      `<i style="width:${(subjectTotals[s] / grand * 100).toFixed(2)}%; background:${subjectColor(s)};" title="${escapeHtml(s)}"></i>`
+    ).join("");
+    const maxS = subjectTotals[sorted[0]] || 1;
+    subjectsList.innerHTML = sorted.map(subj => {
       const secs = subjectTotals[subj];
-      const pct = Math.max(6, Math.round((secs / maxSubjectSeconds) * 100));
+      const pct = Math.max(6, Math.round((secs / maxS) * 100));
+      const share = Math.round((secs / grand) * 100);
+      const c = subjectColor(subj);
       return `
         <div class="report-subject-row">
           <div class="report-subject-top">
-            <span class="report-subject-name">${escapeHtml(subj)}</span>
+            <span class="report-subject-name"><span class="rp-dot" style="background:${c};"></span>${escapeHtml(subj)}<span class="rp-pct">${share}%</span></span>
             <span class="report-subject-time">${formatHM(secs)}</span>
           </div>
-          <div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%;"></div></div>
+          <div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%; background:${c};"></div></div>
         </div>
       `;
     }).join("");
   }
 
-  const maxDaySeconds = Math.max(1, ...days.map(d => d.total));
-  daysChart.innerHTML = days.map(d => {
-    const h = Math.max(4, Math.round((d.total / maxDaySeconds) * 74));
+ /* الرسم: أسبوع = 7 أعمدة، شهر = 30 عمودًا، الكل = أشهر (آخر 12) */
+  const chart = document.getElementById("reportDaysChart");
+  const title = document.getElementById("reportChartTitle");
+  let cols = [];
+  if (reportRange === "all"){
+    title.innerText = "توزيع الأشهر";
+    const monthTotals = {};
+    Object.keys(daily).forEach(k => {
+      const mk = k.slice(0, 7);
+      monthTotals[mk] = (monthTotals[mk] || 0) + sumDay(daily, k);
+    });
+    const now = new Date();
+    for (let i = 11; i >= 0; i--){
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mk = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      cols.push({ total: monthTotals[mk] || 0, label: MONTH_NAMES[d.getMonth()].slice(0, 3), show: true });
+    }
+    chart.classList.add("dense");
+  } else if (reportRange === "month"){
+    title.innerText = "توزيع الأيام";
+    cols = days.map((d, i) => ({ total: d.total, label: String(d.date.getDate()), show: (days.length - 1 - i) % 5 === 0 }));
+    chart.classList.add("dense");
+  } else {
+    title.innerText = "توزيع الأيام";
+    cols = days.map(d => ({ total: d.total, label: WEEKDAY_NAMES[d.date.getDay()], show: true }));
+    chart.classList.remove("dense");
+  }
+  const maxCol = Math.max(1, ...cols.map(c => c.total));
+  chart.innerHTML = cols.map(c => {
+    const h = c.total > 0 ? Math.max(4, Math.round((c.total / maxCol) * 74)) : 3;
     return `
       <div class="day-bar-col">
-        <div class="day-bar-track"><div class="day-bar-fill" style="height:${h}px;" title="${formatHM(d.total)}"></div></div>
-        <span class="day-bar-label">${d.label}</span>
+        <div class="day-bar-track"><div class="day-bar-fill" style="height:${h}px;${c.total > 0 ? "" : " opacity:.25;"}" title="${formatHM(c.total)}"></div></div>
+        <span class="day-bar-label">${c.show ? c.label : "&nbsp;"}</span>
       </div>
     `;
   }).join("");
