@@ -657,6 +657,13 @@ db.ref('countdown').on('value', (snapshot) => {
   document.getElementById("loadingMsg").style.display = "none";
 
   if (!data || !data.targetTime){
+    /* المؤقت انحذف أو لم يُضبط بعد: نوقف أي عدّاد كان شغّالًا بدل ما يستمر بالعدّ على هدف قديم */
+    if (timerHandle){ clearInterval(timerHandle); timerHandle = null; }
+    targetTime = null;
+    lastLoadedTargetTime = null;
+    document.getElementById("digitsWrap").style.display = "none";
+    document.getElementById("finishedMsg").style.display = "none";
+    document.getElementById("eventTitle").innerText = "";
     document.getElementById("loadingMsg").style.display = "block";
     document.getElementById("loadingMsg").innerText = "لم يتم ضبط المؤقت بعد.";
     document.title = baseTitle;
@@ -768,7 +775,12 @@ window.calcInput = function(ch){
   // منع بداية بعملية غير منطقية (× ÷ ^ في البداية)، السماح بـ "-" فقط كإشارة سالبة
   if (CALC_OPS.includes(ch)){
     if (atStart && ch !== "-") return; // إشارة سالبة مسموحة دائماً كبداية عدد، حتى داخل الأقواس أو الدوال (مثل sin(-30) أو √(-4))
-    if (CALC_OPS.includes(last)) calcExpr = calcExpr.slice(0, -1); // استبدال آخر عملية بدل تكديسها
+    // السماح بإشارة سالبة بعد × ÷ ^ (مثل 5×-3 و 2^-3)، وإلا نستبدل العمليات المعلّقة بدل تكديسها
+    const signAfterMulDiv = (ch === "-" && ["×", "÷", "^"].includes(last));
+    if (!signAfterMulDiv){
+      while (CALC_OPS.includes(calcExpr.slice(-1))) calcExpr = calcExpr.slice(0, -1);
+      if (calcExpr === "" && ch !== "-"){ calcRender(); return; }
+    }
   }
 
   // % ² ³ ! يحتاجون عدد أو قوس مغلق أو نتيجة قبلهم
