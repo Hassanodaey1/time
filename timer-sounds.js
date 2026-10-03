@@ -68,6 +68,40 @@ window.playTimerAlert = function(kind){
       { freq: 659.25, delay: 0.19, duration: 0.18 },
       { freq: 783.99, delay: 0.38, duration: 0.42 }
     ]);
+  } else if (kind === "notify"){
+    // نغمتان ناعمتان: وصول إشعار والتطبيق مفتوح
+    _playSequence([
+      { freq: 880.00, delay: 0,    duration: 0.12, volume: 0.12 },
+      { freq: 1174.66, delay: 0.14, duration: 0.2, volume: 0.12 }
+    ]);
+  } else if (kind === "levelup"){
+    // C5 E5 G5 C6 — صعود احتفالي عند مستوى جديد
+    _playSequence([
+      { freq: 523.25, delay: 0,    duration: 0.14 },
+      { freq: 659.25, delay: 0.14, duration: 0.14 },
+      { freq: 783.99, delay: 0.28, duration: 0.14 },
+      { freq: 1046.50, delay: 0.42, duration: 0.5 }
+    ]);
+  } else if (kind === "badge"){
+    // نغمة لامعة قصيرة لشارة جديدة
+    _playSequence([
+      { freq: 783.99, delay: 0,    duration: 0.12 },
+      { freq: 987.77, delay: 0.13, duration: 0.12 },
+      { freq: 1318.51, delay: 0.26, duration: 0.4 }
+    ]);
+  } else if (kind === "streak"){
+    // نغمة دافئة هابطة-صاعدة للسلسلة
+    _playSequence([
+      { freq: 440.00, delay: 0,    duration: 0.14 },
+      { freq: 554.37, delay: 0.15, duration: 0.14 },
+      { freq: 659.25, delay: 0.30, duration: 0.35 }
+    ]);
+  } else if (kind === "overtaken"){
+    // نغمتان تنبيهيتان (هابطة) عند تجاوز أحد لك
+    _playSequence([
+      { freq: 698.46, delay: 0,    duration: 0.16 },
+      { freq: 523.25, delay: 0.2,  duration: 0.3 }
+    ]);
   } else if (kind === "start"){
     // نغمة بداية واحدة هادئة
     _playSequence([
