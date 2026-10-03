@@ -14,9 +14,56 @@ function _getCtx(){
     try{ _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
     catch(e){ return null; }
   }
-  if (_audioCtx.state === "suspended"){ _audioCtx.resume().catch(() => {}); }
+  if (_audioCtx.state !== "running"){ try{ _audioCtx.resume().catch(() => {}); }catch(e){} }
   return _audioCtx;
 }
+
+// المتصفحات (خصوصًا iOS/Chrome) تمنع الصوت حتى يلمس المستخدم الصفحة مرة واحدة على الأقل.
+// نفتح السياق الصوتي عند أول لمسة/ضغطة، حتى تشتغل تنبيهات النهاية لاحقًا بدون مشاكل.
+function _unlockAudio(){
+  const ctx = _getCtx();
+  if (ctx){
+    try{
+      const b = ctx.createBuffer(1, 1, 22050);
+      const s = ctx.createBufferSource();
+      s.buffer = b; s.connect(ctx.destination); s.start(0);
+    }catch(e){}
+  }
+  ["pointerdown", "touchstart", "keydown", "click"].forEach(ev => window.removeEventListener(ev, _unlockAudio, true));
+}
+["pointerdown", "touchstart", "keydown", "click"].forEach(ev => window.addEventListener(ev, _unlockAudio, { capture: true, passive: true }));
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && _audioCtx && _audioCtx.state !== "running"){ _audioCtx.resume().catch(() => {}); }
+});
+
+// وضع التركيز العميق (يُفعَّل من الصفحة الرئيسية ويُحفظ بالجهاز): يوقف الأصوات غير الضرورية
+// ويُضيف الصنف deep-focus على body لتبسيط واجهة المؤقتات.
+window.isDeepFocus = function(){
+  try{ return localStorage.getItem("deep_focus_mode") === "1"; }catch(e){ return false; }
+};
+const _QUIET_KINDS = { mid: 1, start: 1, lastMinute: 1, notify: 1, streak: 1, overtaken: 1, levelup: 1, badge: 1 };
+function _applyFocusClass(){
+  if (document.body) document.body.classList.toggle("deep-focus", window.isDeepFocus());
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", _applyFocusClass);
+else _applyFocusClass();
+window.addEventListener("storage", (e) => { if (e.key === "deep_focus_mode") _applyFocusClass(); });
+
+// إشعار محلي يعمل على أندرويد أيضًا (المُنشئ new Notification غير مسموح هناك، فنستخدم الـ Service Worker)
+window.showLocalNotification = function(title, body, tag){
+  try{
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const opts = { body: body || "", icon: "icon-192.png", badge: "icon-192.png", dir: "rtl", lang: "ar" };
+    if (tag) opts.tag = tag;
+    const fallback = () => { try{ new Notification(title, opts); }catch(e){} };
+    if ("serviceWorker" in navigator){
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        if (reg && reg.showNotification) return reg.showNotification(title, opts);
+        fallback();
+      }).catch(fallback);
+    } else fallback();
+  }catch(e){}
+};
 
 // نغمة واحدة ناعمة: صعود سريع للصوت ثم هبوط تدريجي، بدل بداية/نهاية حادة
 function _tone(ctx, freq, startAt, duration, peakVolume){
@@ -42,12 +89,21 @@ function _tone(ctx, freq, startAt, duration, peakVolume){
 function _playSequence(notes){
   const ctx = _getCtx();
   if (!ctx) return;
-  const base = ctx.currentTime + 0.02;
-  notes.forEach(n => _tone(ctx, n.freq, base + n.delay, n.duration, n.volume || 0.15));
+  const go = () => {
+    const base = ctx.currentTime + 0.02;
+    notes.forEach(n => _tone(ctx, n.freq, base + n.delay, n.duration, n.volume || 0.15));
+  };
+  if (ctx.state === "running"){ go(); return; }
+  // السياق ما زال موقوفًا (لم يلمس المستخدم الصفحة بعد): نحاول فتحه، وإن لم ينجح خلال نصف ثانية نتجاهل
+  // التنبيه بدل أن يُعزف متأخرًا في وقت عشوائي.
+  let done = false;
+  const t = setTimeout(() => { done = true; }, 500);
+  ctx.resume().then(() => { clearTimeout(t); if (!done && ctx.state === "running") go(); }).catch(() => {});
 }
 
 // أنماط تنبيه مميزة لكل حالة — نغمات موسيقية متناغمة (مقام بسيط) بدل نغمة واحدة حادة متكررة
 window.playTimerAlert = function(kind){
+  if (_QUIET_KINDS[kind] && window.isDeepFocus()) return; // وضع التركيز العميق: فقط نغمة النهاية
   if (kind === "mid"){
     // E5 مرتين بلطف — تذكير خفيف بمنتصف الوقت
     _playSequence([
