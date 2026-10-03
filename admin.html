@@ -768,6 +768,7 @@ const firebaseConfig = {
    نحمّلها بأمان: إذا تعذّر الاتصال (لا يوجد إنترنت) نعرض شاشة واضحة بدل ما تنكسر الصفحة بالكامل. */
 let db = null;
 let auth = null;
+let adminApp = null;
 let firebaseOK = false;
 function makeOfflineDbStub(){
   const chain = {
@@ -787,13 +788,21 @@ function makeOfflineAuthStub(){
 }
 try{
   if (typeof firebase === "undefined") throw new Error("firebase-not-loaded");
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.database();
+  /* تطبيق فايربيس مستقل باسم "admin": جلسة الأدمن (بريد/كلمة مرور) تُحفظ بشكل منفصل عن جلسة الطالب (مجهول/Google)
+     على نفس الموقع. قبل كان فتح لوحة التحكم على جهاز الأستاذ يُسجّل خروج حساب الطالب المجهول الخاص به (ويضيع رصيده).
+     ملاحظة: بعد هذا التعديل يحتاج الأدمن تسجيل دخول مرة واحدة فقط من جديد. */
+  adminApp = firebase.initializeApp(firebaseConfig, "admin");
+  db = adminApp.database();
   firebaseOK = true;
 }catch(e){
   firebaseOK = false;
   db = makeOfflineDbStub();
 }
+
+/* ساعة السيرفر: تُستخدم عند حفظ أوقات البداية حتى لا تتأثر بساعة جهاز الأدمن */
+let adminServerOffset = 0;
+function adminNow(){ return Date.now() + adminServerOffset; }
+db.ref(".info/serverTimeOffset").on("value", (snap) => { adminServerOffset = snap.val() || 0; });
 
 if (!firebaseOK){
   document.getElementById("loginView").classList.add("hidden");
@@ -834,7 +843,7 @@ document.getElementById("appDialogCancelBtn").addEventListener("click", () => {
 });
 if (firebaseOK){
   try{
-    auth = firebase.auth();
+    auth = adminApp.auth();
   }catch(e){
     firebaseOK = false;
     db = makeOfflineDbStub();
@@ -1279,7 +1288,7 @@ window.confirmFromToPicker = function(){
     appAlert('يجب أن يكون تاريخ "إلى" بعد تاريخ "من".');
     return;
   }
-  if (toTs <= Date.now()){
+  if (toTs <= adminNow()){
     appAlert('تاريخ "إلى" يجب أن يكون في المستقبل.');
     return;
   }
@@ -1391,7 +1400,7 @@ function loadChallengeState(){
       document.getElementById("colorStart").value = data.colorStart || "#000000";
       document.getElementById("colorEnd").value = data.colorEnd || "#ff0000";
 
-      const now = Date.now();
+      const now = adminNow();
       const isRunning = data.active && data.startTime && data.durationMs && (now < data.startTime + data.durationMs);
       hasRunningChallenge = !!isRunning;
       originalDurationMs = isRunning ? data.durationMs : null;
@@ -1435,7 +1444,7 @@ window.startChallenge = function(){
   // الوقت المنقضي/المتبقي يضل صحيح بالضبط بدل ما يبدأ من جديد.
   const durationMs = minutes * 60000;
   const isSameDuration = hasRunningChallenge && (originalDurationMs === durationMs) && originalChallengeStartTime;
-  const newStartTime = isSameDuration ? originalChallengeStartTime : Date.now();
+  const newStartTime = isSameDuration ? originalChallengeStartTime : adminNow();
 
   db.ref('challenge').set({
     active: true,
@@ -1526,7 +1535,7 @@ window.resetWeeklyLeaderboard = function(){
 
     // نفس حد الأسبوع المستخدم بصفحة تحدي الدراسة: بتوقيت بغداد (UTC+3) بدل منتصف ليل غرينتش
     const LOCAL_UTC_OFFSET_MS = 3 * 60 * 60 * 1000;
-    const currentWeekIndex = Math.floor((Date.now() + LOCAL_UTC_OFFSET_MS) / 604800000);
+    const currentWeekIndex = Math.floor((adminNow() + LOCAL_UTC_OFFSET_MS) / 604800000);
 
     db.ref('studyLeaderboard').once('value').then(snapshot => {
       const updates = {};
@@ -1636,7 +1645,7 @@ window.mergeLegacyRecords = function(){
       updates[o.id] = null;
     });
 
-    db.ref('studyLeaderboard').update(updates).then(() => {
+    db.ref('studyLeaderboard').update(updates).then(() => Promise.all(selected.map(p => syncStudyStateAfterMerge(p.old, p.modern)))).then(() => {
       msg.style.color = "#2ecc71";
       msg.innerText = `تم دمج ${selected.length} سجل بنجاح، والسجلات القديمة انحذفت.`;
       document.getElementById("legacyMigrateList").innerHTML = "";
@@ -1646,6 +1655,16 @@ window.mergeLegacyRecords = function(){
     });
   });
 };
+
+/* بعد دمج حسابين: الـ Worker يعتمد على studyState (السلسلة وآخر يوم دراسة) قبل سجل الترتيب،
+   فلو لم نحدّثه تضيع السلسلة المدموجة عند أول حفظ جديد. المحاولة "best effort" ولا تُفشل الدمج. */
+function syncStudyStateAfterMerge(o, n){
+  const u = { streak: Math.max(o.streak || 0, n.streak || 0) };
+  if (o.lastStudyDayIndex != null) u.lastStudyDayIndex = o.lastStudyDayIndex;
+  return db.ref('studyState/' + n.id).update(u)
+    .then(() => db.ref('studyState/' + o.id).remove())
+    .catch(() => {});
+}
 
 /* ================= إدارة الطلاب ================= */
 let studentsCache = [];
@@ -1696,10 +1715,10 @@ function renderStudents(){
   const listEl = document.getElementById("studentsList");
   const q = (document.getElementById("stuSearchInput").value || "").trim().toLowerCase();
 
-  const currentWeek = Math.floor((Date.now() + STU_LOCAL_UTC_OFFSET_MS) / 604800000);
+  const currentWeek = Math.floor((adminNow() + STU_LOCAL_UTC_OFFSET_MS) / 604800000);
   const activeWeek = studentsCache.filter(s => s.weekIndex === currentWeek && s.weeklySeconds > 0).length;
   const totalHours = studentsCache.reduce((sum, s) => sum + s.totalSeconds, 0) / 3600;
-  const currentDay = Math.floor((Date.now() + STU_LOCAL_UTC_OFFSET_MS) / 86400000);
+  const currentDay = Math.floor((adminNow() + STU_LOCAL_UTC_OFFSET_MS) / 86400000);
   const activeToday = studentsCache.filter(s => s.dayIndex === currentDay && s.daySeconds > 0).length;
 
   statsEl.innerHTML = "";
@@ -1889,8 +1908,8 @@ document.getElementById("stuSearchInput").addEventListener("input", renderStuden
 document.getElementById("stuEditSaveBtn").addEventListener("click", stuSave);
 document.getElementById("stuEditResetBtn").addEventListener("click", stuReset);
 document.getElementById("stuEditDeleteBtn").addEventListener("click", stuDelete);
-document.getElementById("stuEditCloseBtn").addEventListener("click", closeStudentEditor);
-
+document.getElementById("stuEditCloseBtn").addEventListener("click", closeStudentEditor)
+  
 /* ================= رسالة الإعلان ================= */
 const ANN_PATH = 'studyChallengeSettings/announcement';
 function annMsg(text, color){
@@ -2047,7 +2066,7 @@ window.confirmRecoveryMerge = function(code, oldUid){
       if (o.lastStudyDayIndex != null) updates[n.id + '/lastStudyDayIndex'] = o.lastStudyDayIndex;
       updates[n.id + '/updatedAt'] = firebase.database.ServerValue.TIMESTAMP;
       updates[oldUid] = null;
-      return db.ref('studyLeaderboard').update(updates);
+      return db.ref('studyLeaderboard').update(updates).then(() => syncStudyStateAfterMerge(o, n));
     }).then(() => {
       return db.ref('recoveryCodes/' + code).remove();
     }).then(() => {
@@ -2073,3 +2092,6 @@ if ("serviceWorker" in navigator) {
 </script>
 </body>
 </html>
+
+
+ 
