@@ -459,6 +459,7 @@ if (!firebaseOK){
 }
 
 let startTime = null, durationMs = null, colorStart = "#000000", colorEnd = "#ff0000", challengeMode = "down";
+let lastChallengeData;   // آخر بيانات وصلت من السيرفر (undefined = لم تصل بعد)
 let timerHandle = null;
 let lastLoadedStartTime = null;
 let midAlerted = false, lastMinuteAlerted = false, finishedAlerted = false;
@@ -481,6 +482,8 @@ function formatDuration(ms){
 
 db.ref(".info/serverTimeOffset").on("value", (snap) => {
   serverTimeOffset = snap.val() || 0;
+  /* لما يتأكد فرق الساعة مع السيرفر نعيد تقييم حالة التحدي (قد تكون ساعة الجهاز مختلفة) */
+  if (lastChallengeData !== undefined && typeof applyChallenge === "function") applyChallenge();
 });
 
 db.ref(".info/connected").on("value", (snap) => {
@@ -571,11 +574,13 @@ function tick(){
   document.title = "🔥 " + formatDuration(challengeMode === "up" ? elapsed : remaining);
 }
 
-db.ref('challenge').on('value', (snapshot) => {
-  const data = snapshot.val();
+function applyChallenge(){
+  const data = lastChallengeData;
   document.getElementById("loadingMsg").style.display = "none";
 
-  const now = Date.now();
+  /* نقارن بساعة السيرفر (نفس الساعة المستخدمة في العدّاد) بدل ساعة الجهاز، حتى لا يظهر "لا يوجد تحدي"
+     أو "انتهى" بالغلط على جهاز ساعته غير مضبوطة */
+  const now = serverNow();
   const isValid = data && data.active && data.startTime && data.durationMs;
   const isRunning = isValid && (now < data.startTime + data.durationMs);
 
@@ -599,8 +604,10 @@ db.ref('challenge').on('value', (snapshot) => {
 
   if (startTime !== lastLoadedStartTime){
     lastLoadedStartTime = startTime;
-    midAlerted = false;
-    lastMinuteAlerted = false;
+    /* من ينضم متأخرًا (يفتح الصفحة بمنتصف التحدي) لا نشغّل له تنبيهات فاتت أصلًا */
+    const el0 = Math.max(0, serverNow() - startTime);
+    midAlerted = (el0 / durationMs) >= 0.5;
+    lastMinuteAlerted = (durationMs - el0) <= 60000;
     finishedAlerted = false;
   }
 
@@ -611,6 +618,10 @@ db.ref('challenge').on('value', (snapshot) => {
   if (timerHandle) clearInterval(timerHandle);
   tick();
   timerHandle = setInterval(tick, 1000);
+}
+db.ref('challenge').on('value', (snapshot) => {
+  lastChallengeData = snapshot.val();
+  applyChallenge();
 });
 
 db.ref('themeSettings/theme').on('value', (snapshot) => {
@@ -699,7 +710,12 @@ window.calcInput = function(ch){
   // منع بداية بعملية غير منطقية (× ÷ ^ في البداية)، السماح بـ "-" فقط كإشارة سالبة
   if (CALC_OPS.includes(ch)){
     if (atStart && ch !== "-") return; // إشارة سالبة مسموحة دائماً كبداية عدد، حتى داخل الأقواس أو الدوال (مثل sin(-30) أو √(-4))
-    if (CALC_OPS.includes(last)) calcExpr = calcExpr.slice(0, -1); // استبدال آخر عملية بدل تكديسها
+    // السماح بإشارة سالبة بعد × ÷ ^ (مثل 5×-3 و 2^-3)، وإلا نستبدل العمليات المعلّقة بدل تكديسها
+    const signAfterMulDiv = (ch === "-" && ["×", "÷", "^"].includes(last));
+    if (!signAfterMulDiv){
+      while (CALC_OPS.includes(calcExpr.slice(-1))) calcExpr = calcExpr.slice(0, -1);
+      if (calcExpr === "" && ch !== "-"){ calcRender(); return; }
+    }
   }
 
   // % ² ³ ! يحتاجون عدد أو قوس مغلق أو نتيجة قبلهم
