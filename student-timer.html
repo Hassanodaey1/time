@@ -16,7 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 :root{ --safe-t:env(safe-area-inset-top, 0px); --safe-r:env(safe-area-inset-right, 0px); --safe-b:env(safe-area-inset-bottom, 0px); --safe-l:env(safe-area-inset-left, 0px); }
-  :root{ --bg:#000000; --panel:#131316; --accent:#ffb400; --muted:#8b8d99; --border:#26262d; --green:#2ecc71; }
+  :root{ --bg:#000000; --panel:#131316; --accent:#ffb400; --muted:#8b8d99; --border:#26262d; --green:#2ecc71; --red:#ff6b6b; }
   /* ================= مقياس الخط (Typography Scale) ================= */
   :root{
     --fs-01: 7px; /* used across the page */
@@ -559,6 +559,13 @@
     .board-modal{max-width:760px;}
     .notebook-modal{max-width:540px;}
   }
+  /* وضع التركيز العميق (يُفعَّل من الصفحة الرئيسية): نخفي أزرار الأدوات العائمة أثناء الجلسة الجارية لتبسيط الواجهة */
+  body.deep-focus:has(#runningView:not(.hidden)) .calc-fab,
+  body.deep-focus:has(#runningView:not(.hidden)) .board-fab,
+  body.deep-focus:has(#runningView:not(.hidden)) .notebook-fab,
+  body.deep-focus:has(#pomoRunningView:not(.hidden)) .calc-fab,
+  body.deep-focus:has(#pomoRunningView:not(.hidden)) .board-fab,
+  body.deep-focus:has(#pomoRunningView:not(.hidden)) .notebook-fab{display:none !important;}
 </style>
 </head>
 <body>
@@ -1041,6 +1048,7 @@ let remainingMs = 0;
 let totalMs = 0;
 let paused = false;
 let timerHandle = null;
+let lastTickTs = 0;   /* وقت آخر نبضة (Date.now) — نحسب الوقت المنقضي فعليًا بدل افتراض ثانية كاملة لكل نبضة */
 let midAlerted = false, lastMinuteAlerted = false;
 let sessionLogged = false;
 
@@ -1051,8 +1059,8 @@ function requestNotifyPermission(){
   }
 }
 function notifyBackground(title, body){
-  if ("Notification" in window && Notification.permission === "granted" && document.hidden){
-    try{ new Notification(title, { body, icon: "favicon.svg" }); }catch(e){}
+  if (document.hidden && typeof window.showLocalNotification === "function"){
+    window.showLocalNotification(title, body);
   }
 }
 const baseTitle = document.title;
@@ -1327,6 +1335,7 @@ window.startTimer = function(){
   renderTime();
   requestWakeLock();
   if (timerHandle) clearInterval(timerHandle);
+  lastTickTs = Date.now();
   timerHandle = setInterval(step, 1000);
   if (typeof saveActiveSession === "function"){
     saveActiveSession({ kind:"timer", subject: currentSubject, totalMs, remainingMs, savedAt: Date.now(), paused });
@@ -1334,9 +1343,15 @@ window.startTimer = function(){
 };
 
 function step(){
-  if (paused) return;
-  eyeReminderTick();
-  remainingMs -= 1000;
+  const nowTs = Date.now();
+  if (paused){ lastTickTs = nowTs; return; }
+  /* المتصفح يبطّئ/يجمّد المؤقتات عند تصغير التطبيق أو قفل الشاشة، لذلك نخصم الوقت الحقيقي المنقضي
+     (وليس 1000ms ثابتة) حتى لا يتأخر العدّاد عن الواقع. */
+  let dt = nowTs - (lastTickTs || (nowTs - 1000));
+  if (dt < 0) dt = 0;
+  lastTickTs = nowTs;
+  eyeReminderTick(dt / 1000);
+  remainingMs -= dt;
 
   if (remainingMs <= 0){
     clearInterval(timerHandle);
@@ -1364,7 +1379,7 @@ function step(){
 
   setRingProgress((remainingMs / totalMs) * 100);
   renderTime();
-  document.title = "📚 " + formatDuration(remainingMs);
+  document.title = "📚 " + formatDuration(Math.ceil(remainingMs / 1000) * 1000);
   if (typeof saveActiveSession === "function"){
     saveActiveSession({ kind:"timer", subject: currentSubject, totalMs, remainingMs, savedAt: Date.now(), paused });
   }
@@ -1382,7 +1397,7 @@ function setDigit(el, val){
 }
 
 function renderTime(){
-  const totalSeconds = Math.floor(remainingMs / 1000);
+  const totalSeconds = Math.ceil(Math.max(0, remainingMs) / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
@@ -1393,6 +1408,7 @@ function renderTime(){
 
 window.togglePause = function(){
   paused = !paused;
+  if (!paused) lastTickTs = Date.now();
   document.getElementById("pauseBtn").innerText = paused ? "▶️ استئناف" : "⏸️ إيقاف مؤقت";
   if (typeof saveActiveSession === "function"){
     saveActiveSession({ kind:"timer", subject: currentSubject, totalMs, remainingMs, savedAt: Date.now(), paused });
@@ -1680,7 +1696,7 @@ function renderSubjectChipsInto(containerId){
   if (!wrap) return;
   const subjects = getSubjects();
   wrap.innerHTML = subjects.map(s =>
-    `<button type="button" class="subject-chip${s === currentSubject ? " active" : ""}" onclick="selectSubject('${escapeHtml(s).replace(/'/g, "\\'")}')">${escapeHtml(s)}</button>`
+    `<button type="button" class="subject-chip${s === currentSubject ? " active" : ""}" data-subject="${escapeHtml(s)}" onclick="selectSubject(this.dataset.subject)">${escapeHtml(s)}</button>`
   ).join("") + `<button type="button" class="subject-chip manage" onclick="openManageSubjects()" title="إدارة المواد"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 4v2.2M12 17.8V20M4 12h2.2M17.8 12H20M6.3 6.3l1.6 1.6M16.1 16.1l1.6 1.6M6.3 17.7l1.6-1.6M16.1 7.9l1.6-1.6"/></svg></button>`;
 }
 window.selectSubject = function(name){
@@ -1704,7 +1720,7 @@ function renderSubjectsManageList(){
   wrap.innerHTML = subjects.map(s => `
     <div class="subject-manage-row">
       <span>${escapeHtml(s)}</span>
-      ${subjects.length > 1 ? `<button type="button" class="subject-del-btn" onclick="deleteSubject('${escapeHtml(s).replace(/'/g, "\\'")}')">✕</button>` : ""}
+      ${subjects.length > 1 ? `<button type="button" class="subject-del-btn" data-subject="${escapeHtml(s)}" onclick="deleteSubject(this.dataset.subject)">✕</button>` : ""}
     </div>
   `).join("");
 }
@@ -1930,8 +1946,7 @@ function renderReport(){
       `;
     }).join("");
   }
-
- /* الرسم: أسبوع = 7 أعمدة، شهر = 30 عمودًا، الكل = أشهر (آخر 12) */
+/* الرسم: أسبوع = 7 أعمدة، شهر = 30 عمودًا، الكل = أشهر (آخر 12) */
   const chart = document.getElementById("reportDaysChart");
   const title = document.getElementById("reportChartTitle");
   let cols = [];
@@ -2032,6 +2047,7 @@ function tryResumeActiveSession(){
     renderTime();
     requestWakeLock();
     if (timerHandle) clearInterval(timerHandle);
+    lastTickTs = Date.now();
     timerHandle = setInterval(step, 1000);
     showResumeToast("↩️ استأنفنا جلسة دراستك تلقائيًا من وين وقفت");
   } else if (state.kind === "pomodoro"){
@@ -2064,6 +2080,7 @@ function tryResumeActiveSession(){
     renderPomoTime();
     requestPomoWakeLock();
     if (pomoHandle) clearInterval(pomoHandle);
+    pomoLastTickTs = Date.now();
     pomoHandle = setInterval(pomoStep, 1000);
     showResumeToast("↩️ استأنفنا جلسة البومودورو تلقائيًا من وين وقفت");
   }
@@ -2080,7 +2097,8 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-tryResumeActiveSession();
+/* ملاحظة: استدعاء tryResumeActiveSession() موجود في آخر هذا السكربت (بعد تعريف كل متغيرات البومودورو وتذكير العين).
+   كان يُستدعى هنا قبل تعريفها فيحدث خطأ ReferenceError عند استئناف جلسة بومودورو ويتوقف باقي الصفحة. */
 
 /* ================= بومودورو ================= */
 let pomoWorkMinutes = 25;
@@ -2096,6 +2114,7 @@ let pomoPaused = false;
 let pomoHandle = null;
 let pomoWakeLock = null;
 let pomoWorkIsCustom = false;
+let pomoLastTickTs = 0;
 
 function clearPomoWorkActive(){
   document.getElementById("pomoWorkPresets").querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
@@ -2177,6 +2196,7 @@ function beginPomoPhase(){
   if (typeof window.playTimerAlert === "function") window.playTimerAlert("start");
   requestPomoWakeLock();
   if (pomoHandle) clearInterval(pomoHandle);
+  pomoLastTickTs = Date.now();
   pomoHandle = setInterval(pomoStep, 1000);
   if (typeof saveActiveSession === "function"){
     saveActiveSession({ kind:"pomodoro", subject: currentSubject, phase: pomoPhase, cycleCount: pomoCycleCount, pomoWorkMinutes, pomoBreakMinutes, totalMs: pomoTotalMs, remainingMs: pomoRemainingMs, savedAt: Date.now(), paused: pomoPaused });
@@ -2184,9 +2204,13 @@ function beginPomoPhase(){
 }
 
 function pomoStep(){
-  if (pomoPaused) return;
-  if (pomoPhase === "work") eyeReminderTick();
-  pomoRemainingMs -= 1000;
+  const nowTs = Date.now();
+  if (pomoPaused){ pomoLastTickTs = nowTs; return; }
+  let dt = nowTs - (pomoLastTickTs || (nowTs - 1000));
+  if (dt < 0) dt = 0;
+  pomoLastTickTs = nowTs;
+  if (pomoPhase === "work") eyeReminderTick(dt / 1000);
+  pomoRemainingMs -= dt;
   if (pomoRemainingMs <= 0){
     pomoRemainingMs = 0;
     renderPomoTime();
@@ -2227,6 +2251,7 @@ window.skipPomoPhase = function(){
 
 window.togglePomoPause = function(){
   pomoPaused = !pomoPaused;
+  if (!pomoPaused) pomoLastTickTs = Date.now();
   document.getElementById("pomoPauseBtn").innerText = pomoPaused ? "▶️ استئناف" : "⏸️ إيقاف مؤقت";
   if (typeof saveActiveSession === "function"){
     saveActiveSession({ kind:"pomodoro", subject: currentSubject, phase: pomoPhase, cycleCount: pomoCycleCount, pomoWorkMinutes, pomoBreakMinutes, totalMs: pomoTotalMs, remainingMs: pomoRemainingMs, savedAt: Date.now(), paused: pomoPaused });
@@ -2247,7 +2272,7 @@ window.resetPomodoro = function(){
 };
 
 function renderPomoTime(){
-  const totalSeconds = Math.floor(pomoRemainingMs / 1000);
+  const totalSeconds = Math.ceil(Math.max(0, pomoRemainingMs) / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
@@ -2261,6 +2286,12 @@ async function requestPomoWakeLock(){
 }
 document.addEventListener("visibilitychange", () => {
   if (pomoWakeLock !== null && document.visibilityState === "visible") requestPomoWakeLock();
+});
+/* عند رجوع الطالب للصفحة نزامن العدّاد فورًا مع الوقت الحقيقي بدل انتظار النبضة القادمة */
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  if (timerHandle && !paused) step();
+  if (pomoHandle && !pomoPaused) pomoStep();
 });
 
 /* ================= الحاسبة العلمية العائمة ================= */
@@ -2343,7 +2374,12 @@ window.calcInput = function(ch){
   // منع بداية بعملية غير منطقية (× ÷ ^ في البداية)، السماح بـ "-" فقط كإشارة سالبة
   if (CALC_OPS.includes(ch)){
     if (atStart && ch !== "-") return; // إشارة سالبة مسموحة دائماً كبداية عدد، حتى داخل الأقواس أو الدوال (مثل sin(-30) أو √(-4))
-    if (CALC_OPS.includes(last)) calcExpr = calcExpr.slice(0, -1); // استبدال آخر عملية بدل تكديسها
+    // السماح بإشارة سالبة بعد × ÷ ^ (مثل 5×-3 و 2^-3)، وإلا نستبدل العمليات المعلّقة بدل تكديسها
+    const signAfterMulDiv = (ch === "-" && ["×", "÷", "^"].includes(last));
+    if (!signAfterMulDiv){
+      while (CALC_OPS.includes(calcExpr.slice(-1))) calcExpr = calcExpr.slice(0, -1);
+      if (calcExpr === "" && ch !== "-"){ calcRender(); return; }
+    }
   }
 
   // % ² ³ ! يحتاجون عدد أو قوس مغلق أو نتيجة قبلهم
@@ -2766,20 +2802,23 @@ window.boardClear = function(){
 /* ================= تذكير قاعدة 20-20-20 لراحة العين ================= */
 let eyeReminderElapsed = 0;
 const EYE_REMINDER_INTERVAL_SEC = 20 * 60; // كل 20 دقيقة
-function eyeReminderTick(){
-  eyeReminderElapsed++;
+function eyeReminderTick(sec){
+  eyeReminderElapsed += (sec === undefined ? 1 : sec);
   if (eyeReminderElapsed >= EYE_REMINDER_INTERVAL_SEC){
     eyeReminderElapsed = 0;
     showEyeToast();
   }
 }
 function showEyeToast(){
+  if (typeof window.isDeepFocus === "function" && window.isDeepFocus()) return; // وضع التركيز العميق: بدون تنبيهات جانبية
   const el = document.getElementById("eyeToast");
   if (!el) return;
   el.classList.add("show");
   setTimeout(() => { el.classList.remove("show"); }, 20000);
 }
 
+/* استئناف الجلسة الجارية (إن وُجدت) — في آخر السكربت حتى تكون كل المتغيرات معرّفة */
+tryResumeActiveSession();
 </script>
 <script>
 if ("serviceWorker" in navigator) {
