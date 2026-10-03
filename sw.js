@@ -6,7 +6,7 @@
    ================================================================ */
 /* رقم الإصدار: لازم يترفع (v3, v4, ...) كل مرة تتحدث فيها أي صفحة أو ملف مذكور بـ APP_SHELL،
    وإلا المستخدمين اللي مثبتين التطبيق راح يضلوا شغالين بنسخة قديمة مخزّنة أوفلاين. */
-const CACHE_NAME = "timers-app-shell-v10";
+const CACHE_NAME = "timers-app-shell-v11";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -60,11 +60,18 @@ self.addEventListener("fetch", (event) => {
         .then((res) => {
           if (res && res.status === 200) {
             const clone = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone)).catch(() => {});
           }
           return res;
         })
-        .catch(() => cached);
+        .catch(() => {
+          if (cached) return cached;
+          // بلا إنترنت وبلا نسخة محفوظة: للتنقل نرجّع الصفحة الرئيسية بدل صفحة خطأ المتصفح
+          if (req.mode === "navigate") return caches.match("./index.html").then((r) => r || Response.error());
+          return Response.error();
+        });
+      // لو عندنا نسخة محفوظة نعرضها فورًا ونكمل تحديثها بالخلفية (ونمنع إيقاف الـ SW قبل ما ينتهي التحديث)
+      if (cached) event.waitUntil(networkFetch.catch(() => {}));
       return cached || networkFetch;
     })
   );
