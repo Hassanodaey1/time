@@ -13,8 +13,16 @@ const NF_DEFAULTS = {
 };
 const NF_TOGGLES = ["streak", "daily", "overtaken", "achievements", "weekly", "comeback", "news", "quiet"];
 let nfPrefs = null;
+let nfPrefsUid = null;
 let nfBusy = false;
 
+/* المعرّف الحيّ الحالي: authReady يُحلّ مرة واحدة فقط (بأول معرّف)، فلو بدّل الطالب حسابه يبقى فيه المعرّف القديم.
+   لذلك نقرأ دائمًا من المستخدم الحالي في فايربيس. */
+async function nfUid(){
+  const first = await authReady;
+  const u = firebase.auth().currentUser;
+  return (u && u.uid) || first;
+}
 function nfSupported(){
   try{
     return ("Notification" in window) && ("serviceWorker" in navigator) && ("PushManager" in window) &&
@@ -39,15 +47,16 @@ function nfToast(title, body, url){
 }
 
 async function nfLoadPrefs(){
-  if (nfPrefs) return nfPrefs;
-  const uid = await authReady;
+  const uid = await nfUid();
+  if (nfPrefs && nfPrefsUid === uid) return nfPrefs;
   let saved = {};
   try{ saved = (await db.ref("pushPrefs/" + uid).once("value")).val() || {}; }catch(e){}
   nfPrefs = Object.assign({}, NF_DEFAULTS, saved);
+  nfPrefsUid = uid;
   return nfPrefs;
 }
 async function nfSavePrefs(){
-  const uid = await authReady;
+  const uid = await nfUid();
   const out = { on: !!nfPrefs.on, dailyTime: /^([01]\d|2[0-3]):[0-5]\d$/.test(nfPrefs.dailyTime) ? nfPrefs.dailyTime : "18:00" };
   NF_TOGGLES.forEach(k => { out[k] = !!nfPrefs[k]; });
   await db.ref("pushPrefs/" + uid).set(out);
@@ -56,7 +65,7 @@ async function nfRegisterToken(){
   const reg = await navigator.serviceWorker.ready;
   const token = await firebase.messaging().getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: reg });
   if (!token) throw new Error("no-token");
-  const uid = await authReady;
+  const uid = await nfUid();
   const tid = nfHash(token);
   await db.ref("pushTokens/" + uid + "/" + tid).set({ t: token, at: firebase.database.ServerValue.TIMESTAMP });
   try{ localStorage.setItem("nf_tid", tid); }catch(e){}
@@ -71,7 +80,7 @@ async function nfEnable(){
   await nfSavePrefs();
 }
 async function nfDisable(){
-  const uid = await authReady;
+  const uid = await nfUid();
   try{ await firebase.messaging().deleteToken(); }catch(e){}
   let tid = null; try{ tid = localStorage.getItem("nf_tid"); }catch(e){}
   if (tid){ try{ await db.ref("pushTokens/" + uid + "/" + tid).remove(); }catch(e){} }
@@ -181,8 +190,29 @@ if ("serviceWorker" in navigator){
 }
 
 /* تجديد التوكن عند كل فتح للتطبيق (التوكن قد يتغير) */
-authReady.then(async () => {
-  if (!nfSupported() || Notification.permission !== "granted") return;
-  const p = await nfLoadPrefs();
-  if (p.on && VAPID_PUBLIC_KEY.indexOf("PUT_") !== 0) nfRegisterToken().catch(() => {});
-});
+async function nfRefreshToken(){
+  try{
+    if (!nfSupported() || Notification.permission !== "granted") return;
+    const p = await nfLoadPrefs();
+    if (p.on && VAPID_PUBLIC_KEY.indexOf("PUT_") !== 0) await nfRegisterToken();
+  }catch(e){}
+}
+authReady.then(nfRefreshToken);
+
+/* تبديل الحساب (Google): نُعيد تحميل تفضيلات الحساب الجديد ونسجّل هذا الجهاز تحته */
+window.nfOnAccountChange = function(){
+  nfPrefs = null; nfPrefsUid = null;
+  nfRefreshToken();
+};
+
+/* قبل تسجيل الخروج: نفصل هذا الجهاز عن الحساب حتى لا تستمر إشعاراته بالوصول لشخص خرج منه */
+window.nfDetachDevice = async function(){
+  try{
+    if (!nfSupported()) return;
+    const uid = await nfUid();
+    let tid = null; try{ tid = localStorage.getItem("nf_tid"); }catch(e){}
+    if (tid){ try{ await db.ref("pushTokens/" + uid + "/" + tid).remove(); }catch(e){} }
+    try{ await firebase.messaging().deleteToken(); }catch(e){}
+    try{ localStorage.removeItem("nf_tid"); }catch(e){}
+  }catch(e){}
+};
