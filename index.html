@@ -409,6 +409,26 @@
   .pv-badge.earned .b-ico{color:var(--bc); background:rgba(255,255,255,.06); box-shadow:0 0 0 1px var(--bc) inset;}
   .pv-badge.earned .b-name{color:#fff;}
 
+
+  /* ================= الإشعارات ================= */
+  .nf-status{display:inline-flex; align-items:center; gap:6px; font-size:var(--fs-06); font-weight:700; padding:5px 12px; border-radius:20px; margin-bottom:12px;}
+  .nf-status.on{color:var(--green); background:rgba(46,204,113,.12);}
+  .nf-status.off{color:var(--muted); background:rgba(255,255,255,.06);}
+  #nfMainBtn.danger{background:transparent; color:#ff6b6b; border:1px solid rgba(255,107,107,.45);}
+  #nfMainBtn:disabled{opacity:.5;}
+  .nf-group{display:flex; flex-direction:column; gap:8px; margin-top:14px;}
+  .nf-time{display:flex; align-items:center; justify-content:space-between; gap:12px; background:#0d1420; border:1px solid var(--border); border-radius:12px; padding:10px 14px;}
+  .nf-time input{background:#16161c; border:1px solid var(--border); color:#fff; border-radius:8px; padding:6px 10px; font-family:'JetBrains Mono',monospace; font-size:var(--fs-09);}
+  .nf-toast{
+    position:fixed; top:calc(14px + env(safe-area-inset-top, 0px)); left:50%; transform:translate(-50%,-140%);
+    display:flex; flex-direction:column; gap:3px; max-width:90%; width:340px; z-index:200; cursor:pointer;
+    background:#1b1b22; border:1px solid var(--amber); border-radius:14px; padding:12px 16px; color:#fff;
+    box-shadow:0 12px 32px rgba(0,0,0,.5); transition:transform .35s cubic-bezier(.22,.61,.36,1);
+  }
+  .nf-toast.show{transform:translate(-50%,0);}
+  .nf-toast b{font-size:var(--fs-09); color:var(--amber);}
+  .nf-toast span{font-size:var(--fs-07); color:var(--muted); line-height:1.6;}
+
   /* ---- بطاقة اللاعب بالصفحة الرئيسية ---- */
   .player-card{
     display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--border);
@@ -920,6 +940,82 @@
   </div>
 </div>
 
+<div class="overlay" id="nfOverlay" onclick="if(event.target===this) closeNotifSettings()">
+  <div class="profile-modal settings-modal">
+    <button type="button" class="modal-close-btn" onclick="closeNotifSettings()" aria-label="إغلاق">✕</button>
+    <h2><svg class="ico" viewBox="0 0 24 24"><path d="M6 17.5V11a6 6 0 0 1 12 0v6.5l1.5 1.5h-15Z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg> الإشعارات</h2>
+    <div><span class="nf-status off" id="nfStatus">...</span></div>
+    <button class="primary" id="nfMainBtn" onclick="nfMainAction()">تفعيل الإشعارات</button>
+    <p class="modal-error" id="nfError"></p>
+
+    <div id="nfList" style="display:none;">
+      <div class="nf-group">
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <span class="settings-row-title">سلسلتك في خطر</span>
+          <span class="settings-row-desc">تنبيه مساءً قبل أن تنكسر سلسلة أيامك</span>
+        </div>
+        <button type="button" class="switch-toggle" id="nfSw_streak" onclick="nfToggle('streak')" role="switch" aria-checked="false" aria-label="سلسلتك في خطر"><span class="switch-knob"></span></button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <span class="settings-row-title">تذكير يومي</span>
+          <span class="settings-row-desc">في الوقت الذي تختاره</span>
+        </div>
+        <button type="button" class="switch-toggle" id="nfSw_daily" onclick="nfToggle('daily')" role="switch" aria-checked="false" aria-label="تذكير يومي"><span class="switch-knob"></span></button>
+      </div>
+      <div class="nf-time" id="nfTimeRow">
+        <span class="settings-row-desc">وقت التذكير اليومي</span>
+        <input type="time" id="nfDailyTime" value="18:00" onchange="nfSetTime(this.value)">
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <span class="settings-row-title">تجاوزك أحد</span>
+          <span class="settings-row-desc">عند نزول ترتيبك الأسبوعي</span>
+        </div>
+        <button type="button" class="switch-toggle" id="nfSw_overtaken" onclick="nfToggle('overtaken')" role="switch" aria-checked="false" aria-label="تجاوزك أحد"><span class="switch-knob"></span></button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <span class="settings-row-title">المستويات والشارات</span>
+          <span class="settings-row-desc">عند وصولك لمستوى أو شارة جديدة</span>
+        </div>
+        <button type="button" class="switch-toggle" id="nfSw_achievements" onclick="nfToggle('achievements')" role="switch" aria-checked="false" aria-label="المستويات والشارات"><span class="switch-knob"></span></button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <span class="settings-row-title">ملخص أسبوعي</span>
+          <span class="settings-row-desc">كل جمعة مساءً</span>
+        </div>
+        <button type="button" class="switch-toggle" id="nfSw_weekly" onclick="nfToggle('weekly')" role="switch" aria-checked="false" aria-label="ملخص أسبوعي"><span class="switch-knob"></span></button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <span class="settings-row-title">العودة بعد غياب</span>
+          <span class="settings-row-desc">تذكير لطيف بعد 3 أيام بلا دراسة</span>
+        </div>
+        <button type="button" class="switch-toggle" id="nfSw_comeback" onclick="nfToggle('comeback')" role="switch" aria-checked="false" aria-label="العودة بعد غياب"><span class="switch-knob"></span></button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <span class="settings-row-title">إعلانات الإدارة</span>
+          <span class="settings-row-desc">أخبار وتنبيهات مهمة</span>
+        </div>
+        <button type="button" class="switch-toggle" id="nfSw_news" onclick="nfToggle('news')" role="switch" aria-checked="false" aria-label="إعلانات الإدارة"><span class="switch-knob"></span></button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <span class="settings-row-title">ساعات الهدوء</span>
+          <span class="settings-row-desc">بدون إشعارات من 11 مساءً إلى 7 صباحًا</span>
+        </div>
+        <button type="button" class="switch-toggle" id="nfSw_quiet" onclick="nfToggle('quiet')" role="switch" aria-checked="false" aria-label="ساعات الهدوء"><span class="switch-knob"></span></button>
+      </div>
+      </div>
+      <button type="button" class="g-action-btn" style="margin-top:14px; width:100%;" onclick="nfSendTest()">إرسال إشعار تجريبي</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="settingsOverlay" onclick="if(event.target===this) closeSettingsModal()">
   <div class="profile-modal settings-modal">
     <button type="button" class="modal-close-btn" onclick="closeSettingsModal()" aria-label="إغلاق">✕</button>
@@ -934,6 +1030,18 @@
         <button type="button" class="switch-toggle" id="focusSwitch" onclick="toggleDeepFocus()" role="switch" aria-checked="false" aria-label="تفعيل وضع التركيز العميق">
           <span class="switch-knob"></span>
         </button>
+      </div>
+    </div>
+
+    <div class="settings-divider"></div>
+
+    <div class="settings-section">
+      <div class="settings-row" onclick="closeSettingsModal(); openNotifSettings();" style="cursor:pointer;">
+        <div class="settings-row-text">
+          <span class="settings-row-title"><svg class="ico" viewBox="0 0 24 24"><path d="M6 17.5V11a6 6 0 0 1 12 0v6.5l1.5 1.5h-15Z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg> الإشعارات</span>
+          <span class="settings-row-desc">تنبيهات حتى والتطبيق مغلق: السلسلة، الترتيب، الإنجازات</span>
+        </div>
+        <span style="color:var(--muted); font-size:var(--fs-11);">‹</span>
       </div>
     </div>
 
@@ -1043,6 +1151,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDoZPCTfHBg-gCupUOd6FPqMMiJm4jT1vA",
@@ -2115,5 +2224,6 @@ if ("serviceWorker" in navigator) {
   });
 }
 </script>
+<script src="notifications.js"></script>
 </body>
 </html>
