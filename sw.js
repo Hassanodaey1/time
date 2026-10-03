@@ -22,7 +22,8 @@ const APP_SHELL = [
   "./icon-512.png",
   "./icon-maskable-192.png",
   "./icon-maskable-512.png",
-  "./timer-sounds.js"
+  "./timer-sounds.js",
+  "./notifications.js"
 ];
 
 self.addEventListener("install", (event) => {
@@ -67,4 +68,54 @@ self.addEventListener("fetch", (event) => {
       return cached || networkFetch;
     })
   );
+});
+
+
+/* ================= الإشعارات (Push) =================
+   تصل من FCM حتى والتطبيق مغلق. إذا كان التطبيق مفتوحًا وظاهرًا نمرّرها للصفحة
+   لتعرضها داخليًا مع صوت بدل شريط الإشعارات. */
+self.addEventListener("push", (event) => {
+  let p = {};
+  try { p = event.data ? event.data.json() : {}; }
+  catch (e) { try { p = { data: { body: event.data.text() } }; } catch (e2) {} }
+  const d = Object.assign({}, p.notification || {}, p.data || (p.title || p.body ? p : {}));
+  const title = d.title || "مركز المؤقتات";
+  const body = d.body || "";
+  const url = d.url || "./index.html";
+  const kind = d.type || "general";
+
+  event.waitUntil((async () => {
+    const wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const visible = wins.filter((c) => c.visibilityState === "visible");
+    if (visible.length) {
+      visible.forEach((c) => c.postMessage({ type: "nf-foreground", title, body, url, kind }));
+      return;
+    }
+    await self.registration.showNotification(title, {
+      body,
+      icon: "icon-192.png",
+      badge: "icon-192.png",
+      tag: d.tag || kind,
+      renotify: true,
+      dir: "rtl",
+      lang: "ar",
+      vibrate: [140, 70, 140],
+      data: { url }
+    });
+  })());
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL((event.notification.data && event.notification.data.url) || "./index.html", self.registration.scope).href;
+  event.waitUntil((async () => {
+    const wins = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const c of wins) {
+      if (c.url === target && "focus" in c) return c.focus();
+    }
+    if (wins.length && "navigate" in wins[0]) {
+      try { await wins[0].focus(); return await wins[0].navigate(target); } catch (e) {}
+    }
+    return self.clients.openWindow(target);
+  })());
 });
