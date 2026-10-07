@@ -473,6 +473,7 @@
   body.deep-focus:has(#runningView:not(.hidden)) .board-fab{display:none !important;}
 </style>
 <link rel="stylesheet" href="theme.css">
+<style>.wrap{margin-block:0;}</style>
 </head>
 <body>
 
@@ -1921,6 +1922,30 @@ window.calcEquals = function(){
     document.getElementById("calcResultLine").innerText = "خطأ";
   }
 };
+/* ================= السبورة العائمة ================= */
+/* مستقلة تماماً عن منطق المؤقت: فتحها أو إغلاقها لا يوقف أو يبطئ أي مؤقت شغّال بالخلفية. */
+let boardCtx = null;
+let boardDrawing = false;
+let boardColor = "#000000";
+let boardSize = 6;
+let boardEraser = false;
+let boardUndoStack = [];
+let boardLastX = 0, boardLastY = 0;
+let boardEventsBound = false;
+
+window.openBoard = function(){
+  document.getElementById("boardOverlay").classList.add("show");
+  requestAnimationFrame(boardSetupCanvas);
+};
+window.closeBoard = function(){
+  document.getElementById("boardOverlay").classList.remove("show");
+};
+
+function boardSetupCanvas(){
+  const canvas = document.getElementById("boardCanvas");
+  const wrap = canvas.parentElement;
+  const w = Math.round(wrap.clientWidth);
+  const h = Math.round(w * 0.72);
 /* ================= السبورة العائمة ================= */
 /* مستقلة تماماً عن منطق المؤقت: فتحها أو إغلاقها لا يوقف أو يبطئ أي مؤقت شغّال بالخلفية. */
 let boardCtx = null;
