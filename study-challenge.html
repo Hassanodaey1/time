@@ -474,69 +474,6 @@
 </style>
 <link rel="stylesheet" href="theme.css">
 <style>.wrap{margin-block:0;}</style>
-<!-- ===== DIAG-START: لوحة تشخيص الأخطاء (مؤقتة — احذفها كاملة من DIAG-START إلى DIAG-END بعد تحديد العطل) ===== -->
-<script>
-(function(){
-  var logs = [], panel = null, list = null;
-  function build(){
-    if (panel || !document.body) return;
-    panel = document.createElement("div");
-    panel.id = "diagPanel";
-    panel.style.cssText = "position:fixed;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top,0px));z-index:2147483647;" +
-      "background:#2a0a0a;border:1px solid #ff6b6b;border-radius:12px;color:#ffd6d6;font:12px/1.5 monospace;direction:ltr;text-align:left;" +
-      "box-shadow:0 10px 30px rgba(0,0,0,.6);max-height:45vh;display:flex;flex-direction:column;";
-    var head = document.createElement("div");
-    head.style.cssText = "display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid #5a1a1a;direction:rtl;font-family:Tajawal,sans-serif;font-weight:700;";
-    head.innerHTML = '<span style="flex:1">تشخيص الأخطاء — صوّر هذه الشاشة وأرسلها</span>';
-    var copy = document.createElement("button"), close = document.createElement("button");
-    [copy, close].forEach(function(b){ b.style.cssText = "background:#401414;color:#fff;border:1px solid #7a2a2a;border-radius:8px;padding:4px 10px;font:inherit;cursor:pointer;"; });
-    copy.textContent = "نسخ"; close.textContent = "إغلاق";
-    copy.onclick = function(){ try{ navigator.clipboard.writeText(logs.join("\n")); copy.textContent = "تم"; }catch(e){} };
-    close.onclick = function(){ panel.style.display = "none"; };
-    head.appendChild(copy); head.appendChild(close);
-    list = document.createElement("div");
-    list.style.cssText = "overflow:auto;padding:8px 10px;white-space:pre-wrap;word-break:break-word;";
-    panel.appendChild(head); panel.appendChild(list);
-    document.body.appendChild(panel);
-  }
-  function add(msg){
-    var line = "[" + new Date().toLocaleTimeString() + "] " + msg;
-    logs.push(line);
-    build(); if (!panel) return;
-    panel.style.display = "flex";
-    list.textContent = logs.slice(-12).join("\n");
-    list.scrollTop = list.scrollHeight;
-  }
-  window.addEventListener("error", function(e){
-    var where = (e.filename ? e.filename.split("/").pop() : "") + ":" + (e.lineno || "?") + ":" + (e.colno || "?");
-    add("ERROR " + (e.message || "؟") + "  @ " + where);
-  }, true);
-  window.addEventListener("unhandledrejection", function(e){
-    var r = e.reason; add("PROMISE " + (r && (r.stack || r.message) || r));
-  });
-  /* عند الضغط على زر الحاسبة أو السبورة: نفحص ما حدث فعلاً */
-  document.addEventListener("click", function(e){
-    var btn = e.target && e.target.closest && e.target.closest(".calc-fab, .board-fab");
-    if (!btn) return;
-    var isCalc = btn.classList.contains("calc-fab");
-    var fn = isCalc ? "openCalc" : "openBoard", ovId = isCalc ? "calcOverlay" : "boardOverlay";
-    setTimeout(function(){
-      var ov = document.getElementById(ovId);
-      var cs = ov ? getComputedStyle(ov) : null;
-      var modal = ov && ov.firstElementChild;
-      var r = modal ? modal.getBoundingClientRect() : null;
-      var top = r ? document.elementFromPoint(r.left + r.width/2, r.top + r.height/2) : null;
-      add("TAP " + (isCalc ? "calc" : "board") + ": typeof " + fn + "=" + typeof window[fn] +
-          " | overlay " + (ov ? ("show=" + ov.classList.contains("show") + " display=" + cs.display + " opacity=" + cs.opacity + " z=" + cs.zIndex) : "غير موجود") +
-          (r ? " | modal " + Math.round(r.width) + "x" + Math.round(r.height) + " top=" + Math.round(r.top) : "") +
-          " | العنصر الأعلى فوقه: " + (top ? (top.id || top.className || top.tagName) : "لا شيء") +
-          " | viewport " + innerWidth + "x" + innerHeight);
-    }, 350);
-  }, true);
-  window.addEventListener("load", function(){ add("OK الصفحة حُمّلت — firebase=" + (typeof window.firebase) + " | SW=" + (navigator.serviceWorker && navigator.serviceWorker.controller ? "active" : "none")); });
-})();
-</script>
-<!-- ===== DIAG-END ===== -->
 </head>
 <body>
 
@@ -2132,4 +2069,6 @@ if ("serviceWorker" in navigator) {
 </script>
 </body>
 </html>
+
+
 
