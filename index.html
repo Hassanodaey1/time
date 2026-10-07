@@ -545,6 +545,7 @@
   .splash-footer{position:absolute; bottom:calc(22px + var(--safe-b)); font-size:var(--fs-01); color:var(--muted);
     font-family:'JetBrains Mono',monospace; letter-spacing:.5px;}
 </style>
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 
@@ -1759,7 +1760,6 @@ function updateGoogleUI(){
   if (recoverySection) recoverySection.style.display = "none";
   if (recoveryDivider) recoveryDivider.style.display = "none";
 }
-
 /* ================= كود استرجاع الحساب (بديل لمن ما يسجّل دخول بجوجل) ================= */
 const RECOVERY_CODE_KEY = "studyChallengeRecoveryCode";
 // بدون 0/1/O/I/L تفاديًا للّبس عند كتابة الكود يدويًا
@@ -2281,3 +2281,4 @@ if ("serviceWorker" in navigator) {
 <script src="notifications.js"></script>
 </body>
 </html>
+
