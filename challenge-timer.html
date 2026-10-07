@@ -418,6 +418,8 @@
 <script src="timer-sounds.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="time-bank.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDoZPCTfHBg-gCupUOd6FPqMMiJm4jT1vA",
@@ -623,6 +625,18 @@ db.ref('challenge').on('value', (snapshot) => {
   lastChallengeData = snapshot.val();
   applyChallenge();
 });
+
+/* احتساب وقت تحدي الأستاذ لمستوى الطالب: فقط أثناء سريان التحدي فعلًا (بساعة السيرفر) والتحدي مفعّل،
+   والصفحة ظاهرة — والتفاصيل والحماية في time-bank.js */
+if (window.TimeBank){
+  window.TimeBank.track("challenge", () => {
+    if (!firebaseOK || !timerHandle) return false;
+    const d = lastChallengeData;
+    if (!d || !d.active || !startTime || !durationMs) return false;
+    const now = serverNow();
+    return now >= startTime && now < startTime + durationMs;
+  });
+}
 
 db.ref('themeSettings/theme').on('value', (snapshot) => {
   document.body.setAttribute("data-theme", snapshot.val() || "broadcast");
