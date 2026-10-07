@@ -749,6 +749,7 @@
 </div>
 
 <script src="timer-sounds.js"></script>
+<script src="time-bank.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -1063,7 +1064,8 @@ function step(){
   if (paused) return;
   eyeReminderTick();
   remainingMs -= 1000;
-  secondsSinceBank++;
+  /* قفل الجهاز: لو مؤقت آخر (مؤقت الطالب/تحدي الأستاذ) يحتسب الوقت الآن، لا نحتسب هذه الثانية مرتين */
+  if (!window.TimeBank || window.TimeBank.claim()) secondsSinceBank++;
 
   /* تحديث حي لرصيد الطالب في الترتيب كل 60 ثانية أثناء الجلسة نفسها، بدون انتظار انتهاء المؤقت */
   if (secondsSinceBank >= 60){
@@ -1083,9 +1085,11 @@ function step(){
     document.title = "🎉 انتهت الجلسة";
     if (wakeLock){ wakeLock.release().catch(()=>{}); wakeLock = null; }
     const totalSeconds = Math.round(totalMs / 1000);
-    const remainder = totalSeconds - bankedSeconds;
+    const remainder = secondsSinceBank; // فقط الثواني المحتسبة فعلًا (بعد القفل) وغير المودعة بعد
     if (remainder > 0) bankStudyTime(remainder);
     bankedSeconds = totalSeconds;
+    secondsSinceBank = 0;
+    if (window.TimeBank) window.TimeBank.release();
     return;
   }
 
@@ -1131,11 +1135,11 @@ window.togglePause = function(){
 
 window.resetTimer = function(){
   if (timerHandle) clearInterval(timerHandle);
-  const elapsedSeconds = Math.round((totalMs - remainingMs) / 1000);
-  const remainder = elapsedSeconds - bankedSeconds;
+  const remainder = secondsSinceBank; // فقط الثواني المحتسبة فعلًا (بعد القفل) وغير المودعة بعد
   if (remainder > 0) bankStudyTime(remainder);
   bankedSeconds = 0;
   secondsSinceBank = 0;
+  if (window.TimeBank) window.TimeBank.release();
   document.getElementById("setupView").classList.remove("hidden");
   document.getElementById("runningView").classList.add("hidden");
   document.title = baseTitle;
