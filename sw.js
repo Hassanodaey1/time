@@ -6,7 +6,7 @@
    ================================================================ */
 /* رقم الإصدار: لازم يترفع (v3, v4, ...) كل مرة تتحدث فيها أي صفحة أو ملف مذكور بـ APP_SHELL،
    وإلا المستخدمين اللي مثبتين التطبيق راح يضلوا شغالين بنسخة قديمة مخزّنة أوفلاين. */
-const CACHE_NAME = "timers-app-shell-v11";
+const CACHE_NAME = "timers-app-shell-v12";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -23,7 +23,8 @@ const APP_SHELL = [
   "./icon-maskable-192.png",
   "./icon-maskable-512.png",
   "./timer-sounds.js",
-  "./notifications.js"
+  "./notifications.js",
+  "./time-bank.js"
 ];
 
 self.addEventListener("install", (event) => {
