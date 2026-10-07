@@ -567,6 +567,7 @@
   body.deep-focus:has(#pomoRunningView:not(.hidden)) .board-fab,
   body.deep-focus:has(#pomoRunningView:not(.hidden)) .notebook-fab{display:none !important;}
 </style>
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 
@@ -1045,6 +1046,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="time-bank.js"></script>
+<script src="nav-lock.js"></script>
 <script>
 let remainingMs = 0;
 let totalMs = 0;
@@ -2824,6 +2826,12 @@ function showEyeToast(){
 if (window.TimeBank){
   window.TimeBank.track("student", () =>
     (!!timerHandle && !paused) || (!!pomoHandle && !pomoPaused && pomoPhase === "work"));
+}
+
+/* قفل التنقل: ما يقدر الطالب يرجع للصفحات السابقة وهو المؤقت (العادي أو البومودورو) شغّال؛ يُفتح عند الإيقاف المؤقت أو الإنهاء */
+if (window.NavLock){
+  window.NavLock.track(() =>
+    (!!timerHandle && !paused && remainingMs > 0) || (!!pomoHandle && !pomoPaused));
 }
 
 /* استئناف الجلسة الجارية (إن وُجدت) — في آخر السكربت حتى تكون كل المتغيرات معرّفة */
