@@ -1043,6 +1043,8 @@
 <script src="timer-sounds.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="time-bank.js"></script>
 <script>
 let remainingMs = 0;
 let totalMs = 0;
@@ -2815,6 +2817,13 @@ function showEyeToast(){
   if (!el) return;
   el.classList.add("show");
   setTimeout(() => { el.classList.remove("show"); }, 20000);
+}
+
+/* احتساب وقت الدراسة لمستوى الطالب: العدّاد العادي أو مرحلة التركيز في بومودورو فقط (الاستراحات لا تُحتسب).
+   لا يُحتسب إلا والمؤقت شغّال وغير موقوف والصفحة ظاهرة — والتفاصيل والحماية في time-bank.js */
+if (window.TimeBank){
+  window.TimeBank.track("student", () =>
+    (!!timerHandle && !paused) || (!!pomoHandle && !pomoPaused && pomoPhase === "work"));
 }
 
 /* استئناف الجلسة الجارية (إن وُجدت) — في آخر السكربت حتى تكون كل المتغيرات معرّفة */
