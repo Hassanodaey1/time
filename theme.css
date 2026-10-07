@@ -1,0 +1,106 @@
+/* ==========================================================
+   theme.css — طبقة التصميم الموحدة لكل صفحات «مركز المؤقتات»
+   تُحمَّل بعد style الداخلي لكل صفحة، فتعيد تعريف الألوان والمسافات
+   والأزرار والنوافذ بدون لمس أي كود جافاسكربت.
+   ========================================================== */
+:root{
+  /* أسطح متدرجة بدل أسود مسطح: الخلفية أعمق من البطاقة، والبطاقة أعمق من العنصر داخلها */
+  --bg:#07070a;
+  --panel:#101015;
+  --panel-2:#17171e;
+  --border:#24242e;
+  --muted:#9094a3;
+  --text:#f3f4f8;
+
+  /* مقياس موحد للزوايا والظلال */
+  --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:26px;
+  --shadow-1:0 1px 0 rgba(255,255,255,.04) inset, 0 6px 18px rgba(0,0,0,.35);
+  --shadow-2:0 1px 0 rgba(255,255,255,.05) inset, 0 18px 48px rgba(0,0,0,.55);
+  --ring:0 0 0 3px color-mix(in srgb, var(--accent, var(--amber, #ffb400)) 35%, transparent);
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+
+html{ color-scheme:dark; -webkit-text-size-adjust:100%; }
+body{
+  background:
+    radial-gradient(900px 480px at 50% -12%, color-mix(in srgb, var(--accent, var(--amber, #ffb400)) 11%, transparent), transparent 70%),
+    var(--bg);
+  background-attachment:fixed;
+  color:var(--text);
+  font-family:'Tajawal',system-ui,sans-serif;
+  line-height:1.6;
+  text-rendering:optimizeLegibility;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{ background:color-mix(in srgb, var(--accent, var(--amber, #ffb400)) 40%, transparent); }
+
+/* ---------- البطاقات والأقسام ---------- */
+.card, .bento-card, .ch-card, .stu-row, .pattern-box, .player-card, .lb-row, .rank-row{
+  background:linear-gradient(180deg, var(--panel-2), var(--panel));
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow-1);
+}
+.bento-card{ transition:transform .25s var(--ease), border-color .25s var(--ease); }
+.bento-card:active{ transform:scale(.985); }
+@media (hover:hover){
+  .bento-card:hover{ border-color:color-mix(in srgb, var(--accent, var(--amber, #ffb400)) 45%, var(--border)); }
+}
+
+/* ---------- النوافذ المنبثقة ---------- */
+.overlay, .calc-overlay, .board-overlay{
+  background:rgba(4,4,7,.72);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+}
+.modal, .calc-modal, .tp-modal, .board-modal, .profile-modal, .water-modal, .net-modal, .notebook-modal{
+  background:linear-gradient(180deg, var(--panel-2), var(--panel));
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  box-shadow:var(--shadow-2);
+}
+
+/* ---------- الأزرار ---------- */
+button, .btn, .game-btn, .preset-btn, .tp-btn, .mode-btn, .hub-btn, .back-btn, .theme-btn{
+  font-family:inherit;
+  transition:transform .15s var(--ease), background-color .2s var(--ease), border-color .2s var(--ease), opacity .2s;
+  touch-action:manipulation;
+}
+button:active:not(:disabled){ transform:scale(.97); }
+button:disabled{ opacity:.45; cursor:not-allowed; }
+.preset-btn, .mode-btn, .back-btn, .hub-btn, .time-picker-btn{
+  background:var(--panel-2);
+  border:1px solid var(--border);
+  border-radius:var(--r-md);
+}
+
+/* ---------- الحقول ---------- */
+input, select, textarea{
+  font-family:inherit;
+  background:var(--bg);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:var(--r-md);
+  transition:border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+input::placeholder, textarea::placeholder{ color:color-mix(in srgb, var(--muted) 70%, transparent); }
+input:focus, select:focus, textarea:focus{
+  outline:none;
+  border-color:var(--accent, var(--amber, #ffb400));
+  box-shadow:var(--ring);
+}
+
+/* ---------- إمكانية الوصول ---------- */
+:focus-visible{ outline:2px solid var(--accent, var(--amber, #ffb400)); outline-offset:2px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible{ outline:none; }
+
+/* ---------- شريط التمرير ---------- */
+*{ scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-thumb{ background:var(--border); border-radius:8px; }
+
+/* ---------- الأرقام: عرض ثابت حتى لا يهتز المؤقت أثناء العد ---------- */
+.timer, .time, .clock, [class*="timer-digits"], [class*="countdown"]{ font-variant-numeric:tabular-nums; }
+
+@media (prefers-reduced-motion:reduce){
+  *, *::before, *::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
+}
