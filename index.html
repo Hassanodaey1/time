@@ -240,6 +240,11 @@
     border-radius:12px; padding:10px 12px; font-size:var(--fs-04); text-align:center; line-height:1.7; margin:0 0 14px; font-weight:700;}
   .profile-notice.show{display:block;}
   /* داخل متصفح تيليجرام: نخفي أزرار الدخول بجوجل (جوجل تمنعها داخل المتصفحات المدمجة) ونُظهر شرح كود الاسترجاع */
+  /* داخل تيليجرام: شريط تيليجرام العلوي (إغلاق / القائمة) يغطي أزرار اللعبة الثابتة، فننزّلها تحته ونزيح المحتوى */
+  html.in-telegram{--tg-top:60px;}
+  html.in-telegram .focus-toggle-btn,
+  html.in-telegram .profile-btn{top:calc(var(--tg-top) + 12px + var(--safe-t));}
+  html.in-telegram body{padding-top:calc(var(--tg-top) + 36px + var(--safe-t));}
   .tg-only{display:none;}
   html.in-telegram .tg-only{display:block;}
   html.in-telegram .splash-btn.google,
