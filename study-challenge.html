@@ -1030,7 +1030,7 @@ window.pickPreset = function(minutes, el){
 };
 
 window.startTimer = function(){
-  if (!getProfile()){ location.href = "index.html"; return; }
+  if (!getProfile()){ location.replace("index.html?needProfile=1"); return; }
   const customVal = document.getElementById("customTime").value;
   let minutes = selectedMinutes;
   if (customVal){
@@ -1587,8 +1587,8 @@ authReady.then(async (myUid) => {
 /* ================= بدء التشغيل ================= */
 updateGreeting();
 if (!getProfile()){
-  // ما سجّل بياناته من الصفحة الرئيسية بعد — نرجعه ليسجّل هناك أولاً
-  location.href = "index.html";
+  // ما سجّل بياناته من الصفحة الرئيسية بعد — نرجعه ليسجّل هناك أولاً (والصفحة الرئيسية تفتح له نافذة الملف الشخصي تلقائيًا مع رسالة)
+  location.replace("index.html?needProfile=1");
 }
 
 /* قفل التنقل: لا رجوع والمؤقت شغّال؛ يُفتح عند الإيقاف المؤقت أو الإنهاء أو انتهاء الوقت */
