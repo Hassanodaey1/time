@@ -1198,6 +1198,7 @@ let authReadyResolve;
 const authReady = new Promise((resolve) => { authReadyResolve = resolve; });
 /* ننتظر تسجيل الدخول لكن بمهلة: لو فشل الدخول المجهول (إنترنت ضعيف مثلًا) ما نترك الأزرار معلّقة للأبد */
 function waitForAuth(ms){
+  if (!currentUid && typeof kickAnonSignIn === "function") kickAnonSignIn(); // لو الدخول المجهول لم ينجح بعد (مثلاً داخل تيليجرام) نعيد المحاولة فوراً
   return Promise.race([
     authReady,
     new Promise((_, reject) => setTimeout(() => reject(new Error("auth-timeout")), ms || 8000))
@@ -1261,14 +1262,39 @@ try{
       firebase.auth().signInAnonymously().catch(() => {});
     }
   });
-  // نضبط استمرارية الدخول صراحةً حتى يبقى نفس المعرّف لهذا الجهاز قدر الإمكان بين الزيارات
-  firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-    .catch(() => {})
-    .finally(() => {
-      firebase.auth().signInAnonymously().catch(() => {
-        /* لو فشل الدخول المجهول، الدوال التي تكتب على studyLeaderboard رح تنتظر authReady وما رح تكمل */
-      });
-    });
+  /* الدخول المجهول: كان ينتظر setPersistence(LOCAL) أولاً، وداخل متصفح تيليجرام المدمج (تخزين IndexedDB محدود)
+     قد تتعلّق هذه الخطوة أو تفشل فلا يتم الدخول أبداً وتظهر رسالة "تعذّر التحقق من حسابك".
+     الآن: نحاول LOCAL بمهلة قصيرة، ثم ندخل، وإن فشل نجرّب تخزين الجلسة/بدون تخزين، ونعيد المحاولة تلقائياً. */
+  let signInBusy = false;
+  window.__authErrCode = "";
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((res) => setTimeout(res, ms))]);
+  const trySignIn = async () => {
+    await firebase.auth().signInAnonymously();
+  };
+  window.kickAnonSignIn = async function(){
+    if (signInBusy || firebase.auth().currentUser) return;
+    signInBusy = true;
+    try{
+      try{ await trySignIn(); return; }catch(e){ window.__authErrCode = (e && (e.code || e.message)) || "unknown"; }
+      const A = firebase.auth.Auth.Persistence;
+      for (const mode of [A.SESSION, A.NONE]){
+        try{
+          await withTimeout(firebase.auth().setPersistence(mode), 2500);
+          await trySignIn();
+          return;
+        }catch(e){ window.__authErrCode = (e && (e.code || e.message)) || "unknown"; }
+      }
+    } finally { signInBusy = false; }
+  };
+  // نضبط استمرارية الدخول صراحةً (بمهلة) حتى يبقى نفس المعرّف لهذا الجهاز قدر الإمكان بين الزيارات
+  withTimeout(firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {}), 2500)
+    .then(() => window.kickAnonSignIn());
+  // شبكة أمان: إن لم يتم الدخول نعيد المحاولة كل 4 ثوانٍ (حتى 6 مرات)
+  let authRetries = 0;
+  const authRetryTimer = setInterval(() => {
+    if (firebase.auth().currentUser || ++authRetries > 6){ clearInterval(authRetryTimer); return; }
+    window.kickAnonSignIn();
+  }, 4000);
 }catch(e){
   firebaseOK = false;
 }
@@ -2124,9 +2150,9 @@ window.saveProfile = async function(){
   const saveBtn = document.getElementById("profileSaveBtn");
   if (saveBtn) saveBtn.disabled = true;
   try{
-    await waitForAuth(8000); // نستنى الدخول (مجهول أو Google) قبل أي كتابة، لأن قاعدة الأمان بتشترط auth.uid == $uid
+    await waitForAuth(15000); // نستنى الدخول (مجهول أو Google) قبل أي كتابة، لأن قاعدة الأمان بتشترط auth.uid == $uid
   }catch(e){
-    showProfileError("تعذّر التحقق من حسابك، تأكد من الاتصال بالإنترنت وحاول مرة ثانية.");
+    showProfileError("تعذّر التحقق من حسابك، حاول مرة ثانية." + (window.__authErrCode ? " (" + window.__authErrCode + ")" : ""));
     if (saveBtn) saveBtn.disabled = false;
     return;
   }
