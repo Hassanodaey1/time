@@ -236,6 +236,16 @@
     background:#0d1420; color:#fff; font-family:'Tajawal',sans-serif; font-size:var(--fs-07);
   }
   .field.hidden{display:none;}
+  .profile-notice{display:none; color:var(--amber); background:rgba(255,180,0,.1); border:1px solid rgba(255,180,0,.35);
+    border-radius:12px; padding:10px 12px; font-size:var(--fs-04); text-align:center; line-height:1.7; margin:0 0 14px; font-weight:700;}
+  .profile-notice.show{display:block;}
+  /* داخل متصفح تيليجرام: نخفي أزرار الدخول بجوجل (جوجل تمنعها داخل المتصفحات المدمجة) ونُظهر شرح كود الاسترجاع */
+  .tg-only{display:none;}
+  html.in-telegram .tg-only{display:block;}
+  html.in-telegram .splash-btn.google,
+  html.in-telegram #googleAreaWrap{display:none !important;}
+  .tg-note{font-size:var(--fs-03); color:var(--muted); line-height:1.8; margin:0; text-align:center;}
+  .settings-modal .tg-note{background:rgba(255,180,0,.07); border:1px solid rgba(255,180,0,.25); border-radius:12px; padding:10px 12px; color:#fff;}
   .modal-error{color:var(--red); font-size:var(--fs-04); text-align:center; margin:-8px 0 12px; display:none;}
   .profile-modal .primary{width:100%; margin-top:6px;}
   .profile-actions-row{display:flex; gap:8px; margin-top:12px;}
@@ -548,6 +558,21 @@
 <link rel="stylesheet" href="theme.css">
 </head>
 <body>
+<script>
+/* كشف متصفح تيليجرام الداخلي (أندرويد/آيفون/ديسكتوب) — يضيف الصنف in-telegram على <html>.
+   للتجربة من أي متصفح أضف ?tg=1 للرابط. */
+(function(){
+  var tg = false;
+  try{
+    tg = /Telegram/i.test(navigator.userAgent || "")
+      || !!window.TelegramWebview || !!window.TelegramWebviewProxy
+      || !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData)
+      || /[?&]tg=1\b/.test(location.search);
+  }catch(e){}
+  window.IN_TELEGRAM = tg;
+  if (tg) document.documentElement.classList.add("in-telegram");
+})();
+</script>
 
 <div class="splash-screen" id="splashScreen">
   <p class="splash-eyebrow">مركز المؤقتات</p>
@@ -571,6 +596,7 @@
         <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c1-4 4.5-6 7-6s6 2 7 6"/></svg>
         الدخول كضيف
       </button>
+      <p class="tg-only tg-note">أنت داخل تيليجرام، والدخول بجوجل لا يعمل هنا. ادخل كضيف، ولاحقًا من ⚙️ الإعدادات أنشئ «كود الاسترجاع» لحفظ حسابك.</p>
       <button type="button" class="splash-btn google" id="splashGoogleBtn" onclick="splashGoogleSignIn()">
         <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20.4H24v7.2h11.3C33.7 32 29.3 34.8 24 34.8c-6 0-11-5-11-10.8s5-10.8 11-10.8c2.8 0 5.4 1 7.3 2.8l5.1-5.1C33 7.6 28.8 6 24 6 13.5 6 5 14.5 5 24.9s8.5 18.9 19 18.9c10.9 0 18.2-7.7 18.2-18.6 0-1.3-.1-2.3-.6-3.7Z"/><path fill="#FF3D00" d="M7.6 14.8l5.9 4.3C15.1 15.4 19.2 13 24 13c2.8 0 5.4 1 7.3 2.8l5.1-5.1C33 7.6 28.8 6 24 6c-7.5 0-13.9 4.3-16.9 10.5Z"/><path fill="#4CAF50" d="M24 43.8c4.7 0 8.9-1.8 12.1-4.8l-5.6-4.7c-1.7 1.2-3.9 2-6.5 2-5.2 0-9.7-3.4-11.3-8.1l-5.8 4.5C9.9 39.3 16.4 43.8 24 43.8Z"/><path fill="#1976D2" d="M43.6 20.5H42V20.4H24v7.2h11.3c-.8 2.3-2.3 4.2-4.3 5.6l5.6 4.7C40.1 34.6 43.2 30 43.2 24.9c0-1.3-.1-2.3-.6-3.7Z"/></svg>
         تسجيل الدخول بحساب Google
@@ -805,6 +831,7 @@
     </div>
     <p class="stats-hint">هذي إحصائياتك من "تحدي الدراسة" — كل ما تدرس أكثر بالتحدي ترتفع شارتك.</p>
 
+    <p class="profile-notice" id="profileNotice">سجّل بياناتك أولاً (الاسم والعمر والبلد) ثم افتح تحدي الدراسة.</p>
     <p class="modal-error" id="profileError">فضلاً عبّئ الاسم والعمر والبلد بشكل صحيح</p>
     <div class="field">
       <label>الاسم</label>
@@ -1051,6 +1078,7 @@
     <div class="settings-section">
       <h3 class="settings-section-title">الحساب</h3>
       <p class="modal-error" id="settingsError"></p>
+      <p class="tg-only tg-note">أنت داخل تيليجرام، وجوجل تمنع تسجيل الدخول من المتصفحات المدمجة. لحفظ حسابك استخدم «كود الاسترجاع» بالأسفل: أنشئه واحتفظ به، وإن تغيّر جهازك أو انمسحت البيانات أعطه للمشرف ليرجّع لك تقدّمك.</p>
 
       <!-- تسجيل الدخول بحساب Google: هو الطريقة الوحيدة الآن لحفظ الحساب واسترجاعه من أي جهاز -->
       <div class="profile-actions-row" id="googleAreaWrap" style="display:block;">
@@ -1114,11 +1142,11 @@
   <div class="reminder-alert">
     <div class="bell">🔒</div>
     <h2>احمِ تقدّمك</h2>
-    <p>حسابك الآن محفوظ على هذا الجهاز/المتصفح بس. لو غيّرت الجهاز أو مسحت بيانات المتصفح، ممكن تفقد رصيدك.
+    <p id="protectProgressText">حسابك الآن محفوظ على هذا الجهاز/المتصفح بس. لو غيّرت الجهاز أو مسحت بيانات المتصفح، ممكن تفقد رصيدك.
        سجّل دخولك بحساب Google الآن (يأخذ ثانية وحدة) عشان يرجعلك رصيدك تلقائيًا من أي جهاز مستقبلًا.</p>
     <div class="controls">
       <button class="secondary" onclick="closeProtectProgressPrompt()">لاحقًا</button>
-      <button class="primary" onclick="protectProgressSignIn()">سجّل دخول بجوجل الآن</button>
+      <button class="primary" id="protectProgressBtn" onclick="protectProgressSignIn()">سجّل دخول بجوجل الآن</button>
     </div>
   </div>
 </div>
@@ -1723,12 +1751,19 @@ function maybeShowProtectProgressPrompt(){
   if (!user || !user.isAnonymous) return; // أصلًا مرتبط بجوجل، ما يحتاج التنبيه
   try{ if (localStorage.getItem(PROTECT_PROMPT_KEY)) return; }catch(e){}
   try{ localStorage.setItem(PROTECT_PROMPT_KEY, "1"); }catch(e){}
+  if (window.IN_TELEGRAM){
+    const t = document.getElementById("protectProgressText");
+    const b = document.getElementById("protectProgressBtn");
+    if (t) t.innerText = "حسابك الآن محفوظ على هذا الجهاز/المتصفح بس. وجوجل لا تعمل داخل تيليجرام، فأنشئ «كود الاسترجاع» واحتفظ به؛ لو غيّرت الجهاز أو انمسحت البيانات أعطه للمشرف ليرجّع لك تقدّمك.";
+    if (b) b.innerText = "أنشئ كود الاسترجاع";
+  }
   document.getElementById("protectProgressOverlay").classList.add("show");
 }
 window.closeProtectProgressPrompt = function(){
   document.getElementById("protectProgressOverlay").classList.remove("show");
 };
 window.protectProgressSignIn = async function(){
+  if (window.IN_TELEGRAM){ closeProtectProgressPrompt(); openRecoveryCode(); return; } // تيليجرام: بدل جوجل نعرض كود الاسترجاع
   const ok = await runGoogleAuth(null, null, "link");
   if (ok) closeProtectProgressPrompt();
 };
@@ -2031,8 +2066,35 @@ window.openProfileModal = function(forced){
     onCountryChange();
   }
   document.getElementById("profileError").style.display = "none";
+  const pn = document.getElementById("profileNotice");
+  if (pn) pn.classList.remove("show");
   document.getElementById("profileOverlay").classList.add("show");
 };
+
+/* عند الرجوع من تحدي الدراسة بسبب عدم وجود ملف شخصي (?needProfile=1): نفتح نافذة الملف الشخصي تلقائيًا
+   مع رسالة «سجّل بياناتك أولاً» — في كل الحالات (التطبيق، المتصفح، تيليجرام). تنتظر اختفاء شاشة البداية. */
+window.openProfileForRedirect = function(){
+  if (!window.__needProfile || getProfile()) return;
+  window.__needProfile = false;
+  openProfileModal(true);
+  const pn = document.getElementById("profileNotice");
+  if (pn) pn.classList.add("show");
+};
+(function(){
+  let flag = false;
+  try{ flag = /[?&]needProfile=1\b/.test(location.search); }catch(e){}
+  if (!flag) return;
+  window.__needProfile = true;
+  try{ history.replaceState(null, "", location.pathname + location.hash); }catch(e){}
+  const splash = document.getElementById("splashScreen");
+  const splashGone = () => !splash || splash.style.display === "none" || splash.classList.contains("hide");
+  const tryOpen = () => {
+    if (!window.__needProfile) return;
+    if (splashGone()) setTimeout(window.openProfileForRedirect, 480);
+    else setTimeout(tryOpen, 250);
+  };
+  tryOpen();
+})();
 
 window.saveProfile = async function(){
   const name = document.getElementById("fName").value.trim();
