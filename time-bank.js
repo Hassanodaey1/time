@@ -123,8 +123,8 @@
         notice("🧊 فاتك يوم أمس، بس حماية السلسلة حفظت سلسلتك — استمر!");
       }
     }catch(err){
-      if (!err || !err.status){
-        /* لا اتصال / لا هوية بعد: لم يصل الطلب غالبًا، نُرجع الثواني لتُرسل لاحقًا (بسقف صغير) */
+      if (!err || !err.status || err.status === 429 || err.status >= 500){
+        /* لا اتصال / لا هوية بعد / السيرفر مشغول مؤقتًا: الثواني لم تُسجَّل، نُرجعها لتُرسل لاحقًا (بسقف صغير) */
         pending = Math.min(pending + secs, BANK_EVERY * 2);
       } else if (err.status === 412){
         if (!noProfileNoticed){
