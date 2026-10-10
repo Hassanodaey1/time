@@ -1372,6 +1372,7 @@ function chErrText(e){
     "full": "التحدي ممتلئ (10 أعضاء).",
     "bad-name": "اكتب اسماً للتحدي.",
     "not-found": "السيرفر لم يُحدَّث بعد (انشر الـ Worker الجديد على Cloudflare).",
+    "slow-down": "محاولات كثيرة خاطئة، انتظر بضع دقائق ثم حاول مجددًا.",
     "unauthenticated": "فشل التحقق من الحساب، أعد فتح الصفحة وحاول مجددًا."
   };
   const code = e && (e.code || e.message);
@@ -1931,7 +1932,7 @@ window.calcEquals = function(){
     document.getElementById("calcResultLine").innerText = "خطأ";
   }
 };
- /* ================= السبورة العائمة ================= */
+/* ================= السبورة العائمة ================= */
 /* مستقلة تماماً عن منطق المؤقت: فتحها أو إغلاقها لا يوقف أو يبطئ أي مؤقت شغّال بالخلفية. */
 let boardCtx = null;
 let boardDrawing = false;
@@ -2081,4 +2082,3 @@ if ("serviceWorker" in navigator) {
 
 
 
- 
