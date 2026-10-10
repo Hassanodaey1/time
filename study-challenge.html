@@ -975,15 +975,17 @@ try{
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
   firebaseOK = true;
+  /* مهم: لا نستدعي signInAnonymously() مباشرة. هذه الدالة تستبدل أي حساب غير مجهول (Google) بحساب مجهول جديد،
+     فكان الطالب المسجّل بجوجل يفقد هويته بمجرد فتح هذه الصفحة. ندخل مجهولًا فقط إن لم توجد أي هوية بعد استرجاع الجلسة. */
   firebase.auth().onAuthStateChanged((user) => {
     if (user){
       currentUid = user.uid;
       authReadyResolve(currentUid);
+    } else {
+      /* لو فشل الدخول المجهول (مثلاً معطّل بإعدادات المشروع) نبقى بلا uid،
+         والدوال اللي بتكتب على studyLeaderboard رح تنتظر authReady وما رح تكمل. */
+      firebase.auth().signInAnonymously().catch(() => {});
     }
-  });
-  firebase.auth().signInAnonymously().catch(() => {
-    /* لو فشل الدخول المجهول (مثلاً معطّل بإعدادات المشروع) نبقى بلا uid،
-       والدوال اللي بتكتب على studyLeaderboard رح تنتظر authReady وما رح تكمل. */
   });
 }catch(e){
   firebaseOK = false;
@@ -1353,7 +1355,7 @@ function chToast(msg){
   setTimeout(() => t.remove(), 3500);
 }
 function chRemainText(endAt){
-  const ms = endAt - Date.now();
+  const ms = endAt - serverNow();
   if (ms <= 0) return "انتهى";
   const d = Math.floor(ms / 86400000), h = Math.floor((ms % 86400000) / 3600000), m = Math.floor((ms % 3600000) / 60000);
   if (d >= 1) return "باقي " + d + " يوم" + (h ? " و" + h + " س" : "");
@@ -1403,7 +1405,7 @@ const CH_ICO_EXIT = '<svg class="ico" viewBox="0 0 24 24"><path d="M10 4H5.5A1.5
 const CH_ICO_CUP = '<svg class="ico" viewBox="0 0 24 24"><path d="M7 4h10v4.2a5 5 0 0 1-10 0Z"/><path d="M7 5.2H4.6A2.4 2.4 0 0 0 4 9.9 4 4 0 0 0 7 11.4"/><path d="M17 5.2h2.4A2.4 2.4 0 0 1 20 9.9 4 4 0 0 1 17 11.4"/><path d="M12 13.2v2.8"/><path d="M9.3 20h5.4"/></svg>';
 
 function chCardHtml(c){
-  const now = Date.now();
+  const now = serverNow();
   const ended = c.endAt <= now;
   const members = Object.keys(c.members || {}).map(uid => ({
     uid, name: c.members[uid].name, avatar: c.members[uid].avatar,
@@ -1429,8 +1431,8 @@ function chCardHtml(c){
 
   const joinable = !ended && now <= c.joinUntil && members.length < 10;
   const foot = `<div class="ch-foot">
-      ${joinable ? `<button type="button" class="code" onclick="shareChallenge('${c.cid}')">${escapeHtml(c.code)} ${CH_ICO_SHARE}</button>` : ""}
-      <button type="button" onclick="leaveChallenge('${c.cid}')">${CH_ICO_EXIT} ${ended ? "إخفاء" : "خروج"}</button>
+      ${joinable ? `<button type="button" class="code" onclick="shareChallenge(${escapeHtml(JSON.stringify(c.cid))})">${escapeHtml(c.code)} ${CH_ICO_SHARE}</button>` : ""}
+      <button type="button" onclick="leaveChallenge(${escapeHtml(JSON.stringify(c.cid))})">${CH_ICO_EXIT} ${ended ? "إخفاء" : "خروج"}</button>
     </div>`;
   return `
     <div class="ch-card ${ended ? "ended" : ""}">
@@ -1442,7 +1444,7 @@ function chCardHtml(c){
 function renderChallenges(){
   const list = document.getElementById("chList");
   if (!list) return;
-  const now = Date.now();
+  const now = serverNow();
   const all = Object.keys(CH_CACHE).map(cid => Object.assign({ cid }, CH_CACHE[cid]));
   const active = all.filter(c => c.endAt > now).sort((a, b) => a.endAt - b.endAt);
   const done = all.filter(c => c.endAt <= now).sort((a, b) => b.endAt - a.endAt).slice(0, 5);
@@ -1516,7 +1518,7 @@ window.shareChallenge = async function(cid){
 };
 window.leaveChallenge = async function(cid){
   const c = CH_CACHE[cid];
-  const ended = c && c.endAt <= Date.now();
+  const ended = c && c.endAt <= serverNow();
   const msg = ended ? "إخفاء هذا التحدي من قائمتك؟" : "الخروج من التحدي سيزيلك من الترتيب. متأكد؟";
   if (!confirm(msg)) return;
   try{ await callWorker("/challenge/leave", { cid }); }
@@ -1559,7 +1561,7 @@ authReady.then(async (myUid) => {
   // مهم: لا نصفّر رصيد الطالب أبدًا هنا — نجلب أولًا رصيده القديم (totalSeconds/streak/...) وننقله
   // كاملاً للسجل الجديد، حتى لا تختفي ساعات دراسته بسبب مجرد تغيّر معرّف الدخول.
   if (myProfileOnLoad){
-    const migrated = { id: myUid, name: myProfileOnLoad.name, age: myProfileOnLoad.age, country: myProfileOnLoad.country, governorate: myProfileOnLoad.governorate, avatar: myProfileOnLoad.avatar };
+    const migrated = Object.assign({}, myProfileOnLoad, { id: myUid });   /* نحافظ على باقي الحقول (مثل الصورة الشخصية) */
     try{
       // الرصيد صار يُكتب من السيرفر فقط، فلا ننقله من المتصفح. ننشئ سجلاً فارغاً فقط إن لم يكن للمعرّف الحالي سجل.
       // استرجاع الرصيد القديم يتم بربط الحساب بجوجل أو برمز الاسترجاع.
@@ -1630,8 +1632,14 @@ function calcUpdateStatus(){
   document.getElementById("calcModeBtn").innerText = calcMode;
 }
 
+/* تقريب لـ 10 خانات عشرية للأعداد العادية فقط. الأعداد الضخمة (مثل 170!) كان n*1e10 يحوّلها إلى ∞ فتظهر نتيجة خاطئة؛
+   وأيضًا نتخلّص من الصفر السالب (-0) الناتج عن تقريب أعداد سالبة صغيرة جدًا مثل sin(-180°). */
+function calcRound(n){
+  const r = Math.abs(n) < 1e15 ? Math.round(n * 1e10) / 1e10 : n;
+  return r === 0 ? 0 : r;
+}
 function calcNumToDisplay(n){
-  const rounded = Math.round(n * 1e10) / 1e10;
+  const rounded = calcRound(n);
   return rounded.toLocaleString("en-US", { maximumFractionDigits: 10, useGrouping: false });
 }
 
@@ -1916,14 +1924,14 @@ window.calcEquals = function(){
   try{
     const result = calcParse(calcTokenize(expr));
     if (!isFinite(result) || isNaN(result)) throw new Error("invalid");
-    const rounded = Math.round(result * 1e10) / 1e10;
+    const rounded = calcRound(result);
     calcAns = rounded;
     document.getElementById("calcResultLine").innerText = rounded.toLocaleString("en-US", { maximumFractionDigits: 10, useGrouping: false });
   }catch(e){
     document.getElementById("calcResultLine").innerText = "خطأ";
   }
 };
-/* ================= السبورة العائمة ================= */
+ /* ================= السبورة العائمة ================= */
 /* مستقلة تماماً عن منطق المؤقت: فتحها أو إغلاقها لا يوقف أو يبطئ أي مؤقت شغّال بالخلفية. */
 let boardCtx = null;
 let boardDrawing = false;
@@ -2073,3 +2081,4 @@ if ("serviceWorker" in navigator) {
 
 
 
+ 
