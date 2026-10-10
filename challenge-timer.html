@@ -553,6 +553,7 @@ function tick(){
   if (remaining <= 0){
     if (!finishedAlerted){ finishedAlerted = true; window.playTimerAlert("finish"); }
     clearInterval(timerHandle);
+    timerHandle = null;
     document.body.style.backgroundColor = isFlip ? "#000000" : colorEnd;
     document.getElementById("runningView").style.display = "none";
     document.getElementById("finishedMsg").style.display = "block";
@@ -590,6 +591,7 @@ function applyChallenge(){
 
   if (!isValid || !isRunning){
     if (timerHandle) clearInterval(timerHandle);
+    timerHandle = null;
     document.getElementById("runningView").style.display = "none";
     document.getElementById("finishedMsg").style.display = "none";
     document.getElementById("inactiveMsg").style.display = "block";
@@ -674,8 +676,14 @@ function calcUpdateStatus(){
   document.getElementById("calcModeBtn").innerText = calcMode;
 }
 
+/* تقريب لـ 10 خانات عشرية للأعداد العادية فقط. الأعداد الضخمة (مثل 170!) كان n*1e10 يحوّلها إلى ∞ فتظهر نتيجة خاطئة؛
+   وأيضًا نتخلّص من الصفر السالب (-0) الناتج عن تقريب أعداد سالبة صغيرة جدًا مثل sin(-180°). */
+function calcRound(n){
+  const r = Math.abs(n) < 1e15 ? Math.round(n * 1e10) / 1e10 : n;
+  return r === 0 ? 0 : r;
+}
 function calcNumToDisplay(n){
-  const rounded = Math.round(n * 1e10) / 1e10;
+  const rounded = calcRound(n);
   return rounded.toLocaleString("en-US", { maximumFractionDigits: 10, useGrouping: false });
 }
 
@@ -960,7 +968,7 @@ window.calcEquals = function(){
   try{
     const result = calcParse(calcTokenize(expr));
     if (!isFinite(result) || isNaN(result)) throw new Error("invalid");
-    const rounded = Math.round(result * 1e10) / 1e10;
+    const rounded = calcRound(result);
     calcAns = rounded;
     document.getElementById("calcResultLine").innerText = rounded.toLocaleString("en-US", { maximumFractionDigits: 10, useGrouping: false });
   }catch(e){
