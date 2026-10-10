@@ -1274,6 +1274,12 @@ try{
   window.__authErrCode = "";
   const withTimeout = (p, ms) => Promise.race([p, new Promise((res) => setTimeout(res, ms))]);
   const trySignIn = async () => {
+    /* ننتظر استرجاع الجلسة المحفوظة أولًا: signInAnonymously() يستبدل حساب Google المحفوظ بحساب مجهول جديد
+       إن استُدعيت قبل اكتمال استرجاع الجلسة (currentUser يكون null مؤقتًا عند بداية التحميل). */
+    const existing = await new Promise((resolve) => {
+      const off = firebase.auth().onAuthStateChanged((u) => { off(); resolve(u); });
+    });
+    if (existing) return;
     await firebase.auth().signInAnonymously();
   };
   window.kickAnonSignIn = async function(){
@@ -1832,10 +1838,20 @@ const RECOVERY_CODE_KEY = "studyChallengeRecoveryCode";
 const RECOVERY_CODE_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 
 function randomRecoveryCode(){
-  let s = "";
-  for (let i = 0; i < 8; i++){
-    if (i === 4) s += "-";
-    s += RECOVERY_CODE_CHARS[Math.floor(Math.random() * RECOVERY_CODE_CHARS.length)];
+  /* كود الاسترجاع يعمل كسر لاسترجاع الحساب، فنولّده بمولّد عشوائي آمن (crypto) بدل Math.random القابل للتنبؤ.
+     نستخدم rejection sampling حتى يكون توزيع الحروف منتظمًا بدون انحياز. */
+  const n = RECOVERY_CODE_CHARS.length;
+  const limit = 256 - (256 % n);
+  let s = "", count = 0;
+  while (count < 8){
+    const buf = new Uint8Array(16);
+    crypto.getRandomValues(buf);
+    for (let k = 0; k < buf.length && count < 8; k++){
+      if (buf[k] >= limit) continue;
+      if (count === 4) s += "-";
+      s += RECOVERY_CODE_CHARS[buf[k] % n];
+      count++;
+    }
   }
   return s;
 }
@@ -2179,22 +2195,19 @@ window.saveProfile = async function(){
   };
 
   try{
-    if (isBrandNewPlayer){
-      // لاعب جديد كليًا: هذا هو المكان الوحيد المسموح فيه بإنشاء سجل بـ totalSeconds = 0
-      profileUpdate.totalSeconds = 0;
-      await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
-    } else {
-      // الرصيد لا يُنقل من المتصفح. إن لم يكن للمعرّف الحالي سجل على السيرفر (معرّف مختلف، أو سجل محذوف)
-      // ننشئه برصيد صفر حتى يقبله فايربيس. أما السجل الموجود فنعدّل بياناته فقط ولا نلمس رصيده.
-      // (الاسترجاع يتم بربط جوجل أو برمز الاسترجاع.)
-      let ownExists = false;
-      try{
-        const ownSnap = await db.ref('studyLeaderboard/' + myUid).once('value');
-        ownExists = ownSnap.exists();
-      }catch(e){}
-      if (!ownExists) profileUpdate.totalSeconds = 0;
-      await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
+    /* نتحقق دائمًا من السيرفر قبل أي كتابة: لو كان للمعرّف سجل موجود (مثلًا انمسح الملف المحلي فقط وبقيت الجلسة)
+       فلا نضع totalSeconds = 0 أبدًا حتى لا نصفّر رصيد الطالب بالخطأ. الرصيد لا يُنقل من المتصفح،
+       وننشئ السجل برصيد صفر فقط إذا ثبت أنه غير موجود. (الاسترجاع يتم بربط جوجل أو برمز الاسترجاع.) */
+    let ownExists = false;
+    try{
+      const ownSnap = await db.ref('studyLeaderboard/' + myUid).once('value');
+      ownExists = ownSnap.exists();
+    }catch(readErr){
+      showProfileError("تعذّر التحقق من حسابك على السيرفر، تأكد من الاتصال بالإنترنت وحاول مرة ثانية.");
+      return;
     }
+    if (!ownExists) profileUpdate.totalSeconds = 0;
+    await db.ref('studyLeaderboard/' + p.id).update(profileUpdate);
 
     // ما نحفظ البروفايل محليًا إلا بعد التأكد إن الحفظ على فايربيس نجح فعلاً —
     // عشان ما يصير تعارض بين بروفايل محلي "جديد" وبيانات فعلية على السيرفر لو فشلت الكتابة.
@@ -2250,7 +2263,8 @@ watchChallengeStats();
 /* مفتاح عام يتحفظ بالجهاز — لمن يكون مفعّل، صفحات المؤقتات (لمن نطبّقه فيها) تبسّط واجهتها وتوقف
    التنبيهات غير الضرورية. هذا الزر هنا بس يفعّل/يوقف الحالة العامة، ما يغيّر شي بصفحة الرئيسية نفسها. */
 const FOCUS_KEY = "deep_focus_mode";
-let deepFocusOn = localStorage.getItem(FOCUS_KEY) === "1";
+let deepFocusOn = false;
+try{ deepFocusOn = localStorage.getItem(FOCUS_KEY) === "1"; }catch(e){}
 
 function updateFocusButtonUI(){
   const settingsBtn = document.getElementById("settingsBtn");
@@ -2264,7 +2278,7 @@ function updateFocusButtonUI(){
 
 window.toggleDeepFocus = function(){
   deepFocusOn = !deepFocusOn;
-  localStorage.setItem(FOCUS_KEY, deepFocusOn ? "1" : "0");
+  try{ localStorage.setItem(FOCUS_KEY, deepFocusOn ? "1" : "0"); }catch(e){}
   updateFocusButtonUI();
   showFocusToast();
 };
@@ -2299,7 +2313,8 @@ updateFocusButtonUI();
 /* ================= تذكير شرب الماء ================= */
 const WATER_KEY = "water_reminder_enabled";
 const WATER_INTERVAL_MIN = 45;
-let waterEnabled = localStorage.getItem(WATER_KEY) === "1";
+let waterEnabled = false;
+try{ waterEnabled = localStorage.getItem(WATER_KEY) === "1"; }catch(e){}
 let waterHandle = null;
 
 function updateWaterUI(){
@@ -2316,7 +2331,7 @@ function updateWaterUI(){
 
 window.toggleWaterReminder = function(){
   waterEnabled = !waterEnabled;
-  localStorage.setItem(WATER_KEY, waterEnabled ? "1" : "0");
+  try{ localStorage.setItem(WATER_KEY, waterEnabled ? "1" : "0"); }catch(e){}
   updateWaterUI();
   if (waterEnabled){
     if ("Notification" in window && Notification.permission === "default"){
