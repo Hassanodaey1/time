@@ -1620,6 +1620,35 @@ window.scanLegacyRecords = function(){
   });
 };
 
+/* دمج سجلّين (قديم o + جديد n) بدون تخريب العدّادات الدورية: رصيد اليوم/الأسبوع يُؤخذ من الفترة الأحدث فقط
+   (وعند تساوي الفترة نأخذ الأكبر). قبل كان يؤخذ max(الثواني) مع مؤشر الفترة القديم، فيضيع رصيد الأسبوع الحالي. */
+function mergePeriod(o, n, secKey, idxKey){
+  const oi = o[idxKey], ni = n[idxKey];
+  const os = o[secKey] || 0, ns = n[secKey] || 0;
+  if (oi == null && ni == null) return { sec: Math.max(os, ns), idx: null };
+  if (oi == null) return { sec: ns, idx: ni };
+  if (ni == null) return { sec: os, idx: oi };
+  if (oi > ni) return { sec: os, idx: oi };
+  if (ni > oi) return { sec: ns, idx: ni };
+  return { sec: Math.max(os, ns), idx: ni };
+}
+function buildMergeUpdates(o, n){
+  const u = {};
+  u[n.id + '/totalSeconds'] = Math.max(o.totalSeconds || 0, n.totalSeconds || 0);
+  const d = mergePeriod(o, n, 'daySeconds', 'dayIndex');
+  u[n.id + '/daySeconds'] = d.sec;
+  if (d.idx != null) u[n.id + '/dayIndex'] = d.idx;
+  const w = mergePeriod(o, n, 'weeklySeconds', 'weekIndex');
+  u[n.id + '/weeklySeconds'] = w.sec;
+  if (w.idx != null) u[n.id + '/weekIndex'] = w.idx;
+  u[n.id + '/streak'] = Math.max(o.streak || 0, n.streak || 0);
+  if (o.lastStudyDayIndex != null || n.lastStudyDayIndex != null){
+    u[n.id + '/lastStudyDayIndex'] = Math.max(o.lastStudyDayIndex || 0, n.lastStudyDayIndex || 0);
+  }
+  u[n.id + '/updatedAt'] = firebase.database.ServerValue.TIMESTAMP;
+  return u;
+}
+
 window.mergeLegacyRecords = function(){
   const msg = document.getElementById("legacyMigrateStatusMsg");
   const pairs = window._legacyPairs || [];
@@ -1636,14 +1665,7 @@ window.mergeLegacyRecords = function(){
     const updates = {};
     selected.forEach(pair => {
       const o = pair.old, n = pair.modern;
-      updates[n.id + '/totalSeconds'] = Math.max(o.totalSeconds || 0, n.totalSeconds || 0);
-      updates[n.id + '/daySeconds'] = Math.max(o.daySeconds || 0, n.daySeconds || 0);
-      if (o.dayIndex != null) updates[n.id + '/dayIndex'] = o.dayIndex;
-      updates[n.id + '/weeklySeconds'] = Math.max(o.weeklySeconds || 0, n.weeklySeconds || 0);
-      if (o.weekIndex != null) updates[n.id + '/weekIndex'] = o.weekIndex;
-      updates[n.id + '/streak'] = Math.max(o.streak || 0, n.streak || 0);
-      if (o.lastStudyDayIndex != null) updates[n.id + '/lastStudyDayIndex'] = o.lastStudyDayIndex;
-      updates[n.id + '/updatedAt'] = firebase.database.ServerValue.TIMESTAMP;
+      Object.assign(updates, buildMergeUpdates(o, n));
       updates[o.id] = null;
     });
 
@@ -1662,7 +1684,9 @@ window.mergeLegacyRecords = function(){
    فلو لم نحدّثه تضيع السلسلة المدموجة عند أول حفظ جديد. المحاولة "best effort" ولا تُفشل الدمج. */
 function syncStudyStateAfterMerge(o, n){
   const u = { streak: Math.max(o.streak || 0, n.streak || 0) };
-  if (o.lastStudyDayIndex != null) u.lastStudyDayIndex = o.lastStudyDayIndex;
+  if (o.lastStudyDayIndex != null || n.lastStudyDayIndex != null){
+    u.lastStudyDayIndex = Math.max(o.lastStudyDayIndex || 0, n.lastStudyDayIndex || 0);
+  }
   return db.ref('studyState/' + n.id).update(u)
     .then(() => db.ref('studyState/' + o.id).remove())
     .catch(() => {});
@@ -1910,7 +1934,7 @@ document.getElementById("stuSearchInput").addEventListener("input", renderStuden
 document.getElementById("stuEditSaveBtn").addEventListener("click", stuSave);
 document.getElementById("stuEditResetBtn").addEventListener("click", stuReset);
 document.getElementById("stuEditDeleteBtn").addEventListener("click", stuDelete);
-document.getElementById("stuEditCloseBtn").addEventListener("click", closeStudentEditor)
+document.getElementById("stuEditCloseBtn").addEventListener("click", closeStudentEditor);
 /* ================= رسالة الإعلان ================= */
 const ANN_PATH = 'studyChallengeSettings/announcement';
 function annMsg(text, color){
@@ -2057,15 +2081,7 @@ window.confirmRecoveryMerge = function(code, oldUid){
     db.ref('studyLeaderboard/' + oldUid).once('value').then(snap => {
       const o = { id: oldUid, ...(snap.val() || {}) };
       const n = target;
-      const updates = {};
-      updates[n.id + '/totalSeconds'] = Math.max(o.totalSeconds || 0, n.totalSeconds || 0);
-      updates[n.id + '/daySeconds'] = Math.max(o.daySeconds || 0, n.daySeconds || 0);
-      if (o.dayIndex != null) updates[n.id + '/dayIndex'] = o.dayIndex;
-      updates[n.id + '/weeklySeconds'] = Math.max(o.weeklySeconds || 0, n.weeklySeconds || 0);
-      if (o.weekIndex != null) updates[n.id + '/weekIndex'] = o.weekIndex;
-      updates[n.id + '/streak'] = Math.max(o.streak || 0, n.streak || 0);
-      if (o.lastStudyDayIndex != null) updates[n.id + '/lastStudyDayIndex'] = o.lastStudyDayIndex;
-      updates[n.id + '/updatedAt'] = firebase.database.ServerValue.TIMESTAMP;
+      const updates = buildMergeUpdates(o, n);
       updates[oldUid] = null;
       return db.ref('studyLeaderboard').update(updates).then(() => syncStudyStateAfterMerge(o, n));
     }).then(() => {
