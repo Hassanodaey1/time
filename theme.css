@@ -422,3 +422,105 @@ body[data-style="ring"] .monitor{
   background:color-mix(in srgb, var(--accent, var(--amber, #ffb400)) 12%, transparent);
   border:1px solid var(--accent, var(--amber, #ffb400));
 }
+
+
+/* ==========================================================
+   المستويات والألقاب (levels.js)
+   ========================================================== */
+.lvl-chip{
+  --tc:var(--accent, var(--amber, #ffb400));
+  display:inline-flex; align-items:center; vertical-align:middle; margin-inline-start:6px;
+  padding:1px 8px; border-radius:999px; line-height:1.5;
+  font:800 11px 'JetBrains Mono', monospace; color:var(--tc);
+  background:color-mix(in srgb, var(--tc) 14%, transparent);
+  border:1px solid color-mix(in srgb, var(--tc) 45%, transparent);
+}
+/* بطاقة المستوى في الملف الشخصي تأخذ لون اللقب */
+.pv-level{ --tc:var(--amber, #ffb400); cursor:pointer; transition:border-color .25s ease, box-shadow .25s ease; border-color:color-mix(in srgb, var(--tc) 35%, var(--border, #24242e)); box-shadow:0 0 26px -16px var(--tc); }
+.pv-level:active{ transform:scale(.99); }
+.pv-lvl-badge svg{ stroke:var(--tc) !important; fill:color-mix(in srgb, var(--tc) 14%, transparent) !important; }
+.pv-lvl-badge span{ color:var(--tc) !important; }
+.pv-lvl-title{ display:inline-flex; align-items:center; gap:7px; }
+.pv-lvl-title .ho-ic{ width:18px; height:18px; color:var(--tc); }
+.pv-xp-fill{ background:linear-gradient(90deg, var(--tc), color-mix(in srgb, var(--tc) 55%, #fff)) !important; }
+.pv-tier-note{ font-size:12px; color:var(--tc); margin-top:4px; font-weight:700; }
+
+/* ---------- مسار الألقاب ---------- */
+.tier-list{ display:grid; gap:8px; margin-top:6px; }
+.tier-row{
+  --tc:var(--amber, #ffb400);
+  display:flex; align-items:center; gap:12px; padding:12px;
+  background:var(--panel-2, #17171e); border:1px solid var(--border, #24242e); border-radius:14px;
+}
+.tier-row .t-ico{
+  flex:0 0 auto; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  color:var(--tc); background:color-mix(in srgb, var(--tc) 14%, transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--tc) 45%, transparent) inset;
+}
+.tier-row .t-ico .ho-ic{ width:22px; height:22px; }
+.tier-row .t-txt{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.tier-row .t-name{ font-size:15px; font-weight:800; color:#fff; }
+.tier-row .t-sub{ font-size:12px; color:var(--muted, #9094a3); }
+.tier-row .t-state{ font-size:12px; font-weight:800; color:var(--muted, #9094a3); white-space:nowrap; }
+.tier-row.reached .t-state{ color:var(--tc); }
+.tier-row.current{ border-color:var(--tc); box-shadow:0 0 24px -12px var(--tc); background:linear-gradient(180deg, color-mix(in srgb, var(--tc) 8%, var(--panel-2, #17171e)), var(--panel-2, #17171e)); }
+.tier-row.current .t-state{ color:var(--tc); }
+.tier-row.locked{ opacity:.55; }
+.tier-row.locked .t-ico{ color:var(--muted, #9094a3); background:rgba(255,255,255,.04); box-shadow:none; }
+
+
+/* ==========================================================
+   المهام (missions.js)
+   ========================================================== */
+.bento-card.missions{ cursor:pointer; }
+.bento-card.missions .bento-icon{ background:rgba(46,204,113,.13); color:#2ecc71; }
+.bento-card.missions:hover{ border-color:#2ecc71; }
+.bento-card.missions .bento-badge{ background:rgba(255,180,0,.15); color:var(--amber, #ffb400); flex-shrink:0; }
+.bento-card.missions.has-claim{ border-color:#2ecc71; box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 8px 24px rgba(0,0,0,.35), 0 0 26px -12px #2ecc71; }
+.bento-card.missions.has-claim::after{
+  content:""; position:absolute; top:12px; inset-inline-end:12px; width:10px; height:10px; border-radius:50%;
+  background:#2ecc71; box-shadow:0 0 0 0 rgba(46,204,113,.6); animation:ms-ping 1.8s ease-out infinite;
+}
+@keyframes ms-ping{ 0%{ box-shadow:0 0 0 0 rgba(46,204,113,.55); } 100%{ box-shadow:0 0 0 10px rgba(46,204,113,0); } }
+
+.ms-summary{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 16px; padding:14px;
+  border-radius:var(--r-lg, 20px); border:1px solid color-mix(in srgb, var(--amber, #ffb400) 30%, var(--border, #24242e));
+  background:linear-gradient(180deg, color-mix(in srgb, var(--amber, #ffb400) 7%, var(--panel-2, #17171e)), var(--panel-2, #17171e));
+}
+.ms-sum-stars{ display:flex; align-items:baseline; gap:6px; color:var(--amber, #ffb400); }
+.ms-sum-stars .ms-star{ font-size:22px; }
+.ms-sum-stars b{ font:900 28px 'JetBrains Mono', monospace; }
+.ms-sum-stars span:last-child{ font-size:13px; font-weight:700; color:var(--muted, #9094a3); }
+.ms-sum-txt{ font-size:12px; line-height:1.7; color:var(--muted, #9094a3); text-align:end; }
+.ms-list{ display:grid; gap:8px; margin-bottom:6px; }
+.ms-card{
+  --mc:var(--amber, #ffb400);
+  display:flex; align-items:center; gap:12px; padding:12px;
+  background:var(--panel-2, #17171e); border:1px solid var(--border, #24242e); border-radius:14px;
+  transition:border-color .25s ease, box-shadow .25s ease, opacity .25s ease;
+}
+.ms-card .ms-ico{
+  flex:0 0 auto; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  color:var(--mc); background:color-mix(in srgb, var(--mc) 14%, transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--mc) 40%, transparent) inset;
+}
+.ms-card .ms-ico .ho-ic{ width:22px; height:22px; }
+.ms-card .ms-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.ms-card .ms-title{ font-size:14px; font-weight:800; color:#fff; line-height:1.5; }
+.ms-card .ms-desc{ font-size:11.5px; color:var(--muted, #9094a3); }
+.ms-card .ms-bar{ height:6px; margin-top:5px; border-radius:6px; overflow:hidden; background:var(--border, #24242e); }
+.ms-card .ms-bar i{ display:block; height:100%; width:0; border-radius:6px; background:linear-gradient(90deg, var(--mc), color-mix(in srgb, var(--mc) 55%, #fff)); transition:width .6s cubic-bezier(.22,.61,.36,1); }
+.ms-card .ms-side{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:6px; min-width:72px; }
+.ms-card .ms-prog{ font:700 11px 'JetBrains Mono', monospace; color:var(--muted, #9094a3); white-space:nowrap; }
+.ms-card .ms-claim{
+  min-height:34px; padding:0 12px; border-radius:999px; cursor:pointer; white-space:nowrap;
+  font:800 12.5px 'Tajawal', system-ui, sans-serif; color:#1a1200; border:0;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--mc) 80%, #fff), var(--mc)); box-shadow:0 6px 16px -8px var(--mc);
+  animation:ms-pulse 1.8s ease-in-out infinite;
+}
+@keyframes ms-pulse{ 50%{ transform:scale(1.05); } }
+.ms-card .ms-got{ font-size:12px; font-weight:800; color:var(--mc); }
+.ms-card.done{ border-color:color-mix(in srgb, var(--mc) 55%, var(--border, #24242e)); box-shadow:0 0 22px -14px var(--mc); }
+.ms-card.claimed{ opacity:.6; }
+.ms-card.claimed .ms-bar i{ opacity:.6; }
