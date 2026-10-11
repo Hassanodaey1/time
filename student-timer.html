@@ -1011,6 +1011,7 @@
 </div>
 
 <script src="ui.js"></script>
+<script src="missions.js"></script>
 <script src="timer-sounds.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -1479,6 +1480,7 @@ window.toggleTaskDone = function(id){
   t.done = !t.done;
   saveTasks(tasks);
   renderTasks();
+  if (t.done && window.HOMissions) HOMissions.event("task", id);   /* مهمة منجزة (تُحتسب مرة باليوم لكل مهمة) */
 };
 
 window.deleteTask = function(id){
@@ -1750,6 +1752,7 @@ function logStudySession(subject, seconds, type){
     const day = daily[dateKey] || (daily[dateKey] = {});
     day[subject] = (day[subject] || 0) + seconds;
     localStorage.setItem(DAILY_KEY, JSON.stringify(daily));
+    if (window.HOMissions) HOMissions.addStudy(seconds);   /* تقدّم مهام اليوم/الأسبوع */
   }catch(e){}
 }
 
@@ -2177,6 +2180,8 @@ function advancePomoPhase(){
       const elapsedSec = Math.round((pomoTotalMs - pomoRemainingMs) / 1000);
       logStudySession(currentSubject, elapsedSec, "pomodoro");
     }
+    /* جلسة تركيز كاملة فقط (90% من مدتها على الأقل) تُحتسب للمهام، حتى لا يُحتسب التخطي */
+    if (window.HOMissions && pomoTotalMs > 0 && (pomoTotalMs - pomoRemainingMs) / pomoTotalMs >= 0.9) HOMissions.event("pomo");
     pomoCycleCount++;
     pomoPhase = (pomoCycleCount % POMO_CYCLES_BEFORE_LONG_BREAK === 0) ? "longBreak" : "break";
   } else {
@@ -2793,4 +2798,3 @@ if ("serviceWorker" in navigator) {
 </body>
 </html>
 
- 
