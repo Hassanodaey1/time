@@ -651,16 +651,6 @@
   </div>
 </div>
 
-<div class="overlay" id="appDialogOverlay">
-  <div class="modal">
-    <p id="appDialogText" style="margin:0 0 20px; font-size:var(--fs-07); line-height:1.7; color:#fff;"></p>
-    <div class="app-dialog-actions">
-      <button class="secondary hidden" id="appDialogCancelBtn">إلغاء</button>
-      <button class="primary" style="margin-top:0;" id="appDialogOkBtn">حسنًا</button>
-    </div>
-  </div>
-</div>
-
 <!-- نافذة تخصيص مدة التحدي (يوم/ساعة/دقيقة) -->
 <div class="overlay" id="durationPickerOverlay">
   <div class="modal tp-modal" style="max-width:360px;">
@@ -751,6 +741,7 @@
 
 </div><!-- /.page -->
 
+<script src="ui.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -820,29 +811,7 @@ function escapeHtml(str){
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-let appDialogResolver = null;
-function appAlert(message){
-  showAppDialog(message, false);
-}
-function appConfirm(message, onConfirmed){
-  showAppDialog(message, true).then(ok => { if (ok) onConfirmed(); });
-}
-function showAppDialog(message, isConfirm){
-  return new Promise(resolve => {
-    document.getElementById("appDialogText").innerText = message;
-    document.getElementById("appDialogCancelBtn").classList.toggle("hidden", !isConfirm);
-    document.getElementById("appDialogOverlay").classList.add("show");
-    appDialogResolver = resolve;
-  });
-}
-document.getElementById("appDialogOkBtn").addEventListener("click", () => {
-  document.getElementById("appDialogOverlay").classList.remove("show");
-  if (appDialogResolver){ const r = appDialogResolver; appDialogResolver = null; r(true); }
-});
-document.getElementById("appDialogCancelBtn").addEventListener("click", () => {
-  document.getElementById("appDialogOverlay").classList.remove("show");
-  if (appDialogResolver){ const r = appDialogResolver; appDialogResolver = null; r(false); }
-});
+/* نافذة التنبيه/التأكيد صارت في ui.js (appAlert / appConfirm) */
 if (firebaseOK){
   try{
     auth = adminApp.auth();
