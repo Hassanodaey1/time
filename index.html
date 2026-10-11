@@ -717,6 +717,15 @@
       <span class="bento-arrow">‹</span>
     </a>
 
+    <div class="bento-card hero missions" id="missionsCard" onclick="openMissions()" role="button" tabindex="0">
+      <span class="bento-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="4.2"/><circle cx="12" cy="12" r=".8" fill="currentColor" stroke="none"/></svg></span>
+      <span class="bento-txt">
+        <span class="bento-title">المهام</span>
+        <span class="bento-desc" id="msCardDesc">مهامك اليومية والأسبوعية</span>
+      </span>
+      <span class="bento-badge" id="msCardBadge">★ 0</span>
+    </div>
+
     <a href="display.html" class="bento-card annual needs-net" id="annualItem"
        onclick="return guardNetworkNav(event, 'المؤقت الرئيسي', 'المؤقت الرئيسي يعرض عدّاداً يتزامن لحظياً مع السيرفر، فما يشتغل بدون اتصال بالإنترنت.')">
       <span class="bento-icon"><svg viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg></span>
@@ -899,7 +908,7 @@
     </div>
 
     <div class="pv-body">
-      <div class="pv-level">
+      <div class="pv-level" id="pvLevelCard" onclick="openTiersSheet()" role="button" tabindex="0" aria-label="عرض مسار الألقاب">
         <div class="pv-lvl-badge">
           <svg viewBox="0 0 24 24"><path d="M12 2.5l8 3v6.2c0 5-3.4 8.4-8 9.8-4.6-1.4-8-4.8-8-9.8V5.5Z"/></svg>
           <span id="pvLvlNum">1</span>
@@ -911,6 +920,7 @@
           </div>
           <div class="pv-xp"><div class="pv-xp-fill" id="pvXpFill"></div></div>
           <div class="pv-xp-note" id="pvXpNote"></div>
+          <div class="pv-tier-note" id="pvTierNote"></div>
         </div>
       </div>
 
@@ -1139,6 +1149,31 @@
   </div>
 </div>
 
+<div class="overlay" id="missionsOverlay" onclick="if(event.target===this) closeMissions()">
+  <div class="profile-modal settings-modal">
+    <button type="button" class="modal-close-btn" onclick="closeMissions()" aria-label="إغلاق">✕</button>
+    <h2><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="4.2"/><circle cx="12" cy="12" r=".8" fill="currentColor" stroke="none"/></svg> المهام</h2>
+    <div class="ms-summary">
+      <div class="ms-sum-stars"><span class="ms-star">★</span><b id="msStars">0</b><span>نجمة</span></div>
+      <div class="ms-sum-txt" id="msSumTxt"></div>
+    </div>
+    <div class="pv-sec-title"><span>مهام اليوم</span><span id="msDailyCount">0/3</span></div>
+    <div class="ms-list" id="msDaily"></div>
+    <div class="pv-sec-title" style="margin-top:16px;"><span>مهام الأسبوع</span><span id="msWeeklyCount">0/2</span></div>
+    <div class="ms-list" id="msWeekly"></div>
+    <p class="google-hint" style="text-align:center; margin-top:14px;">تتجدد مهام اليوم عند منتصف الليل بتوقيت بغداد. النجوم رصيدك لفتح الجوائز في التحديث القادم.</p>
+  </div>
+</div>
+
+<div class="overlay" id="tiersOverlay" onclick="if(event.target===this) closeTiersSheet()">
+  <div class="profile-modal settings-modal">
+    <button type="button" class="modal-close-btn" onclick="closeTiersSheet()" aria-label="إغلاق">✕</button>
+    <h2><svg class="ico" viewBox="0 0 24 24"><path d="M4 18 3.5 8l5 4L12 5l3.5 7 5-4L20 18Z"/><path d="M4 20.5h16"/></svg> مسار الألقاب</h2>
+    <p class="google-hint" style="text-align:center;" id="tiersIntro"></p>
+    <div class="tier-list" id="tierList"></div>
+  </div>
+</div>
+
 <div class="overlay" id="recoveryCodeOverlay" onclick="if(event.target===this) closeRecoveryCode()">
   <div class="reminder-alert">
     <div class="bell">🔑</div>
@@ -1192,6 +1227,8 @@
 </div>
 
 <script src="ui.js"></script>
+<script src="levels.js"></script>
+<script src="missions.js"></script>
 <script src="timer-sounds.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -1522,36 +1559,8 @@ const PV_ICONS = {
   pin:   '<svg class="ico" viewBox="0 0 24 24"><path d="M12 21s6.5-5.6 6.5-11a6.5 6.5 0 0 0-13 0c0 5.4 6.5 11 6.5 11Z"/><circle cx="12" cy="10" r="2.3"/></svg>',
   user:  '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.6 3.6-5.4 7-5.4s6.2 1.8 7 5.4"/></svg>'
 };
-const PV_BADGES = [
-  { name: "البداية",     req: "ساعة",      type: "hours",  val: 1,   icon: "clock", color: "#48cae4" },
-  { name: "برونزية",     req: "10 ساعات",  type: "hours",  val: 10,  icon: "medal", color: "#cd7f32" },
-  { name: "فضية",        req: "50 ساعة",   type: "hours",  val: 50,  icon: "medal", color: "#c0c8d4" },
-  { name: "ذهبية",       req: "150 ساعة",  type: "hours",  val: 150, icon: "medal", color: "#ffb400" },
-  { name: "3 أيام",      req: "سلسلة 3",   type: "streak", val: 3,   icon: "flame", color: "#ff9f43" },
-  { name: "أسبوع",       req: "سلسلة 7",   type: "streak", val: 7,   icon: "flame", color: "#ff6b3d" },
-  { name: "شهر",         req: "سلسلة 30",  type: "streak", val: 30,  icon: "flame", color: "#ff3b30" },
-  { name: "المستوى 10",  req: "مستوى 10",  type: "level",  val: 10,  icon: "star",  color: "#a78bfa" }
-];
-const PV_MAX_LEVEL = 50;
-
-/* المستوى n يبدأ عند n*(n-1) ساعة: 2 س ← م2، 6 س ← م3، 12 س ← م4، 20 س ← م5 ... */
-function pvLevelInfo(totalSeconds){
-  const h = Math.max(0, (totalSeconds || 0) / 3600);
-  let lvl = Math.floor((1 + Math.sqrt(1 + 4 * h)) / 2);
-  if (lvl > PV_MAX_LEVEL) lvl = PV_MAX_LEVEL;
-  const floorH = lvl * (lvl - 1), ceilH = lvl * (lvl + 1);
-  const maxed = lvl >= PV_MAX_LEVEL;
-  const pct = maxed ? 100 : Math.max(0, Math.min(100, ((h - floorH) / (ceilH - floorH)) * 100));
-  return { lvl, pct, maxed, remainSec: maxed ? 0 : Math.max(0, (ceilH - h) * 3600) };
-}
-function pvLevelTitle(l){
-  if (l >= 20) return "أسطورة";
-  if (l >= 12) return "خبير";
-  if (l >= 8)  return "محترف";
-  if (l >= 5)  return "متمكن";
-  if (l >= 3)  return "مجتهد";
-  return "مبتدئ";
-}
+/* الشارات والمستويات والألقاب: المصدر الوحيد هو levels.js (HOLevel) */
+const PV_BADGES = HOLevel.BADGES;
 
 let pvLastVal = null;
 function renderProfileView(){
@@ -1581,15 +1590,21 @@ function renderProfileView(){
     }
   }
 
-  /* المستوى */
-  const L = pvLevelInfo(total);
+  /* المستوى واللقب (لون اللقب يلوّن البطاقة) */
+  const L = HOLevel.info(total);
+  const lvlCard = document.getElementById("pvLevelCard");
+  if (lvlCard) lvlCard.style.setProperty("--tc", L.tier.color);
   document.getElementById("pvLvlNum").textContent = L.lvl;
-  document.getElementById("pvLvlTitle").textContent = pvLevelTitle(L.lvl);
+  const titleEl = document.getElementById("pvLvlTitle");
+  titleEl.innerHTML = L.tier.icon;
+  titleEl.appendChild(document.createTextNode(L.tier.name));
   document.getElementById("pvLvlNext").textContent = L.maxed ? "أعلى مستوى" : ("المستوى " + (L.lvl + 1));
   document.getElementById("pvXpFill").style.width = L.pct.toFixed(1) + "%";
   document.getElementById("pvXpNote").textContent = L.maxed
     ? "وصلت لأعلى مستوى، أنت أسطورة!"
     : ("باقي " + formatStatHours(L.remainSec) + " للمستوى التالي");
+  const tierNote = document.getElementById("pvTierNote");
+  if (tierNote) tierNote.textContent = L.nextTier ? ("اللقب التالي: " + L.nextTier.name + " عند المستوى " + L.nextTier.min) : "أنت في أعلى رتبة";
 
   /* الإحصاءات (الأسبوعي لا يُعرض إلا إذا كان لنفس الأسبوع الحالي بتوقيت بغداد) */
   const wk = Math.floor((Date.now() + 3 * 3600 * 1000) / 604800000);
@@ -1633,6 +1648,96 @@ function renderProfileView(){
   }
 }
 
+/* ================= المهام (المنطق في missions.js) ================= */
+function msBuildCard(m){
+  const card = document.createElement("div");
+  card.className = "ms-card" + (m.done ? " done" : "") + (m.claimed ? " claimed" : "");
+  card.style.setProperty("--mc", m.color);
+  card.innerHTML = '<span class="ms-ico">' + m.icon + '</span><div class="ms-body"><div class="ms-title"></div><div class="ms-desc"></div><div class="ms-bar"><i></i></div></div><div class="ms-side"><span class="ms-prog"></span></div>';
+  card.querySelector(".ms-title").textContent = m.title;
+  card.querySelector(".ms-desc").textContent = m.desc;
+  card.querySelector(".ms-bar i").style.width = m.pct.toFixed(1) + "%";
+  card.querySelector(".ms-prog").textContent = m.label;
+  const side = card.querySelector(".ms-side");
+  if (m.claimed){
+    const g = document.createElement("span"); g.className = "ms-got"; g.textContent = "✓ تم"; side.appendChild(g);
+  } else if (m.done){
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "ms-claim"; b.textContent = "استلم ★" + m.stars;
+    b.onclick = () => HOMissions.claim(m.id);
+    side.appendChild(b);
+  } else {
+    const s = document.createElement("span"); s.className = "ms-got"; s.style.opacity = ".75"; s.textContent = "★" + m.stars; side.appendChild(s);
+  }
+  return card;
+}
+window.renderMissions = function(){
+  if (!window.HOMissions) return;
+  const S = HOMissions.state();
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set("msStars", S.stars);
+  set("msDailyCount", S.dailyClaimed + "/" + S.daily.length);
+  set("msWeeklyCount", S.weekly.filter(m => m.claimed).length + "/" + S.weekly.length);
+  set("msSumTxt", S.bonusTaken ? "أنجزت كل مهام اليوم وأخذت المكافأة" : ("أكمل مهام اليوم الثلاث لتحصل على +" + S.bonusStars + " ★ إضافية"));
+  [["msDaily", S.daily], ["msWeekly", S.weekly]].forEach(([id, list]) => {
+    const box = document.getElementById(id);
+    if (!box) return;
+    box.innerHTML = "";
+    list.forEach(m => box.appendChild(msBuildCard(m)));
+  });
+};
+window.updateMissionsCard = function(){
+  if (!window.HOMissions) return;
+  const S = HOMissions.state();
+  const d = document.getElementById("msCardDesc"), b = document.getElementById("msCardBadge"), c = document.getElementById("missionsCard");
+  if (d) d.textContent = S.claimable > 0 ? ("عندك " + S.claimable + " مهمة جاهزة للاستلام") : (S.dailyDone + " من " + S.daily.length + " مهام اليوم منجزة");
+  if (b) b.textContent = "★ " + S.stars;
+  if (c) c.classList.toggle("has-claim", S.claimable > 0);
+};
+window.openMissions = function(){
+  renderMissions();
+  document.getElementById("missionsOverlay").classList.add("show");
+};
+window.closeMissions = function(){
+  document.getElementById("missionsOverlay").classList.remove("show");
+};
+if (window.HOMissions){
+  HOMissions.onChange(() => {
+    updateMissionsCard();
+    const ov = document.getElementById("missionsOverlay");
+    if (ov && ov.classList.contains("show")) renderMissions();
+  });
+  updateMissionsCard();
+}
+
+/* ================= مسار الألقاب ================= */
+window.openTiersSheet = function(){
+  const total = (pvLastVal && pvLastVal.totalSeconds) || 0;
+  const L = HOLevel.info(total);
+  const intro = document.getElementById("tiersIntro");
+  if (intro) intro.textContent = "مستواك الحالي " + L.lvl + " — كل لقب يُفتح عند الوصول لمستوى معيّن";
+  const list = document.getElementById("tierList");
+  if (!list) return;
+  list.innerHTML = "";
+  HOLevel.TIERS.forEach((t, i) => {
+    const reached = L.lvl >= t.min, current = i === L.tierIndex;
+    const nextMin = HOLevel.TIERS[i + 1] ? HOLevel.TIERS[i + 1].min - 1 : HOLevel.MAX;
+    const hrs = HOLevel.hoursFor(t.min);
+    const row = document.createElement("div");
+    row.className = "tier-row " + (current ? "current " : "") + (reached ? "reached" : "locked");
+    row.style.setProperty("--tc", t.color);
+    row.innerHTML = '<span class="t-ico">' + t.icon + '</span><span class="t-txt"><span class="t-name"></span><span class="t-sub"></span></span><span class="t-state"></span>';
+    row.querySelector(".t-name").textContent = t.name;
+    row.querySelector(".t-sub").textContent = "المستويات " + t.min + (nextMin > t.min ? " - " + nextMin : "") + " · " + (hrs > 0 ? ("من " + hrs + " ساعة") : "من البداية");
+    row.querySelector(".t-state").textContent = current ? "لقبك الآن" : (reached ? "مكتمل" : "مقفل");
+    list.appendChild(row);
+  });
+  document.getElementById("tiersOverlay").classList.add("show");
+};
+window.closeTiersSheet = function(){
+  document.getElementById("tiersOverlay").classList.remove("show");
+};
+
 let currentStatsUid = null;
 function attachStatsListener(uid){
   if (!firebaseOK || !uid || uid === currentStatsUid) return;
@@ -1642,6 +1747,8 @@ function attachStatsListener(uid){
   currentStatsUid = uid;
   db.ref('studyLeaderboard/' + uid).on('value', (snap) => {
     renderChallengeStats(snap.val());
+    try{ HOLevel.check(uid, snap.val() || {}); }catch(e){}
+    try{ HOMissions.update(uid, snap.val() || {}); }catch(e){}
   }, () => { /* تعذّرت القراءة (بدون إنترنت مثلاً) — نترك آخر قيمة معروضة كما هي */ });
 }
 
@@ -1650,7 +1757,6 @@ function watchChallengeStats(){
     attachStatsListener(myUid);
   });
 }
-
 /* ================= تسجيل الدخول بحساب Google (بديل كامل لرمز الاسترجاع القديم) =================
    الفكرة: أول ما يفتح اللاعب اللعبة يدخل دخول "مجهول" تلقائي (زي القديم بالضبط) حتى يكدر يشتغل فورًا.
    لما يضغط "تسجيل الدخول بحساب Google":
@@ -2431,4 +2537,5 @@ if ("serviceWorker" in navigator) {
 <script src="notifications.js"></script>
 </body>
 </html>
+
 
