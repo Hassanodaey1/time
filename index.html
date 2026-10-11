@@ -152,17 +152,6 @@
     border-color:var(--amber); color:var(--amber);
     box-shadow:0 0 0 3px rgba(255,180,0,.15), 0 6px 18px rgba(0,0,0,.4);
   }
-  .focus-toast{
-    position:fixed; bottom:calc(18px + var(--safe-b)); left:50%; transform:translateX(-50%) translateY(16px);
-    max-width:320px; width:calc(100% - 36px);
-    background:var(--panel); border:1px solid var(--amber); color:#fff;
-    padding:12px 16px; border-radius:14px; display:flex; align-items:center; gap:10px;
-    font-family:'Tajawal',sans-serif; font-size:var(--fs-05); font-weight:700; line-height:1.5;
-    box-shadow:0 10px 30px rgba(0,0,0,.5); z-index:35;
-    opacity:0; pointer-events:none; transition:opacity .3s ease, transform .3s ease;
-  }
-  .focus-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
-  .focus-toast .f-icon{font-size:var(--fs-15); flex-shrink:0;}
 
   /* ================= تذكير شرب الماء ================= */
   .info-btn{
@@ -434,15 +423,6 @@
   .nf-group{display:flex; flex-direction:column; gap:8px; margin-top:14px;}
   .nf-time{display:flex; align-items:center; justify-content:space-between; gap:12px; background:#0d1420; border:1px solid var(--border); border-radius:12px; padding:10px 14px;}
   .nf-time input{background:#16161c; border:1px solid var(--border); color:#fff; border-radius:8px; padding:6px 10px; font-family:'JetBrains Mono',monospace; font-size:var(--fs-09);}
-  .nf-toast{
-    position:fixed; top:calc(14px + env(safe-area-inset-top, 0px)); left:50%; transform:translate(-50%,-140%);
-    display:flex; flex-direction:column; gap:3px; max-width:90%; width:340px; z-index:200; cursor:pointer;
-    background:#1b1b22; border:1px solid var(--amber); border-radius:14px; padding:12px 16px; color:#fff;
-    box-shadow:0 12px 32px rgba(0,0,0,.5); transition:transform .35s cubic-bezier(.22,.61,.36,1);
-  }
-  .nf-toast.show{transform:translate(-50%,0);}
-  .nf-toast b{font-size:var(--fs-09); color:var(--amber);}
-  .nf-toast span{font-size:var(--fs-07); color:var(--muted); line-height:1.6;}
 
   /* ---- بطاقة اللاعب بالصفحة الرئيسية ---- */
   .player-card{
@@ -702,11 +682,6 @@
   <svg viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z"/><path d="M19.4 13.5c.05-.5.05-1 0-1.5l1.6-1.2-1.6-2.8-1.9.6c-.4-.3-.8-.6-1.3-.8L15.8 6h-3.2l-.4 2c-.5.2-.9.5-1.3.8l-1.9-.6-1.6 2.8 1.6 1.2c-.05.5-.05 1 0 1.5l-1.6 1.2 1.6 2.8 1.9-.6c.4.3.8.6 1.3.8l.4 2h3.2l.4-2c.5-.2.9-.5 1.3-.8l1.9.6 1.6-2.8-1.6-1.2Z"/></svg>
 </button>
 <button type="button" class="profile-btn" id="profileBtn" onclick="openProfileView()" aria-label="الملف الشخصي" title="الملف الشخصي"><span class="profile-btn-avatar" id="profileBtnAvatar">🙂</span></button>
-<div class="focus-toast" id="focusToast">
-  <span class="f-icon"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor" stroke="none"/></svg></span>
-  <span id="focusToastText"></span>
-</div>
-
 <div class="wrap">
   <p class="eyebrow">مركز المؤقتات</p>
   <h1>اختر المؤقت</h1>
@@ -1069,6 +1044,41 @@
     <div class="settings-divider"></div>
 
     <div class="settings-section">
+      <h3 class="settings-section-title">الصوت والاهتزاز</h3>
+      <div class="settings-row snd-vol-row">
+        <div class="settings-row-text">
+          <span class="settings-row-title">مستوى الصوت</span>
+          <span class="settings-row-desc" id="sndVolLabel">80%</span>
+        </div>
+        <button type="button" class="ho-chip-btn" onclick="sndTest()">تجربة</button>
+        <input type="range" class="ho-range" id="sndVol" min="0" max="100" step="5" value="80" oninput="sndSetVol(this.value)" onchange="sndTest(true)" aria-label="مستوى الصوت">
+      </div>
+      <div class="settings-row" style="margin-top:8px;">
+        <div class="settings-row-text">
+          <span class="settings-row-title">كتم كل الأصوات</span>
+          <span class="settings-row-desc">يشمل نغمة نهاية المؤقت أيضًا</span>
+        </div>
+        <button type="button" class="switch-toggle" id="sndSw_mute" onclick="sndToggle('mute')" role="switch" aria-checked="false" aria-label="كتم كل الأصوات"><span class="switch-knob"></span></button>
+      </div>
+      <div class="settings-row" style="margin-top:8px;">
+        <div class="settings-row-text">
+          <span class="settings-row-title">أصوات الواجهة</span>
+          <span class="settings-row-desc">النقر وفتح النوافذ والإشعارات الداخلية</span>
+        </div>
+        <button type="button" class="switch-toggle" id="sndSw_ui" onclick="sndToggle('ui')" role="switch" aria-checked="true" aria-label="أصوات الواجهة"><span class="switch-knob"></span></button>
+      </div>
+      <div class="settings-row" style="margin-top:8px;">
+        <div class="settings-row-text">
+          <span class="settings-row-title">الاهتزاز</span>
+          <span class="settings-row-desc">عند نهاية المؤقت وفي المناسبات المهمة (إن كان الجهاز يدعمه)</span>
+        </div>
+        <button type="button" class="switch-toggle" id="sndSw_haptic" onclick="sndToggle('haptic')" role="switch" aria-checked="true" aria-label="الاهتزاز"><span class="switch-knob"></span></button>
+      </div>
+    </div>
+
+    <div class="settings-divider"></div>
+
+    <div class="settings-section">
       <div class="settings-row" onclick="closeSettingsModal(); openNotifSettings();" style="cursor:pointer;">
         <div class="settings-row-text">
           <span class="settings-row-title"><svg class="ico" viewBox="0 0 24 24"><path d="M6 17.5V11a6 6 0 0 1 12 0v6.5l1.5 1.5h-15Z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg> الإشعارات</span>
@@ -1181,6 +1191,7 @@
   </div>
 </div>
 
+<script src="ui.js"></script>
 <script src="timer-sounds.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -2283,9 +2294,42 @@ window.toggleDeepFocus = function(){
   showFocusToast();
 };
 
+/* ================= إعدادات الصوت والاهتزاز (التخزين والتشغيل في timer-sounds.js) ================= */
+window.renderSoundSettings = function(){
+  const s = window.HOSound ? HOSound.get() : { vol: 0.8, mute: false, ui: true, haptic: true };
+  const pct = Math.round(s.vol * 100);
+  const range = document.getElementById("sndVol");
+  if (range){ range.value = pct; range.style.setProperty("--p", pct + "%"); range.disabled = s.mute; range.style.opacity = s.mute ? ".45" : ""; }
+  const lbl = document.getElementById("sndVolLabel");
+  if (lbl) lbl.textContent = s.mute ? "مكتوم" : (pct + "%");
+  [["mute", s.mute], ["ui", s.ui], ["haptic", s.haptic]].forEach(([k, on]) => {
+    const sw = document.getElementById("sndSw_" + k);
+    if (!sw) return;
+    sw.classList.toggle("active", !!on);
+    sw.setAttribute("aria-checked", on ? "true" : "false");
+  });
+};
+window.sndSetVol = function(v){
+  if (!window.HOSound) return;
+  HOSound.set("vol", (+v || 0) / 100);
+  renderSoundSettings();
+};
+window.sndToggle = function(key){
+  if (!window.HOSound) return;
+  const s = HOSound.get();
+  HOSound.set(key, !s[key]);
+  renderSoundSettings();
+  if (key === "haptic" && !s.haptic){ try{ if (navigator.vibrate) navigator.vibrate(60); }catch(e){} }
+};
+window.sndTest = function(short){
+  if (!window.HOSound) return;
+  HOSound.play(short ? "success" : "finish", { force: true });
+};
+
 /* ================= نافذة الإعدادات ================= */
 window.openSettingsModal = function(){
   updateFocusButtonUI();
+  renderSoundSettings();
   if (firebaseOK) updateGoogleUI();
   const errEl = document.getElementById("settingsError");
   if (errEl) errEl.style.display = "none";
@@ -2296,15 +2340,13 @@ window.closeSettingsModal = function(){
   document.getElementById("settingsOverlay").classList.remove("show");
 };
 
-let focusToastTimeout = null;
 function showFocusToast(){
-  const toast = document.getElementById("focusToast");
-  document.getElementById("focusToastText").innerText = deepFocusOn
-    ? "وضع التركيز العميق مفعّل — راح يبسّط واجهة المؤقت ويوقف التنبيهات غير الضرورية"
-    : "تم إيقاف وضع التركيز العميق";
-  toast.classList.add("show");
-  if (focusToastTimeout) clearTimeout(focusToastTimeout);
-  focusToastTimeout = setTimeout(() => toast.classList.remove("show"), 3200);
+  HOUI.toast({
+    id: "focus", type: "info", icon: "focus", duration: 3600, sound: false,
+    text: deepFocusOn
+      ? "وضع التركيز العميق مفعّل — راح يبسّط واجهة المؤقت ويوقف التنبيهات غير الضرورية"
+      : "تم إيقاف وضع التركيز العميق"
+  });
 }
 
 updateFocusButtonUI();
