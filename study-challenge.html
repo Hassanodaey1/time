@@ -282,10 +282,6 @@
   body[data-style="flipclock"] .game-btn{ background:#101418; border-color:#1c232b; color:#8aa0b8; }
   body[data-style="flipclock"] .game-btn.active{ border-color:#4aa8ff; color:#4aa8ff; background:rgba(74,168,255,.1); }
 
-  .session-notice{
-    margin:14px 0 0; padding:10px 12px; border-radius:10px; font-size:var(--fs-07); text-align:center;
-    background:rgba(255,59,48,.1); border:1px solid rgba(255,59,48,.35); color:#ff8a80;
-  }
   .my-rank-banner{
     margin:0 0 10px; padding:10px 12px; border-radius:10px; font-size:var(--fs-08); text-align:center;
     background:rgba(255,180,0,.08); border:1px solid var(--accent); color:var(--accent); font-weight:700;
@@ -342,7 +338,6 @@
   .ch-dur button{padding:10px 0; border-radius:10px; border:1px solid var(--border); background:#16161c; color:var(--muted); font-weight:700; font-size:var(--fs-08); font-family:'Tajawal',sans-serif; cursor:pointer;}
   .ch-dur button.active{border-color:var(--accent); color:var(--accent); background:rgba(255,180,0,.1);}
   .ch-hint{font-size:var(--fs-05); color:var(--muted); margin:10px 0 0; text-align:center; line-height:1.7;}
-  .ch-toast{position:fixed; bottom:calc(84px + var(--safe-b)); left:50%; transform:translateX(-50%); background:#1b1b22; border:1px solid var(--border); color:#fff; padding:10px 16px; border-radius:12px; font-size:var(--fs-08); z-index:40; max-width:88%; text-align:center;}
   #chCodeInput{text-align:center; letter-spacing:6px; font-family:'JetBrains Mono',monospace; text-transform:uppercase;}
 
   /* ================= الحاسبة العلمية العائمة ================= */
@@ -388,17 +383,6 @@
   .calc-btn.eq{background:var(--accent); color:#06222d; border-color:var(--accent);}
   .calc-btn.zero{grid-column:span 2;}
   /* ================= تذكير قاعدة 20-20-20 لراحة العين ================= */
-  .eye-toast{
-    position:fixed; bottom:calc(18px + var(--safe-b)); left:50%; transform:translateX(-50%) translateY(16px);
-    max-width:320px; width:calc(100% - 36px);
-    background:var(--panel); border:1px solid var(--accent); color:#fff;
-    padding:12px 16px; border-radius:14px; display:flex; align-items:center; gap:10px;
-    font-family:'Tajawal',sans-serif; font-size:var(--fs-08); font-weight:700; line-height:1.5;
-    box-shadow:0 10px 30px rgba(0,0,0,.5); z-index:25;
-    opacity:0; pointer-events:none; transition:opacity .3s ease, transform .3s ease;
-  }
-  .eye-toast.show{opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto;}
-  .eye-toast .eye-icon{font-size:var(--fs-17); flex-shrink:0;}
   /* ================= السبورة العائمة ================= */
   .board-fab{
     position:fixed; bottom:calc(84px + var(--safe-b)); inset-inline-end:calc(18px + var(--safe-l)); width:50px; height:50px; border-radius:50%;
@@ -483,11 +467,6 @@
 <button class="calc-fab" onclick="openCalc()" aria-label="حاسبة"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><path d="M8 6.5h8"/><circle cx="8.3" cy="11" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r=".9" fill="currentColor" stroke="none"/><circle cx="15.7" cy="11" r=".9" fill="currentColor" stroke="none"/><circle cx="8.3" cy="14.5" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="14.5" r=".9" fill="currentColor" stroke="none"/><circle cx="15.7" cy="14.5" r=".9" fill="currentColor" stroke="none"/><rect x="8" y="17.3" width="8" height="2" rx="1" fill="currentColor" stroke="none"/></svg></button>
 
 <button class="board-fab" onclick="openBoard()" aria-label="سبورة"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M9 20l3-4 3 4"/><path d="M7 9h10"/><path d="M7 12h6"/></svg></button>
-
-<div class="eye-toast" id="eyeToast">
-  <span class="eye-icon"><svg class="ico" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg></span>
-  <span>قاعدة 20-20-20: انظر لشي يبعد 6 أمتار لمدة 20 ثانية لراحة عينك</span>
-</div>
 
 <div class="board-overlay" id="boardOverlay">
   <div class="board-modal">
@@ -635,7 +614,6 @@
         <button class="secondary" id="pauseBtn" onclick="togglePause()">⏸️ إيقاف مؤقت</button>
         <button class="secondary" onclick="resetTimer()"><svg class="ico" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.6-5.7"/><path d="M20 12a8 8 0 0 1-13.6 5.7"/><path d="M17.6 3.6v3.2h-3.2"/><path d="M6.4 20.4v-3.2h3.2"/></svg> إعادة ضبط</button>
       </div>
-      <p class="session-notice" id="sessionNotice" style="display:none;"></p>
     </div>
   </div>
 
@@ -751,6 +729,7 @@
   </div>
 </div>
 
+<script src="ui.js"></script>
 <script src="timer-sounds.js"></script>
 <script src="time-bank.js"></script>
 <script src="nav-lock.js"></script>
@@ -808,16 +787,14 @@ function isSessionRunning(){
     && document.getElementById("digitsWrap").style.display !== "none";
 }
 
+/* الإشعارات صارت موحّدة عبر HOUI: نحدد النوع من الرمز في أول الرسالة ونستبدله بأيقونة النوع */
 function showSessionNotice(text){
-  const el = document.getElementById("sessionNotice");
-  if (!el) return;
-  el.innerText = text;
-  el.style.display = "block";
+  const raw = String(text || "");
+  const type = raw.startsWith("⚠") ? "warn" : raw.startsWith("🧊") ? "success" : "info";
+  const clean = raw.replace(/^[\p{Extended_Pictographic}\uFE0F\u200d\s]+/u, "");
+  HOUI.toast({ id: "session", type: type, icon: type === "info" ? "resume" : undefined, text: clean, duration: 7500 });
 }
-function hideSessionNotice(){
-  const el = document.getElementById("sessionNotice");
-  if (el) el.style.display = "none";
-}
+function hideSessionNotice(){ HOUI.dismiss("session"); }
 
 /* نص تنبيه الوصول للحد اليومي: نضيف اقتراح ربط الحساب بجوجل فقط لمن لسه داخل بحساب مجهول،
    لأنها اللحظة اللي ممكن يفكر فيها الطالب يتحايل (يمسح بيانات المتصفح) بدل ما يرجع باچر. */
@@ -1347,12 +1324,8 @@ const CH_CACHE = {};
 const chListeners = {};
 let chDays = 7;
 
-function chToast(msg){
-  const t = document.createElement("div");
-  t.className = "ch-toast";
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3500);
+function chToast(msg, type){
+  HOUI.toast({ type: type || "info", text: msg, duration: 3500 });
 }
 function chRemainText(endAt){
   const ms = endAt - serverNow();
@@ -1481,7 +1454,7 @@ window.submitChCreate = async function(){
   try{
     const r = await callWorker("/challenge/create", { name, days: chDays });
     closeChCreate();
-    chToast("تم إنشاء التحدي. رمز الدعوة: " + r.code);
+    chToast("تم إنشاء التحدي. رمز الدعوة: " + r.code, "success");
   }catch(e){ chShowErr(err, chErrText(e)); }
   finally{ btn.disabled = false; }
 };
@@ -1502,7 +1475,7 @@ window.submitChJoin = async function(){
   try{
     const r = await callWorker("/challenge/join", { code });
     closeChJoin();
-    chToast(r && r.already ? "أنت منضم لهذا التحدي مسبقًا." : "انضممت للتحدي، بالتوفيق!");
+    chToast(r && r.already ? "أنت منضم لهذا التحدي مسبقًا." : "انضممت للتحدي، بالتوفيق!", r && r.already ? "info" : "success");
   }catch(e){ chShowErr(err, chErrText(e)); }
   finally{ btn.disabled = false; }
 };
@@ -1514,16 +1487,16 @@ window.shareChallenge = async function(cid){
   try{
     if (navigator.share){ await navigator.share({ text }); return; }
     await navigator.clipboard.writeText(text);
-    chToast("تم نسخ الدعوة. أرسلها لأصدقائك.");
+    chToast("تم نسخ الدعوة. أرسلها لأصدقائك.", "success");
   }catch(e){ /* أغلق المستخدم نافذة المشاركة */ }
 };
 window.leaveChallenge = async function(cid){
   const c = CH_CACHE[cid];
   const ended = c && c.endAt <= serverNow();
   const msg = ended ? "إخفاء هذا التحدي من قائمتك؟" : "الخروج من التحدي سيزيلك من الترتيب. متأكد؟";
-  if (!confirm(msg)) return;
+  if (!(await HOUI.confirm(msg, { title: ended ? "إخفاء التحدي" : "الخروج من التحدي", okText: ended ? "إخفاء" : "خروج", danger: !ended }))) return;
   try{ await callWorker("/challenge/leave", { cid }); }
-  catch(e){ chToast("تعذّر تنفيذ العملية، حاول مجددًا."); }
+  catch(e){ chToast("تعذّر تنفيذ العملية، حاول مجددًا.", "error"); }
 };
 
 /* ================= ترتيبك الشخصي + السلسلة ================= */
@@ -2064,10 +2037,7 @@ function eyeReminderTick(){
 }
 function showEyeToast(){
   if (typeof window.isDeepFocus === "function" && window.isDeepFocus()) return; // وضع التركيز العميق: بدون تنبيهات جانبية
-  const el = document.getElementById("eyeToast");
-  if (!el) return;
-  el.classList.add("show");
-  setTimeout(() => { el.classList.remove("show"); }, 20000);
+  HOUI.toast({ id: "eye", type: "info", icon: "eye", text: "قاعدة 20-20-20: انظر لشي يبعد 6 أمتار لمدة 20 ثانية لراحة عينك", duration: 20000, soft: true, sound: false });
 }
 </script>
 <script>
