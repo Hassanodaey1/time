@@ -30,6 +30,12 @@
   let toastEl = null, toastTimer = null;
   function notice(text){
     try{
+      if (window.HOUI){
+        const t = String(text || "");
+        const lock = t.startsWith("⏳");
+        HOUI.toast({ id: "tb", type: lock ? "info" : "warn", icon: lock ? "lock" : undefined, text: t.replace(/^[\p{Extended_Pictographic}\uFE0F\u200d\s]+/u, ""), duration: 7000 });
+        return;
+      }
       if (!toastEl){
         toastEl = document.createElement("div");
         toastEl.setAttribute("role", "status");
