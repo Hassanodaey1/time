@@ -730,6 +730,8 @@
 </div>
 
 <script src="ui.js"></script>
+<script src="levels.js"></script>
+<script src="missions.js"></script>
 <script src="timer-sounds.js"></script>
 <script src="time-bank.js"></script>
 <script src="nav-lock.js"></script>
@@ -1251,7 +1253,7 @@ function renderLeaderboard(snapshot){
         <div class="rank-num">${medal}</div>
         <div class="rank-avatar">${rankAvatarHtml(r)}</div>
         <div class="rank-info">
-          <p class="rank-name">${escapeHtml(r.name || "طالب")}${isMe ? " (أنت)" : ""}${badge ? `<span class="badge-icon" title="${badge.label}">${badge.icon}</span>` : ""}${streakTag}</p>
+          <p class="rank-name">${escapeHtml(r.name || "طالب")}${isMe ? " (أنت)" : ""}${HOLevel.chip(r.totalSeconds)}${badge ? `<span class="badge-icon" title="${badge.label}">${badge.icon}</span>` : ""}${streakTag}</p>
           <p class="rank-loc">${escapeHtml(r.governorate || "")} • ${escapeHtml(r.country || "")}</p>
         </div>
         <div class="rank-time">${formatTotal(displaySeconds)}</div>
@@ -1555,6 +1557,8 @@ authReady.then(async (myUid) => {
   db.ref('studyLeaderboard/' + myUid).on('value', (snap) => {
     const val = snap.val() || {};
     myLatestLbVal = val;
+    try{ HOLevel.check(myUid, val); }catch(e){}
+    try{ HOMissions.update(myUid, val); }catch(e){}
     updateMyRankBanner(boardSecondsOf(val));
     const freezeStillAvailable = (val.freezeWeekIndex !== localWeekIndex(serverNow())) || !val.freezeUsed;
     updateStreakInfo(val.streak || 0, freezeStillAvailable);
