@@ -235,3 +235,190 @@ body[data-style="ring"] .monitor{
   body:not([data-style]) .flip{ font-size:clamp(40px, 7vmin, 72px); }
 }
 
+
+
+/* ==========================================================
+   نظام الواجهة الموحّد (ui.js): إشعارات · حوارات · احتفال
+   كل التنبيهات في كل الصفحات تستخدم هذه الأصناف فقط (ho-*)
+   ========================================================== */
+.ho-ic{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; display:block; }
+
+/* ---------- الإشعارات ---------- */
+.ho-toasts{
+  position:fixed; z-index:9000; left:50%; transform:translateX(-50%);
+  top:calc(12px + var(--safe-t, env(safe-area-inset-top, 0px)));
+  width:min(92vw, 380px); display:flex; flex-direction:column; gap:8px; pointer-events:none;
+}
+.ho-toast{
+  --ho-c:var(--accent, var(--amber, #ffb400));
+  position:relative; overflow:hidden; pointer-events:auto; touch-action:pan-y;
+  display:flex; align-items:center; gap:12px; padding:12px 14px;
+  background:linear-gradient(180deg, var(--panel-2, #17171e), var(--panel, #101015));
+  border:1px solid color-mix(in srgb, var(--ho-c) 38%, var(--border, #24242e));
+  border-radius:var(--r-lg, 20px);
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 14px 36px rgba(0,0,0,.55), 0 0 26px -12px var(--ho-c);
+  color:var(--text, #f3f4f8); font-family:'Tajawal', system-ui, sans-serif;
+  opacity:0; transform:translateY(-130%) scale(.96);
+  transition:transform .45s var(--ease, cubic-bezier(.2,.8,.2,1)), opacity .3s ease;
+}
+.ho-toast.in{ opacity:1; transform:none; }
+.ho-toast.out{ opacity:0; transform:translateY(-120%) scale(.96); transition-duration:.3s; }
+.ho-toast-ic{
+  flex:0 0 auto; width:38px; height:38px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; color:var(--ho-c);
+  background:color-mix(in srgb, var(--ho-c) 15%, transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--ho-c) 45%, transparent) inset;
+}
+.ho-toast-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.ho-toast-body b{ font-size:14px; font-weight:800; color:#fff; line-height:1.4; }
+.ho-toast-body span{ font-size:13px; font-weight:500; color:var(--muted, #9094a3); line-height:1.6; }
+.ho-toast-body span.solo{ font-size:14px; font-weight:700; color:var(--text, #f3f4f8); }
+.ho-toast-act{
+  flex:0 0 auto; min-height:34px; padding:0 14px; border-radius:999px; cursor:pointer;
+  font:800 13px 'Tajawal', system-ui, sans-serif; color:var(--ho-c);
+  background:color-mix(in srgb, var(--ho-c) 12%, transparent); border:1px solid var(--ho-c);
+}
+.ho-toast-x{
+  flex:0 0 auto; width:30px; height:30px; min-height:0; border-radius:50%; cursor:pointer;
+  font-size:20px; line-height:1; color:var(--muted, #9094a3); background:transparent; border:0;
+}
+.ho-toast-bar{
+  position:absolute; inset-inline:0; bottom:0; height:3px; background:var(--ho-c); opacity:.85;
+  transform-origin:right center; animation:ho-bar var(--ho-d, 4s) linear forwards;
+}
+.ho-toast.paused .ho-toast-bar{ animation-play-state:paused; }
+@keyframes ho-bar{ from{ transform:scaleX(1); } to{ transform:scaleX(0); } }
+
+/* ---------- الحوارات (بديل alert / confirm) ---------- */
+.ho-overlay{
+  --ho-c:var(--accent, var(--amber, #ffb400));
+  position:fixed; inset:0; z-index:9500; display:flex; align-items:center; justify-content:center;
+  padding:max(14px, var(--safe-t, 0px)) max(14px, var(--safe-r, 0px)) max(14px, var(--safe-b, 0px)) max(14px, var(--safe-l, 0px));
+  background:rgba(4,4,7,.72); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  opacity:0; transition:opacity .25s ease;
+}
+.ho-overlay.in{ opacity:1; }
+.ho-dialog{
+  width:100%; max-width:360px; text-align:center; padding:24px 20px 18px; color:var(--text, #f3f4f8);
+  font-family:'Tajawal', system-ui, sans-serif;
+  background:linear-gradient(180deg, var(--panel-2, #17171e), var(--panel, #101015));
+  border:1px solid color-mix(in srgb, var(--ho-c) 30%, var(--border, #24242e));
+  border-radius:var(--r-xl, 26px);
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 24px 60px rgba(0,0,0,.6), 0 0 40px -18px var(--ho-c);
+  transform:translateY(16px) scale(.96); transition:transform .38s var(--ease, cubic-bezier(.2,.8,.2,1));
+  max-height:calc(100dvh - 28px); overflow-y:auto;
+}
+.ho-overlay.in .ho-dialog{ transform:none; }
+.ho-dialog-ic{
+  width:54px; height:54px; margin:0 auto 12px; border-radius:50%; color:var(--ho-c);
+  display:flex; align-items:center; justify-content:center;
+  background:color-mix(in srgb, var(--ho-c) 14%, transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--ho-c) 45%, transparent) inset;
+}
+.ho-dialog-ic .ho-ic{ width:26px; height:26px; }
+.ho-dialog-title{ font-size:17px; font-weight:900; color:#fff; margin-bottom:6px; }
+.ho-dialog-text{ margin:0; font-size:15px; line-height:1.85; color:var(--text, #f3f4f8); white-space:pre-line; word-break:break-word; }
+.ho-actions{ display:flex; gap:10px; margin-top:20px; }
+.ho-btn{
+  flex:1; min-height:46px; padding:0 14px; border-radius:var(--r-md, 14px); cursor:pointer;
+  font:800 15px 'Tajawal', system-ui, sans-serif; color:var(--text, #f3f4f8);
+  background:var(--panel-2, #17171e); border:1px solid var(--border, #24242e);
+}
+.ho-btn.primary{
+  color:#1a1200; border-color:transparent;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--ho-c) 82%, #fff), var(--ho-c));
+  box-shadow:0 8px 20px -8px var(--ho-c);
+}
+.ho-btn.primary.danger{ color:#fff; }
+
+/* ---------- شاشة الاحتفال (ترقية · شارة · جائزة) ---------- */
+.ho-cele{
+  --ho-c:var(--accent, var(--amber, #ffb400));
+  position:fixed; inset:0; z-index:9600; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:24px; font-family:'Tajawal', system-ui, sans-serif; color:var(--text, #f3f4f8);
+  background:radial-gradient(720px 540px at 50% 40%, color-mix(in srgb, var(--ho-c) 26%, transparent), rgba(4,4,7,.95) 70%);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  opacity:0; transition:opacity .35s ease;
+}
+.ho-cele.in{ opacity:1; }
+.ho-cele canvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.ho-cele > *:not(canvas){ position:relative; }
+.ho-cele-medal{
+  width:128px; height:128px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--ho-c);
+  background:radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--ho-c) 32%, #1a1a22), #101015 72%);
+  border:2px solid var(--ho-c);
+  box-shadow:0 0 0 8px color-mix(in srgb, var(--ho-c) 12%, transparent), 0 0 64px -6px var(--ho-c);
+  opacity:0; transform:scale(.4); animation:ho-pop .75s .1s cubic-bezier(.2,1.4,.3,1) forwards;
+}
+.ho-cele-medal .ho-ic{ width:60px; height:60px; stroke-width:1.5; }
+.ho-cele-medal .emoji{ font-size:58px; line-height:1; }
+.ho-cele-medal::after{
+  content:""; position:absolute; inset:-10px; border-radius:50%; border:2px solid var(--ho-c);
+  opacity:0; animation:ho-ring 1.8s .6s ease-out infinite;
+}
+.ho-cele-kicker, .ho-cele-title, .ho-cele-value, .ho-cele-sub, .ho-cele .ho-btn{ opacity:0; animation:ho-rise .6s ease forwards; }
+.ho-cele-kicker{ margin-top:26px; font-size:14px; font-weight:800; letter-spacing:.5px; color:var(--ho-c); animation-delay:.45s; }
+.ho-cele-title{ margin-top:6px; font-size:clamp(26px, 7vw, 36px); font-weight:900; color:#fff; text-shadow:0 0 30px color-mix(in srgb, var(--ho-c) 60%, transparent); animation-delay:.55s; }
+.ho-cele-value{ margin-top:2px; font-family:'JetBrains Mono', monospace; font-size:64px; font-weight:900; line-height:1.1; color:var(--ho-c); text-shadow:0 0 36px color-mix(in srgb, var(--ho-c) 55%, transparent); animation-delay:.65s; }
+.ho-cele-sub{ margin-top:8px; max-width:320px; font-size:14px; line-height:1.8; color:var(--muted, #9094a3); animation-delay:.75s; }
+.ho-cele .ho-btn{ flex:none; width:min(240px, 80vw); margin-top:28px; animation-delay:.9s; }
+@keyframes ho-pop{ to{ opacity:1; transform:scale(1); } }
+@keyframes ho-ring{ 0%{ opacity:.7; transform:scale(.92); } 100%{ opacity:0; transform:scale(1.5); } }
+@keyframes ho-rise{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
+
+
+/* ==========================================================
+   توحيد نوافذ التذكير القديمة (.reminder-alert) مع الحوارات الجديدة
+   + عناصر التحكم بالصوت في الإعدادات
+   ========================================================== */
+.reminder-alert{
+  background:linear-gradient(180deg, var(--panel-2, #17171e), var(--panel, #101015));
+  border:1px solid color-mix(in srgb, var(--accent, var(--amber, #ffb400)) 30%, var(--border, #24242e));
+  border-radius:var(--r-xl, 26px);
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 24px 60px rgba(0,0,0,.6), 0 0 40px -18px var(--accent, var(--amber, #ffb400));
+  animation:ho-dialog-in .38s var(--ease, cubic-bezier(.2,.8,.2,1)) both;
+}
+.reminder-alert.danger{
+  border-color:color-mix(in srgb, var(--red, #ff3b30) 55%, var(--border, #24242e));
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 24px 60px rgba(0,0,0,.6), 0 0 40px -18px var(--red, #ff3b30);
+}
+.reminder-alert .bell{
+  width:60px; height:60px; margin:0 auto 12px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:28px; line-height:1;
+  background:color-mix(in srgb, var(--accent, var(--amber, #ffb400)) 14%, transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--accent, var(--amber, #ffb400)) 45%, transparent) inset;
+}
+.reminder-alert.danger .bell{
+  background:color-mix(in srgb, var(--red, #ff3b30) 14%, transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--red, #ff3b30) 45%, transparent) inset;
+}
+.reminder-alert h2{ font-size:17px; font-weight:900; color:#fff; }
+@keyframes ho-dialog-in{ from{ opacity:0; transform:translateY(16px) scale(.96); } to{ opacity:1; transform:none; } }
+
+/* ---------- شريط مستوى الصوت ---------- */
+.snd-vol-row{ display:grid; grid-template-columns:1fr auto; row-gap:14px; }
+.snd-vol-row .ho-range{ grid-column:1 / -1; }
+.ho-range{
+  -webkit-appearance:none; appearance:none; width:100%; height:28px; background:transparent; cursor:pointer; --p:80%;
+}
+.ho-range::-webkit-slider-runnable-track{
+  height:6px; border-radius:6px;
+  background:linear-gradient(to left, var(--accent, var(--amber, #ffb400)) var(--p), var(--border, #24242e) var(--p));
+}
+.ho-range::-moz-range-track{ height:6px; border-radius:6px; background:var(--border, #24242e); }
+.ho-range::-moz-range-progress{ height:6px; border-radius:6px; background:var(--accent, var(--amber, #ffb400)); }
+.ho-range::-webkit-slider-thumb{
+  -webkit-appearance:none; width:24px; height:24px; margin-top:-9px; border-radius:50%;
+  background:var(--accent, var(--amber, #ffb400)); border:3px solid var(--panel, #101015);
+  box-shadow:0 0 0 1px var(--accent, var(--amber, #ffb400)), 0 4px 12px rgba(0,0,0,.5);
+}
+.ho-range::-moz-range-thumb{
+  width:20px; height:20px; border-radius:50%; background:var(--accent, var(--amber, #ffb400));
+  border:3px solid var(--panel, #101015); box-shadow:0 0 0 1px var(--accent, var(--amber, #ffb400));
+}
+.ho-chip-btn{
+  min-height:36px; padding:0 18px; border-radius:999px; cursor:pointer;
+  font:800 13px 'Tajawal', system-ui, sans-serif; color:var(--accent, var(--amber, #ffb400));
+  background:color-mix(in srgb, var(--accent, var(--amber, #ffb400)) 12%, transparent);
+  border:1px solid var(--accent, var(--amber, #ffb400));
+}
