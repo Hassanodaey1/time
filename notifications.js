@@ -35,15 +35,10 @@ function nfHash(s){
   return a.toString(36) + b.toString(36);
 }
 function nfToast(title, body, url){
-  const t = document.createElement("div");
-  t.className = "nf-toast";
-  t.innerHTML = '<b></b><span></span>';
-  t.firstChild.textContent = title || "";
-  t.lastChild.textContent = body || "";
-  if (url) t.onclick = () => { location.href = url; };
-  document.body.appendChild(t);
-  requestAnimationFrame(() => t.classList.add("show"));
-  setTimeout(() => { t.classList.remove("show"); setTimeout(() => t.remove(), 400); }, 5200);
+  HOUI.toast({
+    type: "info", icon: "bell", title: title || "", text: body || "", duration: 5500, sound: false,
+    onClick: url ? () => { location.href = url; } : undefined
+  });
 }
 
 async function nfLoadPrefs(){
