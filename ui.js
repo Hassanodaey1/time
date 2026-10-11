@@ -61,13 +61,15 @@
   var deferred = [], deferTimer = null;
   function timerRunning(){ try{ return !!(window.NavLock && window.NavLock.isLocked && window.NavLock.isLocked()); }catch(e){ return false; } }
   function shouldDefer(){ return deepFocus() && timerRunning(); }
-  function defer(fn){
-    deferred.push(fn);
+  function defer(fn, pred){
+    deferred.push({ fn: fn, pred: pred });
     if (deferTimer) return;
     deferTimer = setInterval(function(){
-      if (shouldDefer()) return;
-      clearInterval(deferTimer); deferTimer = null;
-      deferred.splice(0).forEach(function(f, i){ setTimeout(f, i * 600); });
+      var keep = [], run = [];
+      deferred.forEach(function(d){ (d.pred() ? keep : run).push(d); });
+      deferred = keep;
+      run.forEach(function(d, i){ setTimeout(d.fn, i * 600); });
+      if (!deferred.length){ clearInterval(deferTimer); deferTimer = null; }
     }, 2000);
   }
 
@@ -90,7 +92,7 @@
     if (o.soft && deepFocus()) return null;
     var type = COLORS.hasOwnProperty(o.type) ? o.type : "info";
     if ((type === "level" || type === "reward") && !o._d && shouldDefer()){
-      defer(function(){ toast(Object.assign({}, o, { _d: 1 })); });
+      defer(function(){ toast(Object.assign({}, o, { _d: 1 })); }, shouldDefer);
       return null;
     }
     if (!document.body){
@@ -344,9 +346,10 @@
 
   function celebrate(o){
     o = o || {};
-    if (!o._d && shouldDefer()){
+    /* الاحتفال شاشة كاملة: لا يظهر أبدًا أثناء عمل مؤقت (حتى بدون وضع التركيز)، بل بعد توقفه */
+    if (!o._d && timerRunning()){
       return new Promise(function(res){
-        defer(function(){ celebrate(Object.assign({}, o, { _d: 1 })).then(res); });
+        defer(function(){ celebrate(Object.assign({}, o, { _d: 1 })).then(res); }, timerRunning);
       });
     }
     return enqueue(function(done){
@@ -357,7 +360,8 @@
       var cv = el("canvas"); cv.setAttribute("aria-hidden", "true");
       var medal = el("div", "ho-cele-medal");
       var icon = o.icon || (kind === "level" ? "level" : "reward");
-      if (P[icon]) medal.innerHTML = svg(icon);
+      if (typeof icon === "string" && icon.charAt(0) === "<") medal.innerHTML = icon;   /* SVG داخلي موثوق (مثل أيقونات الألقاب) */
+      else if (P[icon]) medal.innerHTML = svg(icon);
       else medal.appendChild(el("span", "emoji", icon));
       ov.appendChild(cv);
       ov.appendChild(medal);
