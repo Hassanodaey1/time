@@ -193,6 +193,9 @@ if ("serviceWorker" in navigator){
   navigator.serviceWorker.addEventListener("message", (e) => {
     const m = e.data;
     if (!m || m.type !== "nf-foreground") return;
+    /* ترقية/شارة والتطبيق مفتوح: الاحتفال داخل اللعبة (levels.js) يعرضها ويشغّل صوتها، فلا نكرر الإشعار.
+       إن لم يتوفر سجل اللاعب بعد نعرض الإشعار كالمعتاد. */
+    if ((m.kind === "level" || m.kind === "badge") && window.HOLevel && window.HOLevel.recheck()) return;
     nfToast(m.title, m.body, m.url);
     try{
       const kind = ({ level: "levelup", badge: "badge", streak: "streak", overtaken: "overtaken" })[m.kind] || "notify";
