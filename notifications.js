@@ -88,11 +88,21 @@ async function nfDisable(){
   await nfSavePrefs();
 }
 
+/* الويب لا يستطيع فتح إعدادات الإشعارات في أندرويد بنفسه، فنعرض للمستخدم الخطوات الصحيحة حسب طريقة التشغيل */
+function nfIsStandalone(){
+  try{ return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true; }catch(e){ return false; }
+}
+function nfGuideText(){
+  return nfIsStandalone()
+    ? "الإشعارات مغلقة من إعدادات الجهاز للتطبيق.\n١) افتح إعدادات الجهاز ← التطبيقات ← «المؤقتات» ← الإشعارات.\n٢) فعّل «السماح لجميع الإشعارات».\n٣) ارجع للتطبيق واضغط «تفعيل الإشعارات»."
+    : "الإشعارات محجوبة لهذا الموقع.\n١) اضغط على أيقونة القفل بجانب رابط الموقع ← الأذونات ← الإشعارات.\n٢) اختر «سماح».\n٣) أعد تحميل الصفحة واضغط «تفعيل الإشعارات».";
+}
+
 function nfErrText(code){
   return ({
     "unsupported": "هذا المتصفح أو الجهاز لا يدعم الإشعارات.",
     "no-vapid": "لم يكتمل إعداد الإشعارات بعد (مفتاح VAPID ناقص في notifications.js).",
-    "denied": "الإشعارات محجوبة. فعّلها من إعدادات التطبيق/المتصفح ثم أعد المحاولة.",
+    "denied": nfGuideText(),
     "dismissed": "لم تمنح الإذن. اضغط تفعيل مرة أخرى واختر «سماح».",
     "no-token": "تعذّر تسجيل الجهاز، حاول مجددًا.",
     "slow-down": "انتظر لحظات قبل إرسال إشعار تجريبي آخر."
@@ -102,6 +112,7 @@ function nfShowError(text){
   const el = document.getElementById("nfError");
   if (!el) return;
   el.textContent = text || "";
+  el.style.whiteSpace = "pre-line";
   el.style.display = text ? "block" : "none";
 }
 
@@ -120,11 +131,16 @@ function nfRender(){
       : on ? "مفعّلة على هذا الجهاز" : "متوقفة";
   }
   if (btn){
-    btn.disabled = !supported || perm === "denied";
-    btn.textContent = on ? "إيقاف الإشعارات على هذا الجهاز" : "تفعيل الإشعارات";
+    btn.disabled = !supported;
+    btn.textContent = on ? "إيقاف الإشعارات على هذا الجهاز"
+      : (supported && perm === "denied") ? "كيف أفعّل الإشعارات؟" : "تفعيل الإشعارات";
     btn.classList.toggle("danger", on);
   }
   if (list) list.style.display = on ? "block" : "none";
+  /* إذا كان الإذن محجوبًا نُبقي الخطوات ظاهرة بدل زر معطّل بلا شرح */
+  const errBox = document.getElementById("nfError");
+  if (errBox && supported && perm === "denied" && !errBox.textContent) nfShowError(nfGuideText());
+  else if (errBox && perm === "granted" && errBox.textContent === nfGuideText()) nfShowError("");
   NF_TOGGLES.forEach(k => {
     const sw = document.getElementById("nfSw_" + k);
     if (!sw) return;
@@ -147,6 +163,7 @@ window.closeNotifSettings = function(){ document.getElementById("nfOverlay").cla
 
 window.nfMainAction = async function(){
   if (nfBusy || !nfPrefs) return;
+  if (nfSupported() && Notification.permission === "denied"){ nfShowError(nfGuideText()); return; }
   nfBusy = true; nfShowError("");
   const btn = document.getElementById("nfMainBtn");
   if (btn) btn.disabled = true;
@@ -188,6 +205,16 @@ if ("serviceWorker" in navigator){
     }catch(err){}
   });
 }
+
+/* عودة المستخدم من إعدادات الجهاز: نعيد قراءة حالة الإذن فورًا ونجدّد التوكن إن صار مسموحًا */
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  try{
+    const ov = document.getElementById("nfOverlay");
+    if (ov && ov.classList.contains("show") && nfPrefs) nfRender();
+    nfRefreshToken();
+  }catch(e){}
+});
 
 /* تجديد التوكن عند كل فتح للتطبيق (التوكن قد يتغير) */
 async function nfRefreshToken(){
