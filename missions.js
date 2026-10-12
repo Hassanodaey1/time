@@ -46,6 +46,21 @@
   function jget(k, d){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
   function jset(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
   var mem = {};                                                  /* احتياط إن كان التخزين غير متاح */
+  /* ===== دفتر النجوم (قابل للمزامنة بين الأجهزة بدمج بسيط بلا تضارب) =====
+     الرصيد = مجموع legacy (رصيد كل جهاز عند أول ترحيل) + مجموع claims (نجوم المهام المستلمة) − مجموع spent (المشتريات).
+     كل خريطة مفاتيحها فريدة، فدمج جهازين = اتحاد المفاتيح بلا عدّ مزدوج. */
+  function devId(){
+    var d = null;
+    try{ d = localStorage.getItem("ho_dev"); }catch(e){}
+    if (!d){
+      d = Math.random().toString(36).slice(2, 10);
+      try{ localStorage.setItem("ho_dev", d); }catch(e){}
+    }
+    return d;
+  }
+  function sumMap(o){ var t = 0; for (var k in o){ var v = Number(o[k]); if (v > 0) t += v; } return t; }
+  function balance(st){ return Math.max(0, sumMap(st.legacy) + sumMap(st.claims) - sumMap(st.spent)); }
+  function cleanNum(v, max){ v = Number(v); return v > 0 && v <= max ? Math.floor(v) : 0; }
   function curUid(){ return jget("ho_ms_cur", null) || "guest"; }
   function loadSt(uid){
     var k = "ho_ms_" + uid;
@@ -53,6 +68,9 @@
     st.day = st.day || 0; st.base = st.base || 0; st.total = st.total || 0;
     st.claimed = st.claimed || {}; st.notified = st.notified || {}; st.days = st.days || [];
     st.stars = st.stars || 0; st.bonusDay = st.bonusDay || 0;
+    st.claims = st.claims || {}; st.spent = st.spent || {};
+    if (!st.legacy){ st.legacy = {}; st.legacy[devId()] = st.stars || 0; }   /* ترحيل الرصيد القديم مرة واحدة */
+    st.stars = balance(st);
     st.wkIdx = st.wkIdx || 0; st.wkSec = st.wkSec || 0;
     return st;
   }
@@ -124,9 +142,9 @@
     daily.forEach(function(m){ if (m.done) dailyDone++; if (m.claimed) dailyClaimed++; if (m.done && !m.claimed) claimable++; });
     weekly.forEach(function(m){ if (m.done) weeklyDone++; if (m.done && !m.claimed) claimable++; });
     return {
-      uid: uid, day: d, week: w, stars: st.stars, daily: daily, weekly: weekly,
+      uid: uid, day: d, week: w, stars: balance(st), daily: daily, weekly: weekly,
       dailyDone: dailyDone, dailyClaimed: dailyClaimed, weeklyDone: weeklyDone, claimable: claimable,
-      bonusTaken: st.bonusDay === d, bonusStars: BONUS_STARS, _st: st
+      bonusTaken: st.bonusDay === d || st.claims["b:" + d] !== undefined, bonusStars: BONUS_STARS, _st: st
     };
   }
   function mk(id, kind, title, desc, prog, target, label, stars, scope, st){
@@ -134,7 +152,7 @@
     return {
       id: id, kind: kind, scope: scope, title: title, desc: desc, icon: ICON[kind], color: COLOR[kind],
       progress: prog, target: target, pct: Math.max(0, Math.min(100, (prog / target) * 100)),
-      label: label, stars: stars, done: done, claimed: !!st.claimed[id]
+      label: label, stars: stars, done: done, claimed: !!st.claimed[id] || st.claims[id] !== undefined
     };
   }
   function publicState(){ var s = compute(curUid()); delete s._st; return s; }
@@ -206,12 +224,13 @@
     var m = S.daily.concat(S.weekly).filter(function(x){ return x.id === id; })[0];
     if (!m || !m.done || m.claimed) return { ok: false };
     st.claimed[id] = 1;
-    st.stars += m.stars;
+    st.claims[id] = m.stars;
     var gotBonus = false;
     if (m.scope === "daily"){
       var allClaimed = S.daily.every(function(x){ return x.id === id || x.claimed; });
-      if (allClaimed && st.bonusDay !== S.day){ st.bonusDay = S.day; st.stars += BONUS_STARS; gotBonus = true; }
+      if (allClaimed && !S.bonusTaken){ st.bonusDay = S.day; st.claims["b:" + S.day] = BONUS_STARS; gotBonus = true; }
     }
+    st.stars = balance(st);
     saveSt(uid, st);
     if (window.HOUI){
       HOUI.dismiss("ms-" + id);
@@ -229,17 +248,45 @@
   }
 
   /* خصم نجوم (للمتجر). يرجع true عند النجاح */
-  function spend(n){
+  function spend(n, key){
     n = Math.floor(n || 0);
     var uid = curUid(), st = loadSt(uid);
-    if (n <= 0 || st.stars < n) return false;
-    st.stars -= n;
+    if (n <= 0 || balance(st) < n) return false;
+    st.spent[key || ("x:" + Date.now())] = n;
+    st.stars = balance(st);
     saveSt(uid, st);
     emit();
     return true;
   }
 
+  /* ----- المزامنة: تصدير الدفتر ودمج دفتر قادم من جهاز آخر (اتحاد المفاتيح) ----- */
+  function exportLedger(){
+    var st = loadSt(curUid());
+    return { legacy: st.legacy, claims: st.claims, spent: st.spent };
+  }
+  function mergeLedger(doc){
+    if (!doc) return false;
+    var uid = curUid(), st = loadSt(uid), ch = false;
+    [["legacy", 100000], ["claims", 10], ["spent", 500]].forEach(function(p){
+      var src = doc[p[0]];
+      if (!src) return;
+      Object.keys(src).forEach(function(k){
+        if (st[p[0]][k] !== undefined) return;
+        var v = cleanNum(src[k], p[1]);
+        if (p[0] === "legacy" ? !(Number(src[k]) >= 0) : v <= 0) return;
+        st[p[0]][k] = p[0] === "legacy" ? cleanNum(src[k], 100000) : v;
+        ch = true;
+      });
+    });
+    Object.keys(st.claims).forEach(function(k){
+      if (k.indexOf("b:") !== 0 && !st.claimed[k]){ st.claimed[k] = 1; ch = true; }   /* مهمة استلمها جهاز آخر */
+    });
+    if (ch){ st.stars = balance(st); saveSt(uid, st); emit(); }
+    return ch;
+  }
+
   window.HOMissions = {
+    exportLedger: exportLedger, mergeLedger: mergeLedger,
     update: update, event: event, addStudy: addStudy, state: publicState, claim: claim, spend: spend,
     onChange: function(fn){ if (typeof fn === "function") listeners.push(fn); }
   };
