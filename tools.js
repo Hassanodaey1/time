@@ -456,3 +456,18 @@ window.boardClear = function(){
   boardCtx.fillStyle = "#ffffff";
   boardCtx.fillRect(0, 0, canvas.width, canvas.height);
 };
+
+/* ================= تذكير قاعدة 20-20-20 لراحة العين (مشترك بين student-timer و study-challenge) ================= */
+let eyeReminderElapsed = 0;
+const EYE_REMINDER_INTERVAL_SEC = 20 * 60; // كل 20 دقيقة
+function eyeReminderTick(sec){
+  eyeReminderElapsed += (sec === undefined ? 1 : sec);
+  if (eyeReminderElapsed >= EYE_REMINDER_INTERVAL_SEC){
+    eyeReminderElapsed = 0;
+    showEyeToast();
+  }
+}
+function showEyeToast(){
+  if (typeof window.isDeepFocus === "function" && window.isDeepFocus()) return; // وضع التركيز العميق: بدون تنبيهات جانبية
+  HOUI.toast({ id: "eye", type: "info", icon: "eye", text: "قاعدة 20-20-20: انظر لشي يبعد 6 أمتار لمدة 20 ثانية لراحة عينك", duration: 20000, soft: true, sound: false });
+}
