@@ -15,7 +15,7 @@
   "use strict";
 
   /* ============================ الإعدادات ============================ */
-  var KEYS = { vol: "ho_snd_vol", mute: "ho_snd_mute", ui: "ho_snd_ui", haptic: "ho_snd_haptic", pack: "ho_snd_pack" };
+  var KEYS = { vol: "ho_snd_vol", mute: "ho_snd_mute", ui: "ho_snd_ui", haptic: "ho_snd_haptic", pack: "ho_snd_pack", tick: "ho_snd_tick" };
   function lsGet(k, d){ try{ var v = localStorage.getItem(k); return v == null ? d : v; }catch(e){ return d; } }
   function lsSet(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
   function cfg(){
@@ -25,7 +25,8 @@
       vol: Math.min(1, v),
       mute: lsGet(KEYS.mute, "0") === "1",
       ui: lsGet(KEYS.ui, "1") !== "0",
-      haptic: lsGet(KEYS.haptic, "1") !== "0"
+      haptic: lsGet(KEYS.haptic, "1") !== "0",
+      tick: lsGet(KEYS.tick, "1") !== "0"
     };
   }
   /* حزم الأصوات (تُشترى من المتجر). شاشتا المشرف (display / challenge-timer) تبقيان بالجرس الكلاسيكي دائمًا. */
@@ -190,9 +191,14 @@
     warn:       [{ f: 660, t: 0, d: 0.08, v: 0.1 }, { f: 660, t: 0.13, d: 0.1, v: 0.1 }],
     error:      [{ f: 392, t: 0, d: 0.1, v: 0.11 }, { f: 311.13, t: 0.12, d: 0.2, v: 0.11 }]
   };
+  /* عدّاد آخر 5 ثوانٍ: نبضات بنغمات صاعدة تنتهي بنغمة الانتهاء */
+  [659.25, 698.46, 739.99, 783.99, 880].forEach(function(f, i){
+    SOUNDS["tick" + (5 - i)] = [{ f: f, t: 0, d: 0.06, v: i === 4 ? 0.13 : 0.1 }];
+  });
+  function isTick(kind){ return kind.indexOf("tick") === 0; }
   var UI_KINDS = { tap: 1, open: 1, close: 1, toggleOn: 1, toggleOff: 1, success: 1, warn: 1, error: 1 };
   /* ما يُسكَت في وضع التركيز العميق: كل شيء عدا نغمة نهاية المؤقت */
-  var QUIET_KINDS = { mid: 1, start: 1, lastMinute: 1, notify: 1, streak: 1, overtaken: 1, levelup: 1, badge: 1, mission: 1, chest: 1,
+  var QUIET_KINDS = { tick1: 1, tick2: 1, tick3: 1, tick4: 1, tick5: 1, mid: 1, start: 1, lastMinute: 1, notify: 1, streak: 1, overtaken: 1, levelup: 1, badge: 1, mission: 1, chest: 1,
                       tap: 1, open: 1, close: 1, toggleOn: 1, toggleOff: 1, success: 1, warn: 1, error: 1 };
   var HAPTIC = {
     finish: [220, 120, 220, 120, 380], lastMinute: [140, 90, 140], mid: [70],
@@ -208,12 +214,25 @@
     if (!opts.force){
       if (QUIET_KINDS[kind] && window.isDeepFocus()) return;
       if (UI_KINDS[kind] && !c.ui) return;
+      if (isTick(kind) && !c.tick) return;
     }
     if (c.haptic && HAPTIC[kind]){ try{ if (navigator.vibrate) navigator.vibrate(HAPTIC[kind]); }catch(e){} }
     if (c.mute) return;
-    _playSequence(notes, !!UI_KINDS[kind], curPack(opts));
+    _playSequence(notes, !!UI_KINDS[kind] || isTick(kind), curPack(opts));
   }
   window.playTimerAlert = function(kind){ play(kind); };
+
+  /* تستدعيها حلقات المؤقت كل ثانية بالزمن المتبقي؛ تصدر نبضة واحدة لكل ثانية من آخر 5 */
+  var lastTickId = "";
+  function countdown(remainingMs, key){
+    if (document.hidden) return;
+    var sec = Math.ceil((remainingMs || 0) / 1000);
+    if (sec < 1 || sec > 5) return;
+    var id = (key || "t") + ":" + sec;
+    if (id === lastTickId) return;
+    lastTickId = id;
+    play("tick" + sec);
+  }
 
   window.HOSound = {
     get: cfg,
@@ -224,7 +243,7 @@
       else lsSet(KEYS[key], value ? "1" : "0");
       _getCtx(); _syncMaster();
     },
-    play: play
+    play: play, countdown: countdown
   };
 
   /* ==================== أصوات الواجهة التلقائية ==================== */
