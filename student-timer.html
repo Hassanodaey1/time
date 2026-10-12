@@ -1328,6 +1328,7 @@ function step(){
   const progress = 1 - (remainingMs / totalMs);
   if (progress >= 0.5 && !midAlerted){ midAlerted = true; window.playTimerAlert("mid"); }
   if (remainingMs <= 60000 && !lastMinuteAlerted){ lastMinuteAlerted = true; window.playTimerAlert("lastMinute"); }
+  if (window.HOSound) HOSound.countdown(remainingMs, "main");
 
   setRingProgress((remainingMs / totalMs) * 100);
   renderTime();
@@ -1941,6 +1942,7 @@ function renderReport(){
 }
 
 renderAllSubjectChips();
+
 /* ================= استئناف الجلسة تلقائيًا ================= */
 /* لو انسكر التبويب بالغلط أو راح النت أو تبدّل التطبيق، نحفظ حالة الجلسة الشغّالة
    بشكل مستمر، وأول ما ترجع نحسب كم وقت فعلي مرّ ونكمل من نفس النقطة بالظبط. */
@@ -2167,6 +2169,7 @@ function pomoStep(){
     advancePomoPhase();
     return;
   }
+  if (window.HOSound) HOSound.countdown(pomoRemainingMs, "pomo" + pomoPhase);
   renderPomoTime();
   if (typeof saveActiveSession === "function"){
     saveActiveSession({ kind:"pomodoro", subject: currentSubject, phase: pomoPhase, cycleCount: pomoCycleCount, pomoWorkMinutes, pomoBreakMinutes, totalMs: pomoTotalMs, remainingMs: pomoRemainingMs, savedAt: Date.now(), paused: pomoPaused });
@@ -2797,4 +2800,3 @@ if ("serviceWorker" in navigator) {
 </script>
 </body>
 </html>
-
