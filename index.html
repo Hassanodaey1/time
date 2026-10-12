@@ -1082,6 +1082,13 @@
       </div>
       <div class="settings-row" style="margin-top:8px;">
         <div class="settings-row-text">
+          <span class="settings-row-title">عدّاد آخر 5 ثوانٍ</span>
+          <span class="settings-row-desc">نبضات صاعدة قبل نهاية المؤقت مباشرة</span>
+        </div>
+        <button type="button" class="switch-toggle" id="sndSw_tick" onclick="sndToggle('tick')" role="switch" aria-checked="true" aria-label="عدّاد آخر 5 ثوانٍ"><span class="switch-knob"></span></button>
+      </div>
+      <div class="settings-row" style="margin-top:8px;">
+        <div class="settings-row-text">
           <span class="settings-row-title">الاهتزاز</span>
           <span class="settings-row-desc">عند نهاية المؤقت وفي المناسبات المهمة (إن كان الجهاز يدعمه)</span>
         </div>
@@ -1247,6 +1254,7 @@
 <script src="levels.js"></script>
 <script src="missions.js"></script>
 <script src="shop.js"></script>
+<script src="sync.js"></script>
 <script src="timer-sounds.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -1669,7 +1677,6 @@ function renderProfileView(){
     if (cnt) cnt.textContent = earnedCount + "/" + PV_BADGES.length;
   }
 }
-
 /* ================= المتجر (المنطق في shop.js) ================= */
 let shopTab = "avatar";
 let lastTotalSeconds = 0;
@@ -1916,6 +1923,7 @@ function attachStatsListener(uid){
     renderChallengeStats(snap.val());
     try{ HOLevel.check(uid, snap.val() || {}); }catch(e){}
     try{ HOMissions.update(uid, snap.val() || {}); }catch(e){}
+    try{ if (window.HOSync && !window.__hoSyncStarted){ window.__hoSyncStarted = true; HOSync.start(db, uid); } }catch(e){}
   }, () => { /* تعذّرت القراءة (بدون إنترنت مثلاً) — نترك آخر قيمة معروضة كما هي */ });
 }
 
@@ -2571,13 +2579,13 @@ window.toggleDeepFocus = function(){
 
 /* ================= إعدادات الصوت والاهتزاز (التخزين والتشغيل في timer-sounds.js) ================= */
 window.renderSoundSettings = function(){
-  const s = window.HOSound ? HOSound.get() : { vol: 0.8, mute: false, ui: true, haptic: true };
+  const s = window.HOSound ? HOSound.get() : { vol: 0.8, mute: false, ui: true, haptic: true, tick: true };
   const pct = Math.round(s.vol * 100);
   const range = document.getElementById("sndVol");
   if (range){ range.value = pct; range.style.setProperty("--p", pct + "%"); range.disabled = s.mute; range.style.opacity = s.mute ? ".45" : ""; }
   const lbl = document.getElementById("sndVolLabel");
   if (lbl) lbl.textContent = s.mute ? "مكتوم" : (pct + "%");
-  [["mute", s.mute], ["ui", s.ui], ["haptic", s.haptic]].forEach(([k, on]) => {
+  [["mute", s.mute], ["ui", s.ui], ["tick", s.tick], ["haptic", s.haptic]].forEach(([k, on]) => {
     const sw = document.getElementById("sndSw_" + k);
     if (!sw) return;
     sw.classList.toggle("active", !!on);
@@ -2706,4 +2714,5 @@ if ("serviceWorker" in navigator) {
 <script src="notifications.js"></script>
 </body>
 </html>
+
 
