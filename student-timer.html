@@ -1943,7 +1943,6 @@ function renderReport(){
 }
 
 renderAllSubjectChips();
-
 /* ================= استئناف الجلسة تلقائيًا ================= */
 /* لو انسكر التبويب بالغلط أو راح النت أو تبدّل التطبيق، نحفظ حالة الجلسة الشغّالة
    بشكل مستمر، وأول ما ترجع نحسب كم وقت فعلي مرّ ونكمل من نفس النقطة بالظبط. */
@@ -2318,19 +2317,7 @@ window.clearNotebook = function(){
 /* السبورة العائمة صارت في tools.js */
 
 /* ================= تذكير قاعدة 20-20-20 لراحة العين ================= */
-let eyeReminderElapsed = 0;
-const EYE_REMINDER_INTERVAL_SEC = 20 * 60; // كل 20 دقيقة
-function eyeReminderTick(sec){
-  eyeReminderElapsed += (sec === undefined ? 1 : sec);
-  if (eyeReminderElapsed >= EYE_REMINDER_INTERVAL_SEC){
-    eyeReminderElapsed = 0;
-    showEyeToast();
-  }
-}
-function showEyeToast(){
-  if (typeof window.isDeepFocus === "function" && window.isDeepFocus()) return; // وضع التركيز العميق: بدون تنبيهات جانبية
-  HOUI.toast({ id: "eye", type: "info", icon: "eye", text: "قاعدة 20-20-20: انظر لشي يبعد 6 أمتار لمدة 20 ثانية لراحة عينك", duration: 20000, soft: true, sound: false });
-}
+/* منطق تذكير العين صار في tools.js (eyeReminderTick / showEyeToast) */
 
 /* احتساب وقت الدراسة لمستوى الطالب: العدّاد العادي أو مرحلة التركيز في بومودورو فقط (الاستراحات لا تُحتسب).
    لا يُحتسب إلا والمؤقت شغّال وغير موقوف والصفحة ظاهرة — والتفاصيل والحماية في time-bank.js */
@@ -2357,3 +2344,4 @@ if ("serviceWorker" in navigator) {
 </script>
 </body>
 </html>
+
