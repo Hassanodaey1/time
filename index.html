@@ -717,13 +717,16 @@
       <span class="bento-arrow">‹</span>
     </a>
 
-    <div class="bento-card hero missions" id="missionsCard" onclick="openMissions()" role="button" tabindex="0">
+    <div class="bento-card missions" id="missionsCard" onclick="openMissions()" role="button" tabindex="0">
       <span class="bento-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="4.2"/><circle cx="12" cy="12" r=".8" fill="currentColor" stroke="none"/></svg></span>
-      <span class="bento-txt">
-        <span class="bento-title">المهام</span>
-        <span class="bento-desc" id="msCardDesc">مهامك اليومية والأسبوعية</span>
-      </span>
-      <span class="bento-badge" id="msCardBadge">★ 0</span>
+      <span class="bento-title">المهام</span>
+      <span class="bento-badge" id="msCardBadge">0/3</span>
+    </div>
+
+    <div class="bento-card shop" id="shopCard" onclick="openShop()" role="button" tabindex="0">
+      <span class="bento-icon"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg></span>
+      <span class="bento-title">المتجر</span>
+      <span class="bento-badge" id="shopCardBadge">★ 0</span>
     </div>
 
     <a href="display.html" class="bento-card annual needs-net" id="annualItem"
@@ -1165,6 +1168,20 @@
   </div>
 </div>
 
+<div class="overlay" id="shopOverlay" onclick="if(event.target===this) closeShop()">
+  <div class="profile-modal settings-modal">
+    <button type="button" class="modal-close-btn" onclick="closeShop()" aria-label="إغلاق">✕</button>
+    <h2><svg class="ico" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg> المتجر</h2>
+    <div class="ms-summary">
+      <div class="ms-sum-stars"><span class="ms-star">★</span><b id="shopStars">0</b><span>نجمة</span></div>
+      <div class="ms-sum-txt" id="shopSumTxt"></div>
+    </div>
+    <div class="shop-tabs" id="shopTabs"></div>
+    <div class="shop-grid" id="shopGrid"></div>
+    <p class="google-hint" style="text-align:center; margin-top:14px;">اجمع النجوم من المهام. بعض الجوائز تُفتح عند مستوى معيّن.</p>
+  </div>
+</div>
+
 <div class="overlay" id="tiersOverlay" onclick="if(event.target===this) closeTiersSheet()">
   <div class="profile-modal settings-modal">
     <button type="button" class="modal-close-btn" onclick="closeTiersSheet()" aria-label="إغلاق">✕</button>
@@ -1229,6 +1246,7 @@
 <script src="ui.js"></script>
 <script src="levels.js"></script>
 <script src="missions.js"></script>
+<script src="shop.js"></script>
 <script src="timer-sounds.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -1516,6 +1534,10 @@ function renderChallengeStats(val){
   const totalSeconds = data.totalSeconds || 0;
   const streak = data.streak || 0;
   const badge = getChallengeBadge(totalSeconds);
+  lastTotalSeconds = totalSeconds;
+  if (window.applyOwnFrames) applyOwnFrames();
+  /* إن اختلف الإطار المُجهَّز عن المسجّل في السيرفر نحاول مزامنته مرة لكل جلسة */
+  if (window.HOShop && !shopFrameSynced && (data.frame || "") !== HOShop.eqFrame()){ shopFrameSynced = true; shopSyncFrame(HOShop.eqFrame()); }
 
   const statBadgeIcon = document.getElementById("statBadgeIcon");
   const statBadgeLabel = document.getElementById("statBadgeLabel");
@@ -1648,6 +1670,151 @@ function renderProfileView(){
   }
 }
 
+/* ================= المتجر (المنطق في shop.js) ================= */
+let shopTab = "avatar";
+let lastTotalSeconds = 0;
+const SHOP_TABS = [["avatar", "الصور"], ["frame", "الإطارات"], ["bg", "الخلفيات"], ["pack", "الأصوات"]];
+const SHOP_SPEAKER = '<svg class="ho-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5Z"/><path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/></svg>';
+
+function myAvatarEmoji(){ const p = getProfile(); return (p && !p.photoURL && p.avatar) || DEFAULT_AVATAR; }
+
+/* تطبيق الإطار والخلفية على صورتي أنا في الصفحة الرئيسية */
+window.applyOwnFrames = function(){
+  if (!window.HOShop) return;
+  const id = HOShop.eqFrame();
+  document.querySelectorAll(".avatar-preview, #playerCardAvatar").forEach(el => HOShop.applyFrame(el, id, lastTotalSeconds));
+};
+window.applyOwnBg = function(){
+  if (!window.HOShop) return;
+  document.querySelectorAll(".pv2 .pv-banner").forEach(el => HOShop.applyBg(el));
+};
+let shopFrameSynced = false;
+async function shopSyncFrame(id){
+  /* نكتب الإطار في سجل اللاعب ليراه الآخرون؛ إن رفضته قواعد Firebase يبقى محليًا بصمت */
+  try{
+    if (!firebaseOK || !navigator.onLine) return;
+    await waitForAuth(5000);
+    await db.ref('studyLeaderboard/' + currentUid).update({ frame: id || null });
+  }catch(e){}
+}
+
+function shopBuildCard(it, S){
+  const rar = HOShop.RAR[it.rarity || "normal"];
+  const card = document.createElement("div");
+  card.className = "shop-item" + (it.equipped ? " equipped" : "") + (it.locked && !it.owned ? " locked" : "");
+  card.style.setProperty("--rc", rar.color);
+  const prev = document.createElement(it.type === "pack" ? "button" : "div");
+  prev.className = "si-prev" + (it.type === "bg" ? " bgprev" + (it.id ? " has-bg bg-" + it.id : "") : "");
+  if (it.type === "avatar"){
+    prev.innerHTML = '<span class="sp-av"></span>';
+    prev.firstChild.textContent = it.emoji;
+  } else if (it.type === "frame"){
+    prev.innerHTML = '<span class="sp-av"></span>';
+    const av = prev.firstChild;
+    av.textContent = myAvatarEmoji();
+    HOShop.applyFrame(av, it.id, lastTotalSeconds);
+  } else if (it.type === "pack"){
+    prev.type = "button";
+    prev.setAttribute("aria-label", "استمع");
+    prev.innerHTML = '<span class="sp-sound">' + SHOP_SPEAKER + '</span>';
+    prev.onclick = () => HOSound.play("finish", { force: true, pack: it.id || "bell" });
+  }
+  card.appendChild(prev);
+  const name = document.createElement("div"); name.className = "si-name"; name.textContent = it.name; card.appendChild(name);
+  const sub = document.createElement("div"); sub.className = "si-sub";
+  sub.textContent = it.isDefault ? (HOShop.DEFAULTS[it.type].sub) : (rar.name + (it.minLevel > 1 ? " · م" + it.minLevel : ""));
+  card.appendChild(sub);
+  const btn = document.createElement("button"); btn.type = "button"; btn.className = "si-btn";
+  if (it.equipped){
+    btn.classList.add("on"); btn.textContent = it.type === "pack" ? "مُفعَّل ✓" : "مُجهَّز ✓";
+  } else if (it.isDefault || it.owned){
+    btn.textContent = it.type === "pack" || it.isDefault ? "تفعيل" : "تجهيز";
+    btn.onclick = () => shopEquip(it);
+  } else if (it.locked){
+    btn.classList.add("lock"); btn.textContent = "🔒 يفتح عند م" + it.minLevel;
+    btn.onclick = () => HOUI.toast({ type: "warn", icon: "lock", text: "«" + it.name + "» يُفتح عند المستوى " + it.minLevel + " (مستواك " + S.level + ")", duration: 3200, sound: false });
+  } else if (it.affordable){
+    btn.classList.add("buy"); btn.textContent = "شراء ★" + it.price;
+    btn.onclick = () => shopBuy(it, S);
+  } else {
+    btn.classList.add("cant"); btn.textContent = "★" + it.price;
+    btn.onclick = () => HOUI.toast({ type: "info", text: "تحتاج " + (it.price - S.stars) + " نجمة إضافية. أنجز المهام لتجمعها!", duration: 3200, sound: false });
+  }
+  card.appendChild(btn);
+  return card;
+}
+window.renderShop = function(){
+  if (!window.HOShop) return;
+  const S = HOShop.state();
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  set("shopStars", S.stars);
+  set("shopSumTxt", "مستواك " + S.level + " · اشترِ ما يناسب رتبتك");
+  const tabs = document.getElementById("shopTabs");
+  tabs.innerHTML = "";
+  SHOP_TABS.forEach(([k, label]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "shop-tab" + (k === shopTab ? " on" : ""); b.textContent = label;
+    b.onclick = () => { shopTab = k; renderShop(); };
+    tabs.appendChild(b);
+  });
+  const grid = document.getElementById("shopGrid");
+  grid.innerHTML = "";
+  const p = getProfile();
+  let list = S.items.filter(i => i.type === shopTab).map(i => {
+    if (i.type === "avatar") i.equipped = i.owned && p && !p.photoURL && p.avatar === i.emoji;
+    return i;
+  });
+  if (shopTab !== "avatar"){
+    const d = HOShop.DEFAULTS[shopTab];
+    list = [{ type: shopTab, id: "", name: d.name, isDefault: true, owned: true, rarity: "normal", minLevel: 1,
+              equipped: !S.eq[shopTab] }].concat(list);
+  }
+  list.forEach(i => grid.appendChild(shopBuildCard(i, S)));
+};
+window.shopSetTab = function(k){ shopTab = k; renderShop(); };
+window.openShop = function(){
+  renderShop();
+  document.getElementById("shopOverlay").classList.add("show");
+};
+window.closeShop = function(){
+  document.getElementById("shopOverlay").classList.remove("show");
+};
+async function shopBuy(it, S){
+  const ok = await HOUI.confirm("شراء «" + it.name + "» مقابل ★" + it.price + "؟\nرصيدك بعد الشراء: ★" + (S.stars - it.price),
+    { title: "تأكيد الشراء", okText: "شراء", icon: "reward", type: "reward" });
+  if (!ok) return;
+  const r = HOShop.buy(it.key);
+  if (!r.ok){
+    HOUI.toast({ type: "error", text: r.reason === "level" ? "مستواك لا يكفي بعد" : r.reason === "stars" ? "رصيدك لا يكفي" : "تعذّر الشراء", duration: 3000 });
+    renderShop(); return;
+  }
+  const rar = HOShop.RAR[it.rarity];
+  if (it.rarity !== "rare"){
+    HOUI.celebrate({ kind: "reward", icon: it.emoji || "🎁", color: rar.color, sound: "chest",
+      kicker: "ملكية جديدة!", title: it.name, sub: rar.name + " · " + HOShop.TYPES[it.type] + " · جاهز للتجهيز", okText: "رائع!" });
+  } else {
+    HOUI.toast({ type: "reward", icon: "reward", title: "تم الشراء", text: it.name, duration: 3200, sound: "mission" });
+  }
+  renderShop(); updateMissionsCard();
+}
+async function shopEquip(it){
+  if (it.type === "avatar"){
+    const res = await saveAvatarUpdate({ avatar: it.emoji, photoURL: null });
+    if (res.ok) HOUI.toast({ type: "success", text: "تم تغيير صورتك", duration: 2400 });
+    else HOUI.toast({ type: "error", text: res.error, duration: 3400 });
+  } else {
+    HOShop.equip(it.type, it.id);
+    if (it.type === "frame"){ applyOwnFrames(); shopSyncFrame(it.id); }
+    if (it.type === "bg") applyOwnBg();
+    HOUI.toast({ type: "success", text: it.isDefault ? "تم الرجوع للافتراضي" : "تم تفعيل «" + it.name + "»", duration: 2400 });
+  }
+  renderShop();
+}
+if (window.HOShop){
+  HOShop.onChange(() => { updateMissionsCard(); });
+  applyOwnFrames(); applyOwnBg();
+}
+
 /* ================= المهام (المنطق في missions.js) ================= */
 function msBuildCard(m){
   const card = document.createElement("div");
@@ -1689,9 +1856,9 @@ window.renderMissions = function(){
 window.updateMissionsCard = function(){
   if (!window.HOMissions) return;
   const S = HOMissions.state();
-  const d = document.getElementById("msCardDesc"), b = document.getElementById("msCardBadge"), c = document.getElementById("missionsCard");
-  if (d) d.textContent = S.claimable > 0 ? ("عندك " + S.claimable + " مهمة جاهزة للاستلام") : (S.dailyDone + " من " + S.daily.length + " مهام اليوم منجزة");
-  if (b) b.textContent = "★ " + S.stars;
+  const b = document.getElementById("msCardBadge"), c = document.getElementById("missionsCard"), sb = document.getElementById("shopCardBadge");
+  if (b) b.textContent = S.claimable > 0 ? "جاهزة " + S.claimable : (S.dailyDone + "/" + S.daily.length);
+  if (sb) sb.textContent = "★ " + S.stars;
   if (c) c.classList.toggle("has-claim", S.claimable > 0);
 };
 window.openMissions = function(){
@@ -1757,6 +1924,7 @@ function watchChallengeStats(){
     attachStatsListener(myUid);
   });
 }
+
 /* ================= تسجيل الدخول بحساب Google (بديل كامل لرمز الاسترجاع القديم) =================
    الفكرة: أول ما يفتح اللاعب اللعبة يدخل دخول "مجهول" تلقائي (زي القديم بالضبط) حتى يكدر يشتغل فورًا.
    لما يضغط "تسجيل الدخول بحساب Google":
@@ -2103,6 +2271,7 @@ window.onCountryChange = function(){
 window.openProfileView = function(){
   const p = getProfile();
   setAvatarDisplay("pvAvatarEmoji", p);
+  if (window.applyOwnFrames){ applyOwnFrames(); applyOwnBg(); }
   const pvName = document.getElementById("pvName");
   if (pvName) pvName.innerText = p ? p.name : "";
   renderProfileView();
@@ -2146,7 +2315,7 @@ window.openAvatarGridOverlay = function(){
   const grid = document.getElementById("avatarGridChoice");
   grid.innerHTML = "";
   const currentEmoji = (p && !p.photoURL && p.avatar) || DEFAULT_AVATAR;
-  AVATAR_LIST.forEach(function(emoji){
+  AVATAR_LIST.concat(window.HOShop ? HOShop.ownedAvatars() : []).forEach(function(emoji){
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "avatar-opt" + (emoji === currentEmoji ? " selected" : "");
@@ -2537,5 +2706,4 @@ if ("serviceWorker" in navigator) {
 <script src="notifications.js"></script>
 </body>
 </html>
-
 
