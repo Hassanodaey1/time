@@ -71,7 +71,7 @@
   function inv(){
     var k = "ho_shop_" + uid();
     var v = jget(k, null) || memInv[k] || {};
-    v.owned = v.owned || {}; v.eq = v.eq || {};
+    v.owned = v.owned || {}; v.eq = v.eq || {}; v.eqAt = v.eqAt || 0;
     return v;
   }
   function saveInv(v){ var k = "ho_shop_" + uid(); memInv[k] = v; jset(k, v); }
@@ -107,7 +107,7 @@
     var I = inv();
     if (I.owned[key]) return { ok: false, reason: "owned" };
     if (level() < x.minLevel) return { ok: false, reason: "level", need: x.minLevel };
-    if (!window.HOMissions || !window.HOMissions.spend(x.price)) return { ok: false, reason: "stars" };
+    if (!window.HOMissions || !window.HOMissions.spend(x.price, key)) return { ok: false, reason: "stars" };
     I.owned[key] = 1;
     saveInv(I);
     emit();
@@ -118,6 +118,7 @@
     var I = inv();
     if (id && !I.owned[type + ":" + id]) return { ok: false, reason: "not-owned" };
     I.eq[type] = id || "";
+    I.eqAt = Date.now();
     saveInv(I);
     if (type === "pack" && window.HOSound) window.HOSound.set("pack", id || "bell");
     emit();
@@ -148,7 +149,31 @@
     el.className = keep.concat(id ? ["has-bg", "bg-" + id] : []).join(" ");
   }
 
+  /* ----- المزامنة بين الأجهزة: المشتريات اتحاد، والتجهيز يفوز فيه الأحدث ----- */
+  function exportInv(){ var I = inv(); return { owned: I.owned, eq: I.eq, eqAt: I.eqAt }; }
+  function mergeInv(doc){
+    if (!doc) return false;
+    var I = inv(), ch = false, known = {};
+    ITEMS.forEach(function(x){ known[x.key] = x; });
+    Object.keys(doc.owned || {}).forEach(function(k){
+      if (known[k] && !I.owned[k]){ I.owned[k] = 1; ch = true; }
+    });
+    var at = Number(doc.eqAt) || 0;
+    if (at > (I.eqAt || 0) && doc.eq){
+      ["frame", "bg", "pack"].forEach(function(t){
+        var v = String(doc.eq[t] || "");
+        if (v && !I.owned[t + ":" + v]) v = "";                    /* لا نجهّز ما لا نملكه */
+        if ((I.eq[t] || "") !== v){ I.eq[t] = v; ch = true; }
+      });
+      I.eqAt = at;
+      if (window.HOSound) window.HOSound.set("pack", I.eq.pack || "bell");
+    }
+    if (ch){ saveInv(I); emit(); }
+    return ch;
+  }
+
   window.HOShop = {
+    exportInv: exportInv, mergeInv: mergeInv,
     RAR: RAR, TYPES: TYPES, ITEMS: ITEMS, FRAMES: FRAMES, DEFAULTS: DEFAULTS,
     state: state, buy: buy, equip: equip, ownedAvatars: ownedAvatars,
     frameFor: frameFor, applyFrame: applyFrame, applyBg: applyBg,
