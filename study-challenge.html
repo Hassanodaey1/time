@@ -732,6 +732,7 @@
 <script src="ui.js"></script>
 <script src="levels.js"></script>
 <script src="missions.js"></script>
+<script src="shop.js"></script>
 <script src="timer-sounds.js"></script>
 <script src="time-bank.js"></script>
 <script src="nav-lock.js"></script>
@@ -1251,7 +1252,7 @@ function renderLeaderboard(snapshot){
     return `
       <div class="rank-row ${isMe ? 'me' : ''}">
         <div class="rank-num">${medal}</div>
-        <div class="rank-avatar">${rankAvatarHtml(r)}</div>
+        ${(() => { const f = HOShop.frameFor(r, isMe); return `<div class="rank-avatar ${f.cls}" ${f.style ? `style="${f.style}"` : ""}>${rankAvatarHtml(r)}</div>`; })()}
         <div class="rank-info">
           <p class="rank-name">${escapeHtml(r.name || "طالب")}${isMe ? " (أنت)" : ""}${HOLevel.chip(r.totalSeconds)}${badge ? `<span class="badge-icon" title="${badge.label}">${badge.icon}</span>` : ""}${streakTag}</p>
           <p class="rank-loc">${escapeHtml(r.governorate || "")} • ${escapeHtml(r.country || "")}</p>
