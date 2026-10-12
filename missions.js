@@ -228,8 +228,19 @@
     return { ok: true, stars: m.stars, bonus: gotBonus ? BONUS_STARS : 0, total: st.stars };
   }
 
+  /* خصم نجوم (للمتجر). يرجع true عند النجاح */
+  function spend(n){
+    n = Math.floor(n || 0);
+    var uid = curUid(), st = loadSt(uid);
+    if (n <= 0 || st.stars < n) return false;
+    st.stars -= n;
+    saveSt(uid, st);
+    emit();
+    return true;
+  }
+
   window.HOMissions = {
-    update: update, event: event, addStudy: addStudy, state: publicState, claim: claim,
+    update: update, event: event, addStudy: addStudy, state: publicState, claim: claim, spend: spend,
     onChange: function(fn){ if (typeof fn === "function") listeners.push(fn); }
   };
 })();
