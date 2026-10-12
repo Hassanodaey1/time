@@ -524,3 +524,91 @@ body[data-style="ring"] .monitor{
 .ms-card.done{ border-color:color-mix(in srgb, var(--mc) 55%, var(--border, #24242e)); box-shadow:0 0 22px -14px var(--mc); }
 .ms-card.claimed{ opacity:.6; }
 .ms-card.claimed .ms-bar i{ opacity:.6; }
+
+
+/* ==========================================================
+   المتجر: الإطارات · الخلفيات · واجهة المتجر (shop.js)
+   ========================================================== */
+/* ---- الإطارات: تُطبَّق على أي صورة شخصية بإضافة الأصناف fr fr-<id> ---- */
+.fr.fr.fr{
+  --fc:var(--amber, #ffb400); --sp:3px;
+  border-color:var(--fc);
+  box-shadow:0 0 0 var(--sp) color-mix(in srgb, var(--fc) 22%, transparent), 0 0 16px -4px var(--fc);
+}
+.rank-avatar.fr.fr.fr{ --sp:2px; border-width:2px; }
+.fr.fr.fr.fr-gold{ --fc:#ffd36b; box-shadow:0 0 0 var(--sp) color-mix(in srgb, #ffd36b 30%, transparent), 0 0 20px -2px #ffb400; }
+.fr.fr.fr.fr-ruby{ --fc:#ff3b5c; }
+.fr.fr.fr.fr-emerald{ --fc:#2ecc71; }
+.fr.fr.fr.fr-ice{ --fc:#8be9ff; border-style:dashed; }
+.fr.fr.fr.fr-flame{ --fc:#ff6b35; animation:fr-flame 1.4s ease-in-out infinite; }
+.fr.fr.fr.fr-volt{ --fc:#b388ff; animation:fr-volt 1.1s steps(2, end) infinite; }
+.fr.fr.fr.fr-rainbow{ animation:fr-rainbow 3.2s linear infinite; }
+.fr.fr.fr.fr-crown{ --fc:#ffd36b; animation:fr-crown 2.4s ease-in-out infinite; }
+@keyframes fr-flame{ 50%{ border-color:#ffb347; box-shadow:0 0 0 var(--sp) rgba(255,107,53,.38), 0 0 26px 0 #ff6b35; } }
+@keyframes fr-volt{ 50%{ border-color:#fff; box-shadow:0 0 0 var(--sp) rgba(179,136,255,.42), 0 0 24px 2px #b388ff; } }
+@keyframes fr-rainbow{
+  0%,100%{ border-color:#ff4d4d; box-shadow:0 0 0 var(--sp) rgba(255,77,77,.28), 0 0 18px -2px #ff4d4d; }
+  20%{ border-color:#ffb400; box-shadow:0 0 0 var(--sp) rgba(255,180,0,.28), 0 0 18px -2px #ffb400; }
+  40%{ border-color:#2ecc71; box-shadow:0 0 0 var(--sp) rgba(46,204,113,.28), 0 0 18px -2px #2ecc71; }
+  60%{ border-color:#48cae4; box-shadow:0 0 0 var(--sp) rgba(72,202,228,.28), 0 0 18px -2px #48cae4; }
+  80%{ border-color:#a78bfa; box-shadow:0 0 0 var(--sp) rgba(167,139,250,.28), 0 0 18px -2px #a78bfa; }
+}
+@keyframes fr-crown{
+  0%,100%{ border-color:#ffd36b; box-shadow:0 0 0 var(--sp) rgba(255,211,107,.35), 0 0 20px -2px #ffb400; }
+  50%{ border-color:#fff3c4; box-shadow:0 0 0 calc(var(--sp) + 2px) rgba(255,211,107,.5), 0 0 32px 2px #ffd36b; }
+}
+
+/* ---- خلفيات الملف الشخصي ---- */
+.bg-dusk{  --bgv:linear-gradient(135deg, #ff9a56 0%, #c2417a 48%, #3a2a6b 100%); }
+.bg-night{ --bgv:linear-gradient(135deg, #060b1f 0%, #14306b 55%, #0b1a3a 100%); }
+.bg-sand{  --bgv:linear-gradient(135deg, #e9c27d 0%, #b07a35 52%, #4a2f14 100%); }
+.bg-palm{  --bgv:linear-gradient(135deg, #2f9a5f 0%, #0f4a30 55%, #06160f 100%); }
+.pv2 .pv-banner.has-bg, .bgprev.has-bg{ background:var(--bgv); }
+
+/* ---- واجهة المتجر ---- */
+.shop-tabs{ display:flex; gap:6px; overflow-x:auto; margin:0 0 14px; padding-bottom:2px; scrollbar-width:none; }
+.shop-tabs::-webkit-scrollbar{ display:none; }
+.shop-tab{
+  flex:1 0 auto; min-height:38px; padding:0 14px; border-radius:999px; cursor:pointer; white-space:nowrap;
+  font:800 13px 'Tajawal', system-ui, sans-serif; color:var(--muted, #9094a3);
+  background:var(--panel-2, #17171e); border:1px solid var(--border, #24242e);
+}
+.shop-tab.on{
+  color:#1a1200; border-color:transparent;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--amber, #ffb400) 80%, #fff), var(--amber, #ffb400));
+}
+.shop-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+.shop-item{
+  --rc:var(--muted, #9094a3);
+  display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px 10px; text-align:center;
+  background:var(--panel-2, #17171e); border:1px solid color-mix(in srgb, var(--rc) 32%, var(--border, #24242e));
+  border-radius:16px; transition:border-color .25s ease, box-shadow .25s ease;
+}
+.shop-item.equipped{ border-color:var(--rc); box-shadow:0 0 22px -12px var(--rc); }
+.shop-item.locked .si-prev{ opacity:.4; filter:grayscale(.7); }
+.si-prev{ position:relative; width:100%; min-height:64px; display:flex; align-items:center; justify-content:center; cursor:default; border:0; background:transparent; padding:0; }
+.si-prev .sp-av{
+  width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px;
+  background:linear-gradient(160deg, #1a2130, #0d1420); border:2px solid var(--rc);
+}
+.si-prev .sp-sound{ width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--rc); background:color-mix(in srgb, var(--rc) 14%, transparent); box-shadow:0 0 0 1px color-mix(in srgb, var(--rc) 45%, transparent) inset; cursor:pointer; }
+.si-prev .sp-sound .ho-ic{ width:26px; height:26px; }
+.si-prev.bgprev{ min-height:54px; border-radius:12px; border:1px solid var(--border, #24242e); background:linear-gradient(135deg, rgba(255,180,0,.30), rgba(167,139,250,.22) 60%, rgba(255,59,48,.14)), #10131a; }
+.si-name{ font-size:13.5px; font-weight:800; color:#fff; line-height:1.4; }
+.si-sub{ font-size:11px; font-weight:700; color:var(--rc); margin-top:-4px; }
+.si-btn{
+  width:100%; min-height:36px; border-radius:999px; cursor:pointer;
+  font:800 12.5px 'Tajawal', system-ui, sans-serif; color:var(--text, #f3f4f8);
+  background:var(--panel, #101015); border:1px solid var(--border, #24242e);
+}
+.si-btn.buy{
+  color:#1a1200; border-color:transparent;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--amber, #ffb400) 80%, #fff), var(--amber, #ffb400));
+}
+.si-btn.cant{ opacity:.55; }
+.si-btn.lock{ color:var(--muted, #9094a3); cursor:not-allowed; }
+.si-btn.on{ color:var(--rc); border-color:var(--rc); background:color-mix(in srgb, var(--rc) 12%, transparent); }
+.bento-card.shop{ cursor:pointer; }
+.bento-card.shop .bento-icon{ background:rgba(240,107,176,.14); color:#f06bb0; }
+.bento-card.shop .bento-badge{ background:rgba(255,180,0,.15); color:var(--amber, #ffb400); }
+.bento-card.missions .bento-badge{ background:rgba(46,204,113,.15); color:#2ecc71; }
