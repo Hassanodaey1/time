@@ -15,7 +15,7 @@
   "use strict";
 
   /* ============================ الإعدادات ============================ */
-  var KEYS = { vol: "ho_snd_vol", mute: "ho_snd_mute", ui: "ho_snd_ui", haptic: "ho_snd_haptic" };
+  var KEYS = { vol: "ho_snd_vol", mute: "ho_snd_mute", ui: "ho_snd_ui", haptic: "ho_snd_haptic", pack: "ho_snd_pack" };
   function lsGet(k, d){ try{ var v = localStorage.getItem(k); return v == null ? d : v; }catch(e){ return d; } }
   function lsSet(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
   function cfg(){
@@ -27,6 +27,18 @@
       ui: lsGet(KEYS.ui, "1") !== "0",
       haptic: lsGet(KEYS.haptic, "1") !== "0"
     };
+  }
+  /* حزم الأصوات (تُشترى من المتجر). شاشتا المشرف (display / challenge-timer) تبقيان بالجرس الكلاسيكي دائمًا. */
+  var PACKS = {
+    bell:    { wave: "sine",   parts: [[1, 1, 1], [2, 0.3, 0.6], [3.01, 0.1, 0.35]], attack: 0.012, tail: 0.22, vib: 0 },
+    ney:     { wave: "sine",   parts: [[1, 1, 1], [2, 0.2, 0.7], [3, 0.07, 0.5]],    attack: 0.045, tail: 0.32, vib: 5.2 },
+    crystal: { wave: "sine",   parts: [[1, 0.9, 1], [2.76, 0.4, 0.55], [5.4, 0.2, 0.3]], attack: 0.004, tail: 0.35, vib: 0 },
+    retro:   { wave: "square", parts: [[1, 0.45, 1]],                              attack: 0.004, tail: 0.06, vib: 0 }
+  };
+  var CLASSROOM = /(^|\/)(display|challenge-timer)\.html?$/i.test((window.location && location.pathname) || "");
+  function curPack(opts){
+    var id = (opts && opts.pack) || (CLASSROOM ? "bell" : lsGet(KEYS.pack, "bell"));
+    return PACKS[id] || PACKS.bell;
   }
   function masterGain(){ var c = cfg(); return c.mute ? 0 : c.vol * 1.25; }
 
@@ -111,30 +123,40 @@
 
   /* ============================== الأصوات ============================== */
   /* نغمة «جرس»: صعود سريع ثم هبوط أُسّي. التوافقيات (×2 و ×3.01) تعطي لمعة معدنية ناعمة. */
-  function _bell(ctx, freq, startAt, duration, peak, soft){
-    var parts = soft ? [[1, 1, 1]] : [[1, 1, 1], [2, 0.3, 0.6], [3.01, 0.1, 0.35]];
-    var attack = soft ? 0.006 : 0.012;
+  function _bell(ctx, freq, startAt, duration, peak, soft, pack){
+    var P = pack || PACKS.bell;
+    var parts = soft ? [[1, 1, 1]] : P.parts;
+    var attack = soft ? Math.min(P.attack, 0.008) : P.attack;
+    var tail = soft ? 0.05 : P.tail;
     for (var i = 0; i < parts.length; i++){
       var p = parts[i];
       var osc = ctx.createOscillator(), g = ctx.createGain();
-      osc.type = "sine";
+      osc.type = P.wave;
       osc.frequency.setValueAtTime(freq * p[0], startAt);
-      var end = startAt + (duration + (soft ? 0.05 : 0.22)) * p[2];
+      var end = startAt + (duration + tail) * p[2];
       var vol = Math.max(0.0002, peak * p[1]);
       g.gain.setValueAtTime(0.0001, startAt);
       g.gain.exponentialRampToValueAtTime(vol, startAt + attack);
       g.gain.exponentialRampToValueAtTime(0.0001, end);
       osc.connect(g); g.connect(_bus || ctx.destination);
+      if (P.vib && !soft && i === 0){            /* اهتزاز خفيف يعطي إحساس الناي */
+        try{
+          var lfo = ctx.createOscillator(), lg = ctx.createGain();
+          lfo.frequency.value = P.vib; lg.gain.value = freq * 0.006;
+          lfo.connect(lg); lg.connect(osc.frequency);
+          lfo.start(startAt); lfo.stop(end + 0.04);
+        }catch(e){}
+      }
       osc.start(startAt); osc.stop(end + 0.04);
     }
   }
   /* تشغيل تسلسل نغمات مجدول بدقة على ساعة السياق الصوتي بدل setTimeout المتراكم الخطأ */
-  function _playSequence(notes, soft){
+  function _playSequence(notes, soft, pack){
     var ctx = _getCtx();
     if (!ctx) return;
     var go = function(){
       var base = ctx.currentTime + 0.02;
-      notes.forEach(function(n){ _bell(ctx, n.f, base + (n.t || 0), n.d, n.v || 0.15, soft); });
+      notes.forEach(function(n){ _bell(ctx, n.f, base + (n.t || 0), n.d, n.v || 0.15, soft, pack); });
     };
     if (ctx.state === "running"){ go(); return; }
     /* السياق موقوف (لم يلمس المستخدم الصفحة بعد): نحاول فتحه، وإن لم ينجح خلال نصف ثانية نتجاهل التنبيه */
@@ -189,7 +211,7 @@
     }
     if (c.haptic && HAPTIC[kind]){ try{ if (navigator.vibrate) navigator.vibrate(HAPTIC[kind]); }catch(e){} }
     if (c.mute) return;
-    _playSequence(notes, !!UI_KINDS[kind]);
+    _playSequence(notes, !!UI_KINDS[kind], curPack(opts));
   }
   window.playTimerAlert = function(kind){ play(kind); };
 
@@ -197,6 +219,7 @@
     get: cfg,
     set: function(key, value){
       if (!KEYS[key]) return;
+      if (key === "pack"){ lsSet(KEYS.pack, PACKS[value] ? String(value) : "bell"); return; }
       if (key === "vol") lsSet(KEYS.vol, String(Math.max(0, Math.min(1, +value || 0))));
       else lsSet(KEYS[key], value ? "1" : "0");
       _getCtx(); _syncMaster();
