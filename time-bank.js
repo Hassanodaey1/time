@@ -11,7 +11,6 @@
    ================================================================ */
 (function(){
   "use strict";
-  const WORKER_URL   = "https://study-bank.hassan1odaey.workers.dev";
   const PROFILE_KEY  = "studyChallengeProfile";
   const LOCK_KEY     = "tb_lock_v1";
   const LOCK_TTL_MS  = 3500;     // القفل ينتهي تلقائيًا لو صاحبه توقف (إغلاق تبويب مثلًا)
@@ -90,26 +89,8 @@
   function hasProfile(){
     try{ return !!localStorage.getItem(PROFILE_KEY); }catch(e){ return false; }
   }
-  async function callWorker(path, body){
-    if (!fbReady()) throw new Error("firebase-not-ready");
-    const user = firebase.auth().currentUser;
-    if (!user) throw new Error("no-user");
-    const token = await user.getIdToken();
-    const res = await fetch(WORKER_URL + path, {
-      method: "POST", keepalive: true,
-      headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-      body: JSON.stringify(body || {})
-    });
-    let data = {};
-    try{ data = await res.json(); }catch(e){}
-    if (!res.ok){
-      const err = new Error((data && data.error) || ("http-" + res.status));
-      err.code = (data && data.error) || ("http-" + res.status);
-      err.status = res.status;
-      throw err;
-    }
-    return data;
-  }
+  /* الاتصال بالـ Worker صار في core.js (callWorker). keepalive يضمن اكتمال الإيداع حتى لو أُغلقت الصفحة */
+  function callWorker(path, body){ return window.callWorker(path, body, { keepalive: true }); }
 
   /* ---------- الإيداع ---------- */
   async function flush(){
