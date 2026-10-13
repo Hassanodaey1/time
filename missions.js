@@ -4,7 +4,8 @@
    التصميم (بدون أي تعديل على السيرفر):
    • وقت الدراسة يُحسب من رصيد السيرفر الموثوق (studyLeaderboard: totalSeconds / weeklySeconds)
      كفرق عن بداية اليوم، مضافًا إليه جلسات مؤقت الطالب المحلية. لا يمكن تزويره بتغيير الواجهة.
-   • الجلسات المحلية (بومودورو، إنجاز مهمة) تُسجَّل من student-timer عبر HOMissions.event / addStudy.
+   • الجلسات المحلية (بومودورو، إنجاز مهمة) تُسجَّل من student-timer عبر HOMissions.event / addStudy
+     (addStudy تُهمَل لمن لديه ملف شخصي لأن وقته يصل من السيرفر، منعًا للعدّ المزدوج).
    • المكافآت «نجوم» مظهرية فقط (لا تدخل في الترتيب ولا في المستوى)، فالتلاعب بها لا يعطي أفضلية.
    • اليوم والأسبوع بتوقيت بغداد (UTC+3) وبنفس معادلة weekIndex المستخدمة في السيرفر.
    • الحالة محفوظة بالجهاز. لنقلها للسيرفر لاحقًا يكفي استبدال load()/save()/claim() دون لمس الواجهة.
@@ -205,9 +206,12 @@
     saveEv(ev);
     changed();
   }
+  /* من لديه ملف شخصي يُودَع وقت مؤقت الطالب في رصيد السيرفر (time-bank.js) وسيصل هنا عبر update()،
+     فلو أضفناه محليًا أيضًا لحُسب مرتين. المحلي يُستخدم فقط للضيف بلا ملف (لا يُودَع له شيء). */
+  function hasProfile(){ try{ return !!localStorage.getItem("studyChallengeProfile"); }catch(e){ return false; } }
   function addStudy(seconds){
     seconds = Math.round(seconds || 0);
-    if (seconds <= 0) return;
+    if (seconds <= 0 || hasProfile()) return;
     var ev = loadEv();
     ev.localSec += seconds; ev.wkSec += seconds;
     saveEv(ev);
