@@ -1251,6 +1251,7 @@
 </div>
 
 <script src="ui.js"></script>
+<script src="core.js"></script>
 <script src="levels.js"></script>
 <script src="missions.js"></script>
 <script src="shop.js"></script>
@@ -1283,39 +1284,9 @@ function waitForAuth(ms){
     new Promise((_, reject) => setTimeout(() => reject(new Error("auth-timeout")), ms || 8000))
   ]);
 }
-function serverTimestampValue(){
-  try{
-    if (firebaseOK && typeof firebase !== "undefined" && firebase.database && firebase.database.ServerValue){
-      return firebase.database.ServerValue.TIMESTAMP;
-    }
-  }catch(e){}
-  return Date.now();
-}
-
 /* ================= الاتصال بالـ Worker (study-bank) =================
    كل عملية تمس رصيد الدراسة (الحفظ، التصفير) تمر عبر السيرفر الموثوق على Cloudflare،
    ويتحقق من هوية الطالب بتوكن تسجيل الدخول. القواعد في فايربيس تمنع الكتابة المباشرة على الرصيد. */
-const WORKER_URL = "https://study-bank.hassan1odaey.workers.dev";
-async function callWorker(path, body){
-  if (!firebaseOK || typeof firebase === "undefined") throw new Error("firebase-not-ready");
-  const user = firebase.auth().currentUser;
-  if (!user) throw new Error("no-user");
-  const token = await user.getIdToken();
-  const res = await fetch(WORKER_URL + path, {
-    method: "POST",
-    headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-    body: JSON.stringify(body || {})
-  });
-  let data = {};
-  try{ data = await res.json(); }catch(e){}
-  if (!res.ok){
-    const err = new Error((data && data.error) || ("http-" + res.status));
-    err.code = (data && data.error) || ("http-" + res.status);
-    err.status = res.status;
-    throw err;
-  }
-  return data;
-}
 try{
   if (typeof firebase === "undefined") throw new Error("firebase-not-loaded");
   firebase.initializeApp(firebaseConfig);
@@ -2261,13 +2232,6 @@ async function adoptRemoteProfile(uid){
   }
   updateHomeGreeting();
   attachStatsListener(uid);
-}
-
-function getProfile(){
-  try{
-    const raw = localStorage.getItem(PROFILE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  }catch(e){ return null; }
 }
 
 window.onCountryChange = function(){
