@@ -418,6 +418,7 @@
 </div>
 
 <script src="ui.js"></script>
+<script src="core.js"></script>
 <script src="tools.js"></script>
 <script src="timer-sounds.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -438,15 +439,6 @@ const firebaseConfig = {
    نحمّل فايربيس بأمان، وإن تعذّر (لا يوجد إنترنت) نعرض رسالة واضحة بدل صفحة عالقة. */
 let db = null;
 let firebaseOK = false;
-function makeOfflineDbStub(){
-  const chain = {
-    on(){ return chain; }, off(){ return chain; },
-    once(){ return Promise.resolve({ val: () => null }); },
-    update(){ return Promise.resolve(); }, set(){ return Promise.resolve(); },
-    orderByChild(){ return chain; }, limitToLast(){ return chain; }, startAt(){ return chain; }
-  };
-  return { ref(){ return chain; } };
-}
 try{
   if (typeof firebase === "undefined") throw new Error("firebase-not-loaded");
   firebase.initializeApp(firebaseConfig);
@@ -472,19 +464,7 @@ let midAlerted = false, lastMinuteAlerted = false, finishedAlerted = false;
 let serverTimeOffset = 0;
 const baseTitle = document.title;
 
-const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
-
 function serverNow(){ return Date.now() + serverTimeOffset; }
-
-function formatDuration(ms){
-  ms = Math.max(0, ms);
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  if (hours > 0) return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-  return `${pad(minutes)}:${pad(seconds)}`;
-}
 
 db.ref(".info/serverTimeOffset").on("value", (snap) => {
   serverTimeOffset = snap.val() || 0;
@@ -498,13 +478,6 @@ db.ref(".info/connected").on("value", (snap) => {
 
 /* إبقاء الشاشة مضيئة أثناء التحدي */
 let wakeLock = null;
-async function requestWakeLock(){
-  try{
-    if ("wakeLock" in navigator){
-      wakeLock = await navigator.wakeLock.request("screen");
-    }
-  }catch(e){ /* غير مدعوم، تجاهل بصمت */ }
-}
 requestWakeLock();
 document.addEventListener("visibilitychange", () => {
   if (wakeLock !== null && document.visibilityState === "visible") requestWakeLock();
@@ -528,17 +501,6 @@ function motivationFor(t){
   if (t < 0.7) return "🔥 تجاوزت النصف، لا تتوقف الآن";
   if (t < 0.9) return "⏰ اقتربنا، شد حيلك للنهاية";
   return "🏁 اللحظات الأخيرة! أعطِ أقصى ما عندك";
-}
-
-function setDigit(el, val){
-  if (el.innerText !== val){
-    el.innerText = val;
-    if (document.body.getAttribute("data-style") === "flipclock"){
-      el.classList.remove("flip-anim");
-      void el.offsetWidth; /* إعادة تشغيل الأنيميشن */
-      el.classList.add("flip-anim");
-    }
-  }
 }
 
 function setRingProgress(pct){
