@@ -10,7 +10,6 @@
   var check = function(){ return false; };
   var locked = false;
   var trapped = false;   /* هل أضفنا عنصرًا إضافيًا لسجل التصفح */
-  var toastEl = null, toastTimer = null;
   var MSG = "المؤقت شغّال. أوقفه مؤقتًا أو أنهِه أولًا حتى تتمكن من الرجوع.";
 
   function isLocked(){ try{ return !!check(); }catch(e){ return false; } }
@@ -19,30 +18,13 @@
     if (document.getElementById("navlock-style")) return;
     var s = document.createElement("style");
     s.id = "navlock-style";
-    s.textContent =
-      ".nav-locked .back-link, .nav-locked .back-btn{ opacity:.4; cursor:not-allowed; }" +
-      "#navlockToast{ position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px));" +
-      " transform:translate(-50%,16px); max-width:min(92vw,380px); padding:12px 18px; border-radius:14px;" +
-      " background:var(--panel-2,#17171e); color:var(--text,#f3f4f8); border:1px solid var(--accent,var(--amber,#ffb400));" +
-      " font:700 14px/1.6 'Tajawal',sans-serif; text-align:center; box-shadow:0 12px 36px rgba(0,0,0,.55);" +
-      " opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:99999; }" +
-      "#navlockToast.show{ opacity:1; transform:translate(-50%,0); }";
+    s.textContent = ".nav-locked .back-link, .nav-locked .back-btn{ opacity:.4; cursor:not-allowed; }";
     document.head.appendChild(s);
   }
 
+  /* الإشعار بتصميم اللعبة الموحّد (ui.js يُحمَّل قبل هذا الملف في كل صفحة تستخدمه) */
   function toast(){
-    injectStyle();
-    if (!toastEl){
-      toastEl = document.createElement("div");
-      toastEl.id = "navlockToast";
-      toastEl.setAttribute("role", "status");
-      toastEl.setAttribute("aria-live", "polite");
-      toastEl.textContent = MSG;
-      document.body.appendChild(toastEl);
-    }
-    toastEl.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2800);
+    if (window.HOUI) window.HOUI.toast({ id: "navlock", type: "info", icon: "lock", text: MSG, duration: 2800 });
   }
 
   function pushTrap(){
@@ -82,6 +64,8 @@
     e.stopImmediatePropagation();
     toast();
   }, true);
+
+  injectStyle();
 
   window.NavLock = {
     track: function(fn){ if (typeof fn === "function"){ check = fn; apply(); } },
