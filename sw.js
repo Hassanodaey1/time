@@ -6,7 +6,7 @@
    ================================================================ */
 /* رقم الإصدار: لازم يترفع (v3, v4, ...) كل مرة تتحدث فيها أي صفحة أو ملف مذكور بـ APP_SHELL،
    وإلا المستخدمين اللي مثبتين التطبيق راح يضلوا شغالين بنسخة قديمة مخزّنة أوفلاين. */
-const CACHE_NAME = "timers-app-shell-v28";
+const CACHE_NAME = "timers-app-shell-v32";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -18,6 +18,8 @@ const APP_SHELL = [
   "./manifest.json",
   "./theme.css",
   "./ui.js",
+  "./core.js",
+  "./timepicker.js",
   "./tools.js",
   "./levels.js",
   "./missions.js",
