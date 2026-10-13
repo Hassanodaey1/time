@@ -742,6 +742,7 @@
 </div><!-- /.page -->
 
 <script src="ui.js"></script>
+<script src="core.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -763,15 +764,6 @@ let db = null;
 let auth = null;
 let adminApp = null;
 let firebaseOK = false;
-function makeOfflineDbStub(){
-  const chain = {
-    on(){ return chain; }, off(){ return chain; },
-    once(){ return Promise.resolve({ val: () => null }); },
-    update(){ return Promise.resolve(); }, set(){ return Promise.resolve(); },
-    orderByChild(){ return chain; }, limitToLast(){ return chain; }, startAt(){ return chain; }
-  };
-  return { ref(){ return chain; } };
-}
 function makeOfflineAuthStub(){
   return {
     onAuthStateChanged(){ /* لا نستدعي أي شيء — نبقى على شاشة "لا يوجد اتصال" */ },
