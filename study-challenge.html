@@ -730,6 +730,8 @@
 </div>
 
 <script src="ui.js"></script>
+<script src="core.js"></script>
+<script src="timepicker.js"></script>
 <script src="tools.js"></script>
 <script src="levels.js"></script>
 <script src="missions.js"></script>
@@ -753,23 +755,7 @@ let timerHandle = null;
 let midAlerted = false, lastMinuteAlerted = false;
 const baseTitle = document.title;
 
-const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
-
-function formatDuration(ms){
-  ms = Math.max(0, ms);
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  if (hours > 0) return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-  return `${pad(minutes)}:${pad(seconds)}`;
-}
-
 let wakeLock = null;
-async function requestWakeLock(){
-  try{ if ("wakeLock" in navigator){ wakeLock = await navigator.wakeLock.request("screen"); } }catch(e){}
-}
-
 /* ================= الوقت الحقيقي (متزامن مع السيرفر) ================= */
 let serverTimeOffset = 0;
 function serverNow(){ return Date.now() + serverTimeOffset; } // المصدر الموثوق للوقت — يبقى كما هو، ما نلمسه
@@ -813,56 +799,11 @@ function dailyCapNoticeText(){
   return msg;
 }
 
-/* ================= نافذة تخصيص الوقت بتصميم اللعبة ================= */
-let pickerHour = 0, pickerMinute = 30;
-let pickerTargetId = "customTime";
-let pickerDisplayId = "customTimeDisplay";
-window.openTimePicker = function(targetId, displayId){
-  pickerTargetId = targetId || "customTime";
-  pickerDisplayId = displayId || "customTimeDisplay";
-  const existing = document.getElementById(pickerTargetId).value;
-  if (existing){
-    const parts = existing.split(":").map(Number);
-    if (!isNaN(parts[0]) && !isNaN(parts[1])){ pickerHour = parts[0]; pickerMinute = parts[1]; }
-  }
-  renderTimePicker();
-  document.getElementById("timePickerOverlay").classList.add("show");
-};
-window.closeTimePicker = function(){
-  document.getElementById("timePickerOverlay").classList.remove("show");
-};
-function renderTimePicker(){
-  document.getElementById("pickerHourNum").innerText = String(pickerHour).padStart(2, "0");
-  document.getElementById("pickerMinuteNum").innerText = String(pickerMinute).padStart(2, "0");
-}
-window.adjustPickerHour = function(delta){
-  pickerHour = Math.max(0, Math.min(23, pickerHour + delta));
-  renderTimePicker();
-};
-window.adjustPickerMinute = function(delta){
-  let total = pickerHour * 60 + pickerMinute + delta;
-  total = Math.max(0, Math.min(23 * 60 + 59, total));
-  pickerHour = Math.floor(total / 60);
-  pickerMinute = total % 60;
-  renderTimePicker();
-};
-window.confirmTimePicker = function(){
-  if (pickerHour === 0 && pickerMinute === 0){
-    if (typeof appAlert === "function") appAlert("حدد وقتًا أكبر من صفر");
-    else if (typeof showSessionNotice === "function") showSessionNotice("⚠️ حدد وقتًا أكبر من صفر");
-    else alert("حدد وقتًا أكبر من صفر");
-    return;
-  }
-  const hh = String(pickerHour).padStart(2, "0");
-  const mm = String(pickerMinute).padStart(2, "0");
-  const val = hh + ":" + mm;
-  document.getElementById(pickerTargetId).value = val;
-  const displayEl = document.getElementById(pickerDisplayId);
-  displayEl.innerText = val + " ساعة:دقيقة";
-  displayEl.classList.add("set");
+/* ================= نافذة تخصيص الوقت: المنطق في timepicker.js ================= */
+/* بعد اختيار وقت مخصص نلغي تفعيل أزرار الأوقات الجاهزة */
+document.addEventListener("timepicker:confirm", () => {
   document.querySelectorAll(".preset-btn").forEach(btn => btn.classList.remove("active"));
-  closeTimePicker();
-};
+});
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden"){
@@ -909,48 +850,9 @@ let firebaseOK = false;
 let currentUid = null;
 let authReadyResolve;
 const authReady = new Promise((resolve) => { authReadyResolve = resolve; });
-function makeOfflineDbStub(){
-  const chain = {
-    on(){ return chain; }, off(){ return chain; },
-    once(){ return Promise.resolve({ val: () => null }); },
-    update(){ return Promise.resolve(); }, set(){ return Promise.resolve(); },
-    orderByChild(){ return chain; }, limitToLast(){ return chain; }, startAt(){ return chain; }
-  };
-  return { ref(){ return chain; } };
-}
-function serverTimestampValue(){
-  try{
-    if (firebaseOK && typeof firebase !== "undefined" && firebase.database && firebase.database.ServerValue){
-      return firebase.database.ServerValue.TIMESTAMP;
-    }
-  }catch(e){}
-  return Date.now();
-}
-
 /* ================= الاتصال بالـ Worker (study-bank) =================
    كل عملية تمس رصيد الدراسة (الحفظ، التصفير) تمر عبر السيرفر الموثوق على Cloudflare،
    ويتحقق من هوية الطالب بتوكن تسجيل الدخول. القواعد في فايربيس تمنع الكتابة المباشرة على الرصيد. */
-const WORKER_URL = "https://study-bank.hassan1odaey.workers.dev";
-async function callWorker(path, body){
-  if (!firebaseOK || typeof firebase === "undefined") throw new Error("firebase-not-ready");
-  const user = firebase.auth().currentUser;
-  if (!user) throw new Error("no-user");
-  const token = await user.getIdToken();
-  const res = await fetch(WORKER_URL + path, {
-    method: "POST",
-    headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-    body: JSON.stringify(body || {})
-  });
-  let data = {};
-  try{ data = await res.json(); }catch(e){}
-  if (!res.ok){
-    const err = new Error((data && data.error) || ("http-" + res.status));
-    err.code = (data && data.error) || ("http-" + res.status);
-    err.status = res.status;
-    throw err;
-  }
-  return data;
-}
 try{
   if (typeof firebase === "undefined") throw new Error("firebase-not-loaded");
   firebase.initializeApp(firebaseConfig);
@@ -1090,17 +992,6 @@ function step(){
   document.title = "📚 " + formatDuration(remainingMs);
 }
 
-function setDigit(el, val){
-  if (el.innerText !== val){
-    el.innerText = val;
-    if (document.body.getAttribute("data-style") === "flipclock"){
-      el.classList.remove("flip-anim");
-      void el.offsetWidth;
-      el.classList.add("flip-anim");
-    }
-  }
-}
-
 function renderTime(){
   const totalSeconds = Math.floor(remainingMs / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -1138,13 +1029,6 @@ window.resetTimer = function(){
    إدارة الملف الشخصي (تعديل البيانات، الرمز، الاسترجاع) انتقلت بالكامل
    إلى الصفحة الرئيسية (index.html). هذه الصفحة فقط تقرأ الملف الشخصي المحفوظ محليًا. */
 const PROFILE_KEY = "studyChallengeProfile";
-
-function getProfile(){
-  try{
-    const raw = localStorage.getItem(PROFILE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  }catch(e){ return null; }
-}
 
 function updateGreeting(){
   const p = getProfile();
