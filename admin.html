@@ -278,7 +278,7 @@
     to{opacity:1; transform:translateY(0);}
   }
   @media (prefers-reduced-motion: no-preference){
-    #hubView:not(.hidden), #mainTimerPanel:not(.hidden), #challengePanel:not(.hidden), #studyChallengePanel:not(.hidden), #themesPatternsPanel:not(.hidden), #studentsPanel:not(.hidden), #announcementPanel:not(.hidden){
+    #hubView:not(.hidden), #mainTimerPanel:not(.hidden), #challengePanel:not(.hidden), #studyChallengePanel:not(.hidden), #themesPatternsPanel:not(.hidden), #studentsPanel:not(.hidden), #announcementPanel:not(.hidden), #missionsPanel:not(.hidden){
       animation:screenIn .32s cubic-bezier(.22,.61,.36,1) both;
     }
     .hub-btn{ animation:itemIn .38s cubic-bezier(.22,.61,.36,1) backwards; }
@@ -301,6 +301,69 @@
     .tp-modal{max-width:500px !important;}
     .hub-btn{min-height:50px;}
   }
+
+  /* ================= إدارة المهام ================= */
+  .hub-btn.missions .icon{background:rgba(255,159,67,.14); color:#ff9f43; box-shadow:inset 0 0 0 1px rgba(255,159,67,.18);}
+  .hub-btn.missions:hover{border-color:#ff9f43;}
+  .mp-tabs{display:flex; gap:8px; margin:0 0 14px;}
+  .mp-tab{
+    flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--panel-2);
+    color:var(--muted); font-family:'Tajawal',sans-serif; font-weight:900; font-size:var(--fs-06); cursor:pointer;
+  }
+  .mp-tab.active{border-color:var(--amber); color:var(--amber); background:rgba(255,180,0,.08);}
+  .mp-strip{display:flex; gap:8px; overflow-x:auto; padding:2px 2px 10px; margin:0 -2px 4px; -webkit-overflow-scrolling:touch; scrollbar-width:thin;}
+  .mp-chip{
+    flex:0 0 auto; min-width:76px; padding:10px 10px 9px; border-radius:12px; border:1px solid var(--border);
+    background:var(--panel-2); color:var(--muted); font-family:'Tajawal',sans-serif; cursor:pointer;
+    text-align:center; line-height:1.4; position:relative;
+  }
+  .mp-chip b{display:block; font-size:var(--fs-04); color:#fff; font-weight:900;}
+  .mp-chip small{display:block; font-size:var(--fs-02); margin-top:1px;}
+  .mp-chip.wide{min-width:132px;}
+  .mp-chip.active{border-color:var(--amber); background:rgba(255,180,0,.08);}
+  .mp-chip.active b{color:var(--amber);}
+  .mp-chip .dot{position:absolute; top:6px; inset-inline-start:7px; width:7px; height:7px; border-radius:50%; background:var(--border);}
+  .mp-chip.has .dot{background:var(--green); box-shadow:0 0 6px rgba(46,204,113,.6);}
+  .mp-period{font-size:var(--fs-05); color:var(--muted); margin:0 0 12px; line-height:1.8;}
+  .mp-period b{color:#fff;}
+  .mp-slot{
+    border:1px solid var(--border); border-inline-start:4px solid var(--mc,#ffb400); background:var(--panel-2);
+    border-radius:12px; padding:6px 12px 12px; margin-bottom:12px;
+  }
+  .mp-slot-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:6px;}
+  .mp-slot-head b{font-size:var(--fs-06); color:#fff;}
+  .mp-del{
+    width:36px; min-height:36px !important; border-radius:10px; border:1px solid var(--border); background:var(--panel);
+    color:var(--red); font-size:var(--fs-08); font-weight:900; cursor:pointer;
+  }
+  .mp-row{display:flex; gap:10px;}
+  .mp-field{flex:1; min-width:0;}
+  .mp-field label, .mp-slot label{font-size:var(--fs-03); margin:10px 0 5px;}
+  .mp-step{display:flex; align-items:stretch; gap:6px;}
+  .mp-step button{
+    width:42px; flex-shrink:0; border-radius:10px; border:1px solid var(--border); background:var(--panel);
+    color:#fff; font-size:var(--fs-12); font-weight:900; cursor:pointer; font-family:'Tajawal',sans-serif;
+  }
+  .mp-step button:active{transform:scale(.94);}
+  .mp-step input{text-align:center; padding:10px 2px; min-width:0; font-family:'JetBrains Mono',monospace; font-weight:700;}
+  .mp-step input[type=number]{-moz-appearance:textfield; appearance:textfield;}
+  .mp-step input::-webkit-outer-spin-button, .mp-step input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+  .mp-hint{font-size:var(--fs-02); color:var(--muted); margin:6px 0 0;}
+  .mp-actions{display:flex; gap:8px; margin:4px 0 6px;}
+  .mp-actions button{flex:1;}
+  .mp-ck{display:flex; gap:8px; align-items:flex-start; padding:7px 0; border-top:1px dashed var(--border); font-size:var(--fs-04); line-height:1.7; color:#d6d7de;}
+  .mp-ck:first-of-type{border-top:none;}
+  .mp-ck i{font-style:normal; font-weight:900; width:18px; flex-shrink:0; text-align:center;}
+  .mp-ck.err i{color:var(--red);} .mp-ck.warn i{color:#ff9f43;} .mp-ck.ok i{color:var(--green);} .mp-ck.info i{color:var(--muted);}
+  .mp-prev{display:flex; align-items:center; gap:10px; padding:10px 12px; margin-bottom:8px; border-radius:12px; background:var(--panel); border:1px solid var(--border); border-inline-start:4px solid var(--mc,#ffb400);}
+  .mp-prev .tx{flex:1; min-width:0;}
+  .mp-prev .tx b{display:block; font-size:var(--fs-06); color:#fff;}
+  .mp-prev .tx small{display:block; font-size:var(--fs-03); color:var(--muted); margin-top:2px;}
+  .mp-prev .st{color:var(--amber); font-weight:900; font-size:var(--fs-06); flex-shrink:0;}
+  .mp-prev.bonus{border-inline-start-color:#a78bfa;}
+  .mp-prev.bonus .st{color:#a78bfa;}
+  #mpSaveBtn{margin-top:18px;}
+  #mpDeleteBtn{margin-top:10px; border-color:var(--red); color:var(--red); background:rgba(255,59,48,.08);}
 </style>
 <link rel="stylesheet" href="theme.css">
 </head>
@@ -370,6 +433,12 @@
   <button type="button" class="hub-btn announce" onclick="showPanel('announcement')">
     <span class="icon"><svg class="ico" viewBox="0 0 24 24"><path d="M4 10v4a1 1 0 0 0 1 1h2l5 4V5L7 9H5a1 1 0 0 0-1 1Z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></svg></span>
     <span class="txt"><b>رسالة الإعلان</b><small>نص يظهر لكل الطلاب في الصفحة الرئيسية</small></span>
+    <span class="arrow">‹</span>
+  </button>
+
+  <button type="button" class="hub-btn missions" onclick="showPanel('missions')">
+    <span class="icon"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="4.2"/><circle cx="12" cy="12" r=".8" fill="currentColor" stroke="none"/></svg></span>
+    <span class="txt"><b>إدارة المهام</b><small>ضع مهام اليوم والأسبوع وقيمة نجومها</small></span>
     <span class="arrow">‹</span>
   </button>
 
@@ -533,6 +602,46 @@
     <button type="button" class="toggle-btn" onclick="clearAnnouncement()"><svg class="ico" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor" stroke="none"/></svg> إخفاء</button>
   </div>
   <div id="announcementStatusMsg" class="hint" style="margin-top:12px;"></div>
+</div>
+
+<!-- لوحة إدارة المهام (اليومية والأسبوعية) -->
+<div class="card hidden" id="missionsPanel">
+  <button type="button" class="back-btn" onclick="mpBack()">‹ رجوع</button>
+  <p class="eyebrow">إدارة المهام</p>
+  <h1>مهام الطلاب</h1>
+  <p class="hint" style="margin:-10px 0 14px;">اختر اليوم أو الأسبوع وأضف مهامه ثم انشرها. إن لم تضع مهامًا لفترة ما، تظهر للطلاب المهام التلقائية بدلها.</p>
+
+  <div class="mp-tabs">
+    <button type="button" class="mp-tab active" id="mpTabDaily" onclick="mpTab('daily')">مهام اليوم</button>
+    <button type="button" class="mp-tab" id="mpTabWeekly" onclick="mpTab('weekly')">مهام الأسبوع</button>
+  </div>
+  <div class="mp-strip" id="mpStrip"></div>
+  <p class="mp-period" id="mpPeriod"></p>
+
+  <div id="mpList"></div>
+  <div class="mp-actions">
+    <button type="button" class="secondary" id="mpAddBtn" onclick="mpAdd()">+ إضافة مهمة</button>
+    <button type="button" class="secondary" onclick="mpSuggest()">✦ اقتراح بدون تكرار</button>
+  </div>
+
+  <div id="mpBonusBox" class="pattern-box hidden">
+    <p class="pattern-box-title">مكافأة إكمال كل مهام اليوم (★)</p>
+    <div class="mp-step" id="mpBonusStep" style="margin-bottom:10px;"></div>
+  </div>
+
+  <div class="pattern-box">
+    <p class="pattern-box-title">الفحوصات</p>
+    <div id="mpChecks" style="padding-bottom:8px;"></div>
+  </div>
+
+  <div class="pattern-box">
+    <p class="pattern-box-title">كما يراها الطالب</p>
+    <div id="mpPreview"></div>
+  </div>
+
+  <button type="button" class="primary" id="mpSaveBtn" onclick="mpSave()">نشر</button>
+  <button type="button" class="secondary" id="mpDeleteBtn" onclick="mpDelete()">حذف (الرجوع للمهام التلقائية)</button>
+  <div id="mpStatus" class="hint" style="margin-top:12px;"></div>
 </div>
 
 <!-- لوحة الثيمات والأنماط الموحدة -->
@@ -842,6 +951,7 @@ function hideAllPanels(){
   document.getElementById("themesPatternsPanel").classList.add("hidden");
   document.getElementById("studentsPanel").classList.add("hidden");
   document.getElementById("announcementPanel").classList.add("hidden");
+  document.getElementById("missionsPanel").classList.add("hidden");
 }
 
 window.showHub = function(){
@@ -862,6 +972,10 @@ window.showPanel = function(name){
   else if (name === "students"){
     document.getElementById("studentsPanel").classList.remove("hidden");
     loadStudents();
+  }
+  else if (name === "missions"){
+    document.getElementById("missionsPanel").classList.remove("hidden");
+    mpOpen();
   }
 };
 
@@ -1935,6 +2049,408 @@ window.clearAnnouncement = function(){
   db.ref(ANN_PATH + '/active').set(false)
     .then(() => annMsg("تم إخفاء الإعلان عن الطلاب.", "#8b8d99"))
     .catch(error => annMsg("فشل الإخفاء: " + error.message, "#ff3b30"));
+};
+
+/* ================= إدارة المهام (اليومية والأسبوعية) =================
+   المخطط في فايربيس:
+     missionPlans/daily/{dayIdx}   = { items:{ A:{k,t,s,title?,note?}, B:..., C:... }, bonus, updatedAt }
+     missionPlans/weekly/{weekIdx} = { items:{ A:{...}, B:{...}, C:{...} }, updatedAt }
+   dayIdx = floor((الآن + 3 ساعات) / يوم) أي بتوقيت بغداد، و weekIdx = floor(dayIdx / 7) — نفس معادلة missions.js والسيرفر
+   (لذلك يبدأ الأسبوع يوم الخميس عند منتصف الليل بتوقيت بغداد).
+   الأنواع والحدود والنصوص هنا يجب أن تطابق missions.js (cleanPlan / dailyDescribe / weeklyDescribe) وقواعد الـ RTDB.
+   رمز كل خانة (A/B/C) ثابت بعد إنشائه: حتى لو حذفت مهمة لا تتغير معرّفات البقية، فلا يُستلم شيء مرتين. */
+const MP_DAY = 86400000, MP_BAGHDAD = 3 * 3600000, MP_SLOTS = ["A", "B", "C"];
+const MP_TYPES = {
+  study: { scope: "daily",  label: "دقائق دراسة",       unit: "دقيقة", min: 5, max: 300, step: 5, def: 30, color: "#ffb400", desc: "من مؤقت التحدي أو مؤقت الطالب" },
+  pomo:  { scope: "daily",  label: "جلسات بومودورو",    unit: "جلسة",  min: 1, max: 12,  step: 1, def: 2,  color: "#ff6b3d", desc: "جلسة كاملة بدون تخطي" },
+  task:  { scope: "daily",  label: "مهام منجزة",        unit: "مهمة",  min: 1, max: 15,  step: 1, def: 2,  color: "#2ecc71", desc: "علّم المهمة كمنجزة في مؤقت الطالب" },
+  hours: { scope: "weekly", label: "ساعات دراسة",       unit: "ساعة",  min: 1, max: 40,  step: 1, def: 5,  color: "#48cae4", desc: "المجموع من كل مؤقتاتك" },
+  days:  { scope: "weekly", label: "أيام دراسة",        unit: "يوم",   min: 1, max: 7,   step: 1, def: 4,  color: "#a78bfa", desc: "يوم الدراسة = 10 دقائق فأكثر" },
+  wpomo: { scope: "weekly", label: "جلسات بومودورو",    unit: "جلسة",  min: 1, max: 60,  step: 1, def: 10, color: "#ff6b3d", desc: "جلسات كاملة بدون تخطي" },
+  wtask: { scope: "weekly", label: "مهام منجزة",        unit: "مهمة",  min: 1, max: 60,  step: 1, def: 10, color: "#2ecc71", desc: "علّم مهامك كمنجزة في مؤقت الطالب" }
+};
+const MP_SUGGEST_POOL = {
+  study: [15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 120], pomo: [1, 2, 3, 4], task: [1, 2, 3, 4, 5],
+  hours: [3, 4, 5, 6, 8, 10, 12], days: [3, 4, 5, 6, 7], wpomo: [5, 8, 10, 15, 20], wtask: [5, 8, 10, 15]
+};
+const MP_DAYNAMES = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+const MP_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+const MP_DEFAULT_BONUS = 2;
+const MP = { scope: "daily", sel: { daily: null, weekly: null }, store: { daily: {}, weekly: {} }, draft: { items: [], bonus: MP_DEFAULT_BONUS }, dirty: false, loading: false, saving: false };
+
+function mpClamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+function mpToday(){ return Math.floor((adminNow() + MP_BAGHDAD) / MP_DAY); }
+function mpWeekOf(d){ return Math.floor(d / 7); }
+function mpDate(idx){ const d = new Date(idx * MP_DAY); return { dow: d.getUTCDay(), day: d.getUTCDate(), mon: d.getUTCMonth() }; }
+function mpDateText(idx){ const x = mpDate(idx); return x.day + " " + MP_MONTHS[x.mon]; }
+function mpDateFull(idx){ const x = mpDate(idx); return MP_DAYNAMES[x.dow] + " " + x.day + " " + MP_MONTHS[x.mon]; }
+function mpCnt(n, one, two, few, many){ return n === 1 ? one : n === 2 ? two : n <= 10 ? (n + " " + few) : (n + " " + many); }
+function mpPeriodWord(n, sc){
+  return sc === "daily" ? (n === 1 ? "يوم" : n === 2 ? "يومين" : n + " أيام") : (n === 1 ? "أسبوع" : n === 2 ? "أسبوعين" : n + " أسابيع");
+}
+function mpFmtMin(m){ const h = Math.floor(m / 60), r = m % 60; return h ? (h + " س" + (r ? " و" + r + " د" : "")) : (r + " د"); }
+
+/* العنوان التلقائي (مطابق لـ missions.js) */
+function mpAutoTitle(k, t){
+  switch (k){
+    case "study": return "ادرس " + mpCnt(t, "دقيقة واحدة", "دقيقتين", "دقائق", "دقيقة") + " اليوم";
+    case "pomo":  return "أنهِ " + mpCnt(t, "جلسة تركيز", "جلستي تركيز", "جلسات تركيز", "جلسة تركيز") + " بومودورو";
+    case "task":  return "أنجز " + mpCnt(t, "مهمة", "مهمتين", "مهام", "مهمة") + " من لائحتك";
+    case "hours": return "ادرس " + mpCnt(t, "ساعة واحدة", "ساعتين", "ساعات", "ساعة") + " هذا الأسبوع";
+    case "days":  return t === 1 ? "ادرس في يوم واحد" : t === 2 ? "ادرس في يومين مختلفين" : "ادرس في " + t + " أيام مختلفة";
+    case "wpomo": return "أنهِ " + mpCnt(t, "جلسة تركيز", "جلستي تركيز", "جلسات تركيز", "جلسة تركيز") + " بومودورو هذا الأسبوع";
+    default:      return "أنجز " + mpCnt(t, "مهمة", "مهمتين", "مهام", "مهمة") + " من لائحتك هذا الأسبوع";
+  }
+}
+/* نجوم مقترحة حسب الجهد (يمكنك تعديلها يدويًا؛ الحد الأقصى 10 لكل مهمة) */
+function mpSuggestStars(k, t){
+  let v = 1;
+  if (k === "study") v = Math.ceil(t / 30);
+  else if (k === "pomo") v = t;
+  else if (k === "task") v = Math.ceil(t / 2);
+  else if (k === "hours") v = Math.round(t * 1.1) + 1;
+  else if (k === "days") v = t + (t >= 5 ? 1 : 0);
+  else if (k === "wpomo") v = Math.max(2, Math.ceil(t * 0.6));
+  else if (k === "wtask") v = Math.max(2, Math.ceil(t * 0.5));
+  return mpClamp(v, 1, 10);
+}
+
+/* تطبيع بيانات قادمة من فايربيس (نفس منطق cleanPlan في missions.js) */
+function mpNormalize(sc, raw){
+  if (!raw || typeof raw !== "object" || !raw.items || typeof raw.items !== "object") return null;
+  const items = [];
+  MP_SLOTS.forEach(slot => {
+    const it = raw.items[slot];
+    if (!it || typeof it !== "object") return;
+    const T = Object.prototype.hasOwnProperty.call(MP_TYPES, it.k) ? MP_TYPES[it.k] : null;
+    if (!T || T.scope !== sc) return;
+    const t = Math.floor(Number(it.t)), s = Math.floor(Number(it.s));
+    if (!(t >= T.min && t <= T.max) || !(s >= 1 && s <= 10)) return;
+    items.push({ slot, k: it.k, t, s, title: typeof it.title === "string" ? it.title : "", note: typeof it.note === "string" ? it.note : "" });
+  });
+  if (!items.length) return null;
+  let bonus = Math.floor(Number(raw.bonus));
+  if (!(bonus >= 0 && bonus <= 10)) bonus = MP_DEFAULT_BONUS;
+  return { items, bonus };
+}
+function mpDraftFrom(saved){
+  return saved ? { items: saved.items.map(o => Object.assign({}, o, { manual: true })), bonus: saved.bonus } : { items: [], bonus: MP_DEFAULT_BONUS };
+}
+function mpCurIdx(){ return MP.sel[MP.scope]; }
+function mpStatus(text, color){
+  const el = document.getElementById("mpStatus");
+  el.style.color = color || "#8b8d99"; el.textContent = text || "";
+}
+function mpMarkDirty(){ MP.dirty = true; mpStatus("تغييرات غير منشورة — اضغط «نشر» ليراها الطلاب.", "#ff9f43"); }
+
+/* ---------- التحميل ---------- */
+function mpLoad(){
+  if (MP.loading) return;
+  MP.loading = true; mpStatus("جارٍ التحميل...");
+  Promise.all([
+    db.ref("missionPlans/daily").orderByKey().limitToLast(40).once("value"),
+    db.ref("missionPlans/weekly").orderByKey().limitToLast(12).once("value")
+  ]).then(res => {
+    MP.store = { daily: {}, weekly: {} };
+    res[0].forEach(ch => { const n = mpNormalize("daily", ch.val()); if (n) MP.store.daily[ch.key] = n; });
+    res[1].forEach(ch => { const n = mpNormalize("weekly", ch.val()); if (n) MP.store.weekly[ch.key] = n; });
+    MP.loading = false;
+    const today = mpToday(), wk = mpWeekOf(today);
+    if (MP.sel.daily == null || MP.sel.daily < today || MP.sel.daily > today + 14) MP.sel.daily = today;
+    if (MP.sel.weekly == null || MP.sel.weekly < wk || MP.sel.weekly > wk + 4) MP.sel.weekly = wk;
+    MP.draft = mpDraftFrom(MP.store[MP.scope][String(mpCurIdx())]);
+    MP.dirty = false; mpStatus(""); mpRender();
+  }).catch(e => { MP.loading = false; mpStatus("تعذّر التحميل: " + (e && e.message ? e.message : e), "#ff3b30"); });
+}
+function mpOpen(){
+  if (MP.dirty){ mpRender(); return; }
+  if (MP.sel.daily == null){ const t = mpToday(); MP.sel.daily = t; MP.sel.weekly = mpWeekOf(t); }
+  mpRender(); mpLoad();
+}
+window.mpBack = function(){
+  if (MP.dirty){ appConfirm("لديك تغييرات غير منشورة. تريد الخروج وتجاهلها؟", () => { MP.dirty = false; showHub(); }); return; }
+  showHub();
+};
+
+/* ---------- الاختيار والتبويبات ---------- */
+function mpGuard(then){
+  if (!MP.dirty){ then(); return; }
+  appConfirm("لديك تغييرات غير منشورة. تريد تجاهلها والانتقال؟", () => { MP.dirty = false; then(); });
+}
+window.mpTab = function(sc){
+  if (sc === MP.scope) return;
+  mpGuard(() => {
+    MP.scope = sc;
+    MP.draft = mpDraftFrom(MP.store[sc][String(mpCurIdx())]);
+    mpStatus(""); mpRender();
+  });
+};
+window.mpSelect = function(idx){
+  if (idx === mpCurIdx()) return;
+  mpGuard(() => {
+    MP.sel[MP.scope] = idx;
+    MP.draft = mpDraftFrom(MP.store[MP.scope][String(idx)]);
+    mpStatus(""); mpRender();
+  });
+};
+
+/* ---------- تحرير المهام ---------- */
+function mpNewItem(k, t){
+  const slot = MP_SLOTS.find(sl => !MP.draft.items.some(i => i.slot === sl));
+  if (!slot) return null;
+  return { slot, k, t, s: mpSuggestStars(k, t), title: "", note: "", manual: false };
+}
+function mpPushItem(it){
+  MP.draft.items.push(it);
+  MP.draft.items.sort((a, b) => MP_SLOTS.indexOf(a.slot) - MP_SLOTS.indexOf(b.slot));
+}
+window.mpAdd = function(){
+  if (MP.draft.items.length >= 3) return;
+  const kinds = Object.keys(MP_TYPES).filter(k => MP_TYPES[k].scope === MP.scope);
+  const k = kinds.find(x => !MP.draft.items.some(i => i.k === x)) || kinds[0];
+  const it = mpNewItem(k, MP_TYPES[k].def);
+  if (!it) return;
+  mpPushItem(it); mpMarkDirty(); mpRender();
+};
+window.mpRemove = function(i){
+  if (!MP.draft.items[i]) return;
+  MP.draft.items.splice(i, 1); mpMarkDirty(); mpRender();
+};
+window.mpSetType = function(i, k){
+  const it = MP.draft.items[i];
+  if (!it || !MP_TYPES[k] || MP_TYPES[k].scope !== MP.scope) return;
+  it.k = k; it.t = MP_TYPES[k].def;
+  if (!it.manual) it.s = mpSuggestStars(k, it.t);
+  mpMarkDirty(); mpRender();
+};
+window.mpStep = function(i, f, dir){
+  const it = MP.draft.items[i]; if (!it) return;
+  window.mpSetNum(i, f, (f === "t" ? it.t + dir * MP_TYPES[it.k].step : it.s + dir));
+};
+window.mpSetNum = function(i, f, v){
+  const it = MP.draft.items[i]; if (!it) return;
+  const T = MP_TYPES[it.k]; let n = Math.round(Number(v));
+  if (!isFinite(n)) n = f === "t" ? it.t : it.s;
+  if (f === "t"){ it.t = mpClamp(n, T.min, T.max); if (!it.manual) it.s = mpSuggestStars(it.k, it.t); }
+  else { it.s = mpClamp(n, 1, 10); it.manual = true; }
+  mpMarkDirty(); mpRender();
+};
+window.mpSetText = function(i, f, v){
+  const it = MP.draft.items[i]; if (!it || (f !== "title" && f !== "note")) return;
+  it[f] = String(v).slice(0, f === "title" ? 40 : 90);
+  mpMarkDirty(); mpRenderLight();
+};
+window.mpBonusSet = function(v){
+  let n = Math.round(Number(v)); if (!isFinite(n)) n = MP.draft.bonus;
+  MP.draft.bonus = mpClamp(n, 0, 10); mpMarkDirty(); mpRender();
+};
+window.mpSuggest = function(){
+  const sc = MP.scope, idx = mpCurIdx();
+  if (idx == null) return;
+  if (MP.draft.items.length >= 3){ mpStatus("الحد الأقصى 3 مهام. احذف مهمة أولًا.", "#ff9f43"); return; }
+  const radius = sc === "daily" ? 7 : 3, used = new Set();
+  Object.keys(MP.store[sc]).map(Number).filter(n => n !== idx && Math.abs(n - idx) <= radius)
+    .forEach(n => MP.store[sc][String(n)].items.forEach(o => used.add(o.k + ":" + o.t)));
+  MP.draft.items.forEach(o => used.add(o.k + ":" + o.t));
+  const usedKinds = new Set(MP.draft.items.map(o => o.k));
+  let cands = [];
+  Object.keys(MP_TYPES).filter(k => MP_TYPES[k].scope === sc).forEach(k => {
+    MP_SUGGEST_POOL[k].forEach(t => { if (!used.has(k + ":" + t)) cands.push({ k, t, fresh: !usedKinds.has(k) }); });
+  });
+  const fresh = cands.filter(c => c.fresh); if (fresh.length) cands = fresh;
+  if (!cands.length){ mpStatus("لا يوجد اقتراح جديد بدون تكرار — جرّب تعديل الأهداف يدويًا.", "#ff9f43"); return; }
+  const c = cands[Math.floor(Math.random() * cands.length)];
+  const it = mpNewItem(c.k, c.t); if (!it) return;
+  mpPushItem(it); mpMarkDirty(); mpRender();
+};
+
+/* ---------- الفحوصات ---------- */
+function mpNear(sc, idx){
+  const radius = sc === "daily" ? 7 : 3;
+  return Object.keys(MP.store[sc]).map(Number).filter(n => n !== idx && Math.abs(n - idx) <= radius).sort((a, b) => a - b);
+}
+function mpTotalStars(sc, plan){
+  return plan.items.reduce((a, i) => a + i.s, 0) + (sc === "daily" && plan.items.length >= 2 ? plan.bonus : 0);
+}
+function mpChecks(){
+  const out = [], sc = MP.scope, idx = mpCurIdx(), items = MP.draft.items;
+  const add = (lvl, text) => out.push({ lvl, text });
+  if (idx == null) return out;
+  const word = sc === "daily" ? "اليوم" : "الأسبوع";
+  if (!items.length){
+    add("info", "لا مهام لهذا " + (sc === "daily" ? "اليوم" : "الأسبوع") + ": سيرى الطلاب المهام التلقائية.");
+    return out;
+  }
+  const seen = {};
+  items.forEach(it => { const key = it.k + ":" + it.t; seen[key] = (seen[key] || 0) + 1; });
+  Object.keys(seen).forEach(key => { if (seen[key] > 1){ const p = key.split(":"); add("err", "مهمتان متطابقتان: «" + mpAutoTitle(p[0], Number(p[1])) + "»."); } });
+  const kinds = {}; items.forEach(it => { kinds[it.k] = (kinds[it.k] || 0) + 1; });
+  Object.keys(kinds).forEach(k => {
+    if (kinds[k] > 1 && !Object.keys(seen).some(key => key.indexOf(k + ":") === 0 && seen[key] > 1)) add("warn", "مهمتان من نوع «" + MP_TYPES[k].label + "» — الأفضل تنويع الأنواع.");
+  });
+  const near = mpNear(sc, idx);
+  const reps = [];
+  near.forEach(n => MP.store[sc][String(n)].items.forEach(o => items.forEach(it => { if (o.k === it.k && o.t === it.t) reps.push({ it, dist: n - idx }); })));
+  reps.slice(0, 4).forEach(r => add("warn", "تكرار: «" + mpAutoTitle(r.it.k, r.it.t) + "» " + (r.dist < 0 ? "ظهرت قبل " : "ستظهر بعد ") + mpPeriodWord(Math.abs(r.dist), sc) + "."));
+
+  if (sc === "daily"){
+    const study = Math.max(0, ...items.filter(i => i.k === "study").map(i => i.t));
+    const pomo = items.filter(i => i.k === "pomo").reduce((a, i) => a + i.t, 0);
+    const est = Math.max(study, pomo * 25);
+    if (est > 360) add("err", "الوقت المطلوب (" + mpFmtMin(est) + ") يتجاوز سقف الدراسة اليومي (6 ساعات).");
+    else if (est > 240) add("warn", "مهام ثقيلة: تحتاج نحو " + mpFmtMin(est) + " في اليوم.");
+    else if (est > 0) add("info", "الوقت المطلوب لإنجاز كل المهام تقريبًا: " + mpFmtMin(est) + ".");
+  } else {
+    const hrs = Math.max(0, ...items.filter(i => i.k === "hours").map(i => i.t));
+    const days = Math.max(0, ...items.filter(i => i.k === "days").map(i => i.t));
+    if (hrs){
+      const perDay = Math.round(hrs * 60 / 7);
+      if (hrs > 28) add("warn", hrs + " ساعة في الأسبوع ثقيلة (≈ " + mpFmtMin(perDay) + " يوميًا).");
+      else add("info", "هدف الساعات ≈ " + mpFmtMin(perDay) + " يوميًا لو توزّع على 7 أيام.");
+    }
+    if (hrs && days && hrs / days > 6) add("err", "الساعات مع الأيام تتطلب أكثر من 6 ساعات في اليوم الدراسي — فوق السقف اليومي.");
+  }
+
+  const total = mpTotalStars(sc, MP.draft);
+  const others = near.map(n => mpTotalStars(sc, MP.store[sc][String(n)]));
+  const avg = others.length ? Math.round(others.reduce((a, b) => a + b, 0) / others.length) : 0;
+  if (avg && total > avg * 1.5) add("warn", "نجوم " + word + " (" + total + ") أعلى بكثير من معدل الفترات القريبة (" + avg + ") — انتبه لاقتصاد النجوم.");
+  else add("info", "مجموع النجوم الممكنة " + (sc === "daily" ? "اليوم" : "هذا الأسبوع") + ": " + total + (avg ? " (المعدل القريب " + avg + ")" : "") + ".");
+
+  const cur = sc === "daily" ? mpToday() : mpWeekOf(mpToday());
+  if (idx === cur) add("warn", (sc === "daily" ? "هذه مهام اليوم الجاري" : "هذا الأسبوع الجاري") + ": أي تعديل يظهر للطلاب فورًا. من استلم نجومه لا يستلمها مرتين.");
+  if (!out.some(c => c.lvl === "err" || c.lvl === "warn")) out.unshift({ lvl: "ok", text: "لا ملاحظات — الخطة متوازنة." });
+  return out;
+}
+
+/* ---------- العرض ---------- */
+function mpRenderStrip(){
+  const sc = MP.scope, today = mpToday(), box = document.getElementById("mpStrip");
+  let html = "";
+  if (sc === "daily"){
+    for (let i = 0; i <= 14; i++){
+      const idx = today + i, name = i === 0 ? "اليوم" : i === 1 ? "غدًا" : MP_DAYNAMES[mpDate(idx).dow];
+      html += '<button type="button" class="mp-chip' + (idx === MP.sel.daily ? " active" : "") + (MP.store.daily[String(idx)] ? " has" : "") + '" onclick="mpSelect(' + idx + ')"><span class="dot"></span><b>' + name + '</b><small>' + mpDateText(idx) + '</small></button>';
+    }
+  } else {
+    const wk = mpWeekOf(today);
+    for (let i = 0; i <= 4; i++){
+      const w = wk + i, name = i === 0 ? "هذا الأسبوع" : i === 1 ? "الأسبوع القادم" : "بعد " + i + " أسابيع";
+      html += '<button type="button" class="mp-chip wide' + (w === MP.sel.weekly ? " active" : "") + (MP.store.weekly[String(w)] ? " has" : "") + '" onclick="mpSelect(' + w + ')"><span class="dot"></span><b>' + name + '</b><small>' + mpDateText(w * 7) + ' – ' + mpDateText(w * 7 + 6) + '</small></button>';
+    }
+  }
+  box.innerHTML = html;
+}
+function mpRenderPeriod(){
+  const sc = MP.scope, idx = mpCurIdx(), el = document.getElementById("mpPeriod");
+  if (idx == null){ el.textContent = ""; return; }
+  el.innerHTML = sc === "daily"
+    ? '<b>' + mpDateFull(idx) + '</b> — تتجدد المهام اليومية عند منتصف الليل بتوقيت بغداد.'
+    : '<b>من ' + mpDateFull(idx * 7) + ' إلى ' + mpDateFull(idx * 7 + 6) + '</b> — تتجدد المهام الأسبوعية كل خميس عند منتصف الليل بتوقيت بغداد.';
+}
+function mpStepper(onMinus, onPlus, value, min, max, onChange){
+  return '<div class="mp-step"><button type="button" onclick="' + onMinus + '" aria-label="إنقاص">−</button>' +
+    '<input type="number" inputmode="numeric" value="' + value + '" min="' + min + '" max="' + max + '" onchange="' + onChange + '">' +
+    '<button type="button" onclick="' + onPlus + '" aria-label="زيادة">+</button></div>';
+}
+function mpSlotHtml(it, i){
+  const T = MP_TYPES[it.k];
+  const opts = Object.keys(MP_TYPES).filter(k => MP_TYPES[k].scope === MP.scope)
+    .map(k => '<option value="' + k + '"' + (k === it.k ? " selected" : "") + '>' + MP_TYPES[k].label + '</option>').join("");
+  const sug = mpSuggestStars(it.k, it.t);
+  return '<div class="mp-slot" style="--mc:' + T.color + '">' +
+    '<div class="mp-slot-head"><b>مهمة ' + (i + 1) + '</b><button type="button" class="mp-del" onclick="mpRemove(' + i + ')" aria-label="حذف المهمة">✕</button></div>' +
+    '<label>نوع المهمة</label><select onchange="mpSetType(' + i + ', this.value)">' + opts + '</select>' +
+    '<div class="mp-row">' +
+      '<div class="mp-field"><label>الهدف (' + T.unit + ')</label>' + mpStepper("mpStep(" + i + ",'t',-1)", "mpStep(" + i + ",'t',1)", it.t, T.min, T.max, "mpSetNum(" + i + ",'t',this.value)") + '</div>' +
+      '<div class="mp-field"><label>النجوم ★</label>' + mpStepper("mpStep(" + i + ",'s',-1)", "mpStep(" + i + ",'s',1)", it.s, 1, 10, "mpSetNum(" + i + ",'s',this.value)") + '</div>' +
+    '</div>' +
+    (it.s !== sug ? '<p class="mp-hint">النجوم المقترحة لهذا الجهد: ★' + sug + '</p>' : '') +
+    '<label>عنوان مخصص (اختياري)</label><input type="text" maxlength="40" value="' + escapeHtml(it.title) + '" placeholder="' + escapeHtml(mpAutoTitle(it.k, it.t)) + '" oninput="mpSetText(' + i + ',\'title\',this.value)">' +
+    '<label>ملاحظة للطالب (اختياري)</label><input type="text" maxlength="90" value="' + escapeHtml(it.note) + '" placeholder="' + escapeHtml(T.desc) + '" oninput="mpSetText(' + i + ',\'note\',this.value)">' +
+  '</div>';
+}
+function mpRenderList(){
+  document.getElementById("mpList").innerHTML = MP.draft.items.length
+    ? MP.draft.items.map(mpSlotHtml).join("")
+    : '<p class="hint" style="margin:6px 0 12px;">لا توجد مهام لهذه الفترة بعد. أضف مهمة أو اضغط «اقتراح».</p>';
+  document.getElementById("mpAddBtn").disabled = MP.draft.items.length >= 3;
+  const showBonus = MP.scope === "daily" && MP.draft.items.length >= 2;
+  document.getElementById("mpBonusBox").classList.toggle("hidden", !showBonus);
+  if (showBonus) document.getElementById("mpBonusStep").innerHTML =
+    '<button type="button" onclick="mpBonusSet(' + (MP.draft.bonus - 1) + ')" aria-label="إنقاص">−</button>' +
+    '<input type="number" inputmode="numeric" value="' + MP.draft.bonus + '" min="0" max="10" onchange="mpBonusSet(this.value)">' +
+    '<button type="button" onclick="mpBonusSet(' + (MP.draft.bonus + 1) + ')" aria-label="زيادة">+</button>';
+}
+function mpRenderChecks(){
+  const marks = { err: "✕", warn: "!", ok: "✓", info: "i" };
+  document.getElementById("mpChecks").innerHTML = mpChecks().map(c => '<div class="mp-ck ' + c.lvl + '"><i>' + marks[c.lvl] + '</i><span>' + escapeHtml(c.text) + '</span></div>').join("");
+}
+function mpRenderPreview(){
+  const sc = MP.scope, items = MP.draft.items;
+  let html = items.map(it => {
+    const T = MP_TYPES[it.k], title = it.title.trim() || mpAutoTitle(it.k, it.t), note = it.note.trim() || T.desc;
+    return '<div class="mp-prev" style="--mc:' + T.color + '"><div class="tx"><b>' + escapeHtml(title) + '</b><small>' + escapeHtml(note) + '</small></div><span class="st">★' + it.s + '</span></div>';
+  }).join("");
+  if (sc === "daily" && items.length >= 2 && MP.draft.bonus > 0)
+    html += '<div class="mp-prev bonus"><div class="tx"><b>مكافأة إكمال كل المهام</b><small>تُمنح بعد استلام كل مهام اليوم</small></div><span class="st">+' + MP.draft.bonus + ' ★</span></div>';
+  document.getElementById("mpPreview").innerHTML = html || '<p class="hint" style="margin:0;">لا مهام — سيرى الطلاب المهام التلقائية.</p>';
+}
+function mpRenderButtons(){
+  const sc = MP.scope, idx = mpCurIdx(), has = idx != null && !!MP.store[sc][String(idx)];
+  const save = document.getElementById("mpSaveBtn"), del = document.getElementById("mpDeleteBtn");
+  save.textContent = MP.saving ? "جارٍ النشر..." : (sc === "daily" ? "نشر مهام اليوم" : "نشر مهام الأسبوع");
+  save.disabled = MP.saving || !MP.dirty || !MP.draft.items.length;
+  del.classList.toggle("hidden", !has);
+  del.textContent = sc === "daily" ? "حذف مهام هذا اليوم (الرجوع للتلقائية)" : "حذف مهام هذا الأسبوع (الرجوع للتلقائية)";
+  document.getElementById("mpTabDaily").classList.toggle("active", sc === "daily");
+  document.getElementById("mpTabWeekly").classList.toggle("active", sc === "weekly");
+}
+function mpRenderLight(){ mpRenderChecks(); mpRenderPreview(); mpRenderButtons(); }
+function mpRender(){ mpRenderStrip(); mpRenderPeriod(); mpRenderList(); mpRenderLight(); }
+
+/* ---------- النشر والحذف ---------- */
+window.mpSave = function(){
+  const sc = MP.scope, idx = mpCurIdx(), items = MP.draft.items;
+  if (idx == null || MP.saving) return;
+  if (!items.length){ mpStatus("أضف مهمة واحدة على الأقل، أو استخدم «حذف» للرجوع للمهام التلقائية.", "#ff3b30"); return; }
+  if (mpChecks().some(c => c.lvl === "err")){ mpStatus("أصلح الأخطاء الحمراء في «الفحوصات» أولًا.", "#ff3b30"); return; }
+  const payload = { items: {}, updatedAt: firebase.database.ServerValue.TIMESTAMP };
+  items.forEach(it => {
+    const o = { k: it.k, t: it.t, s: it.s }, ti = it.title.trim(), no = it.note.trim();
+    if (ti) o.title = ti.slice(0, 40);
+    if (no) o.note = no.slice(0, 90);
+    payload.items[it.slot] = o;
+  });
+  if (sc === "daily") payload.bonus = MP.draft.bonus;
+  const snapshot = mpNormalize(sc, { items: payload.items, bonus: payload.bonus });
+  MP.saving = true; mpRenderButtons(); mpStatus("جارٍ النشر...");
+  db.ref("missionPlans/" + sc + "/" + idx).set(payload).then(() => {
+    MP.saving = false;
+    MP.store[sc][String(idx)] = snapshot;
+    if (MP.scope === sc && mpCurIdx() === idx){
+      MP.dirty = false; MP.draft = mpDraftFrom(snapshot); mpRender();
+      mpStatus("تم النشر ✓ — ستظهر للطلاب " + (sc === "daily" ? "في ذلك اليوم." : "في ذلك الأسبوع."), "#2ecc71");
+    } else { mpRenderStrip(); mpRenderButtons(); }
+  }).catch(e => {
+    MP.saving = false; mpRenderButtons();
+    mpStatus("فشل النشر: " + (e && e.message ? e.message : e), "#ff3b30");
+  });
+};
+window.mpDelete = function(){
+  const sc = MP.scope, idx = mpCurIdx();
+  if (idx == null || !MP.store[sc][String(idx)]) return;
+  appConfirm(sc === "daily"
+    ? "حذف مهام هذا اليوم؟ سيرى الطلاب المهام التلقائية بدلها."
+    : "حذف مهام هذا الأسبوع؟ سيرى الطلاب المهام التلقائية بدلها (ويُنصح بعدم حذفها بعد بدء الأسبوع).", () => {
+    mpStatus("جارٍ الحذف...");
+    db.ref("missionPlans/" + sc + "/" + idx).remove().then(() => {
+      delete MP.store[sc][String(idx)];
+      if (MP.scope === sc && mpCurIdx() === idx){ MP.dirty = false; MP.draft = mpDraftFrom(null); mpRender(); }
+      else mpRenderStrip();
+      mpStatus("تم الحذف — المهام التلقائية تظهر الآن.", "#8b8d99");
+    }).catch(e => mpStatus("فشل الحذف: " + (e && e.message ? e.message : e), "#ff3b30"));
+  });
 };
 
 window.lookupRecoveryCode = function(){
