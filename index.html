@@ -1171,7 +1171,7 @@
     <div class="ms-list" id="msDaily"></div>
     <div class="pv-sec-title" style="margin-top:16px;"><span>مهام الأسبوع</span><span id="msWeeklyCount">0/2</span></div>
     <div class="ms-list" id="msWeekly"></div>
-    <p class="google-hint" style="text-align:center; margin-top:14px;">تتجدد مهام اليوم عند منتصف الليل بتوقيت بغداد. النجوم رصيدك لفتح الجوائز في التحديث القادم.</p>
+    <p class="google-hint" style="text-align:center; margin-top:14px;">تتجدد مهام اليوم عند منتصف الليل بتوقيت بغداد، والأسبوعية كل خميس. اصرف نجومك في المتجر.</p>
   </div>
 </div>
 
@@ -1823,7 +1823,9 @@ window.renderMissions = function(){
   set("msStars", S.stars);
   set("msDailyCount", S.dailyClaimed + "/" + S.daily.length);
   set("msWeeklyCount", S.weekly.filter(m => m.claimed).length + "/" + S.weekly.length);
-  set("msSumTxt", S.bonusTaken ? "أنجزت كل مهام اليوم وأخذت المكافأة" : ("أكمل مهام اليوم الثلاث لتحصل على +" + S.bonusStars + " ★ إضافية"));
+  set("msSumTxt", S.bonusStars > 0
+    ? (S.bonusTaken ? "أنجزت كل مهام اليوم وأخذت المكافأة" : ("أكمل كل مهام اليوم لتحصل على +" + S.bonusStars + " ★ إضافية"))
+    : "اجمع النجوم من مهام اليوم والأسبوع");
   [["msDaily", S.daily], ["msWeekly", S.weekly]].forEach(([id, list]) => {
     const box = document.getElementById(id);
     if (!box) return;
@@ -1890,6 +1892,7 @@ function attachStatsListener(uid){
     db.ref('studyLeaderboard/' + currentStatsUid).off('value');
   }
   currentStatsUid = uid;
+  try{ if (window.HOMissions) HOMissions.startPlans(db); }catch(e){}   /* مهام يضعها المشرف (احتياطها المهام التلقائية) */
   db.ref('studyLeaderboard/' + uid).on('value', (snap) => {
     renderChallengeStats(snap.val());
     try{ HOLevel.check(uid, snap.val() || {}); }catch(e){}
