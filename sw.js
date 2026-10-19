@@ -6,7 +6,7 @@
    ================================================================ */
 /* رقم الإصدار: لازم يترفع (v3, v4, ...) كل مرة تتحدث فيها أي صفحة أو ملف مذكور بـ APP_SHELL،
    وإلا المستخدمين اللي مثبتين التطبيق راح يضلوا شغالين بنسخة قديمة مخزّنة أوفلاين. */
-const CACHE_NAME = "timers-app-shell-v36";
+const CACHE_NAME = "timers-app-shell-v38";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -44,7 +44,8 @@ self.addEventListener("install", (event) => {
      (cache.addAll كان يفشل كله إذا ملف واحد فقط رجع 404.) */
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
-      Promise.allSettled(APP_SHELL.map((url) => cache.add(url)))
+      /* cache: "reload" = اجلب النسخة الحالية من السيرفر مباشرة (لا من كاش المتصفح)، حتى لا يُخزَّن خليط نسخ قديمة وجديدة */
+      Promise.allSettled(APP_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" }))))
     ).catch(() => {})
   );
   self.skipWaiting();
@@ -69,7 +70,9 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.match(req).then((cached) => {
-      const networkFetch = fetch(req)
+      /* لملفات الجافاسكربت والأنماط والأيقونات: نتحقق من السيرفر دائمًا (طلب شرطي خفيف) حتى يصل التحديث بسرعة.
+         الصفحات نفسها (navigate) نتركها كما هي حتى لا تتأثر إعادة التوجيه. */
+      const networkFetch = (req.mode === "navigate" ? fetch(req) : fetch(new Request(req, { cache: "no-cache" })))
         .then((res) => {
           if (res && res.status === 200) {
             const clone = res.clone();
