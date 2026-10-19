@@ -278,7 +278,7 @@
     to{opacity:1; transform:translateY(0);}
   }
   @media (prefers-reduced-motion: no-preference){
-    #hubView:not(.hidden), #mainTimerPanel:not(.hidden), #challengePanel:not(.hidden), #studyChallengePanel:not(.hidden), #themesPatternsPanel:not(.hidden), #studentsPanel:not(.hidden), #announcementPanel:not(.hidden), #missionsPanel:not(.hidden){
+    #hubView:not(.hidden), #mainTimerPanel:not(.hidden), #challengePanel:not(.hidden), #studyChallengePanel:not(.hidden), #themesPatternsPanel:not(.hidden), #studentsPanel:not(.hidden), #announcementPanel:not(.hidden), #missionsPanel:not(.hidden), #coachPanel:not(.hidden){
       animation:screenIn .32s cubic-bezier(.22,.61,.36,1) both;
     }
     .hub-btn{ animation:itemIn .38s cubic-bezier(.22,.61,.36,1) backwards; }
@@ -305,6 +305,11 @@
   /* ================= إدارة المهام ================= */
   .hub-btn.missions .icon{background:rgba(255,159,67,.14); color:#ff9f43; box-shadow:inset 0 0 0 1px rgba(255,159,67,.18);}
   .hub-btn.missions:hover{border-color:#ff9f43;}
+  /* ================= المساعد الذكي ================= */
+  .hub-btn.coach .icon{background:rgba(72,202,228,.12); color:#48cae4; box-shadow:inset 0 0 0 1px rgba(72,202,228,.2);}
+  .hub-btn.coach:hover{border-color:#48cae4;}
+  .coach-usage{font-size:var(--fs-04); color:#fff; background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin:14px 0 0;}
+  .coach-usage b{color:var(--amber); font-family:'JetBrains Mono',monospace;}
   .mp-tabs{display:flex; gap:8px; margin:0 0 14px;}
   .mp-tab{
     flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--panel-2);
@@ -439,6 +444,12 @@
   <button type="button" class="hub-btn missions" onclick="showPanel('missions')">
     <span class="icon"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="4.2"/><circle cx="12" cy="12" r=".8" fill="currentColor" stroke="none"/></svg></span>
     <span class="txt"><b>إدارة المهام</b><small>ضع مهام اليوم والأسبوع وقيمة نجومها</small></span>
+    <span class="arrow">‹</span>
+  </button>
+
+  <button type="button" class="hub-btn coach" onclick="showPanel('coach')">
+    <span class="icon"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3.2l1.9 4.4 4.7.5-3.5 3.2 1 4.7L12 13.5 7.9 16l1-4.7L5.4 8.1l4.7-.5Z"/><path d="M18.5 16.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7Z"/></svg></span>
+    <span class="txt"><b>المساعد الذكي</b><small>تفعيل المحادثة مع الطلاب وضبط عدد الرسائل اليومية</small></span>
     <span class="arrow">‹</span>
   </button>
 
@@ -642,6 +653,36 @@
   <button type="button" class="primary" id="mpSaveBtn" onclick="mpSave()">نشر</button>
   <button type="button" class="secondary" id="mpDeleteBtn" onclick="mpDelete()">حذف (الرجوع للمهام التلقائية)</button>
   <div id="mpStatus" class="hint" style="margin-top:12px;"></div>
+</div>
+
+<!-- لوحة المساعد الذكي -->
+<div class="card hidden" id="coachPanel">
+  <button type="button" class="back-btn" onclick="showHub()">‹ رجوع</button>
+  <p class="eyebrow">المساعد الذكي</p>
+  <h1>محادثة مساعد الدراسة</h1>
+  <p class="hint" style="margin-bottom:16px;">عند التفعيل يظهر للطلاب تبويب «اسأل المساعد» داخل نافذة مساعد الدراسة. المحادثة مغلقة افتراضيًا حتى تفعّلها من هنا. التفعيل والإيقاف يُحفظان فورًا.</p>
+
+  <div class="toggle-row">
+    <button type="button" class="toggle-btn" id="coachOnBtn" onclick="setCoachEnabled(true)">تفعيل</button>
+    <button type="button" class="toggle-btn" id="coachOffBtn" onclick="setCoachEnabled(false)">إيقاف</button>
+  </div>
+
+  <div class="pattern-box" style="padding-bottom:14px;">
+    <p class="pattern-box-title">الحدود اليومية</p>
+    <div class="field">
+      <label>عدد الرسائل لكل طالب في اليوم (من 1 إلى 50)</label>
+      <input type="number" id="coachDailyLimit" min="1" max="50" step="1" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>الحد العام لكل الطلاب في اليوم (من 10 إلى 20000)</label>
+      <input type="number" id="coachGlobalLimit" min="10" max="20000" step="1" inputmode="numeric">
+    </div>
+    <p class="hint" style="margin-top:10px;">الحد العام يحمي حصة الذكاء الاصطناعي من النفاد. يتجدد العدّاد كل يوم عند منتصف الليل بتوقيت بغداد.</p>
+  </div>
+
+  <button type="button" class="primary" onclick="saveCoachLimits()">حفظ الحدود</button>
+  <div class="coach-usage" id="coachUsage">رسائل اليوم: <b>—</b></div>
+  <div id="coachStatusMsg" class="hint" style="margin-top:12px;"></div>
 </div>
 
 <!-- لوحة الثيمات والأنماط الموحدة -->
@@ -952,6 +993,7 @@ function hideAllPanels(){
   document.getElementById("studentsPanel").classList.add("hidden");
   document.getElementById("announcementPanel").classList.add("hidden");
   document.getElementById("missionsPanel").classList.add("hidden");
+  document.getElementById("coachPanel").classList.add("hidden");
 }
 
 window.showHub = function(){
@@ -976,6 +1018,10 @@ window.showPanel = function(name){
   else if (name === "missions"){
     document.getElementById("missionsPanel").classList.remove("hidden");
     mpOpen();
+  }
+  else if (name === "coach"){
+    document.getElementById("coachPanel").classList.remove("hidden");
+    loadCoachState();
   }
 };
 
@@ -2051,6 +2097,62 @@ window.clearAnnouncement = function(){
     .catch(error => annMsg("فشل الإخفاء: " + error.message, "#ff3b30"));
 };
 
+/* ================= المساعد الذكي =================
+   coachSettings = { enabled, dailyLimit, globalDailyLimit }  — يقرؤها الـ Worker (/coach/chat) ويقرأ enabled ملف coach.js
+   coachGlobal   = { d: يوم بغداد, c: عدد رسائل اليوم }       — يكتبها السيرفر فقط، وهنا للعرض */
+const COACH_PATH = 'coachSettings';
+function coachMsg(text, color){
+  const el = document.getElementById("coachStatusMsg");
+  el.style.color = color || "#8b8d99";
+  el.textContent = text || "";
+}
+function coachRenderEnabled(on){
+  document.getElementById("coachOnBtn").classList.toggle("on", !!on);
+  document.getElementById("coachOffBtn").classList.toggle("off", !on);
+}
+function coachRenderUsage(g, limit){
+  const box = document.getElementById("coachUsage");
+  const today = Math.floor((Date.now() + (adminServerOffset || 0) + 3 * 3600000) / 86400000);
+  const used = (g && g.d === today) ? (Number(g.c) || 0) : 0;
+  box.textContent = "رسائل اليوم: ";
+  const b = document.createElement("b");
+  b.textContent = used + (limit ? " / " + limit : "");
+  box.appendChild(b);
+}
+function loadCoachState(){
+  coachMsg("جارٍ التحميل...");
+  coachRenderUsage(null, null);
+  db.ref(COACH_PATH).once('value').then(snap => {
+    const d = snap.val() || {};
+    const on = d.enabled === true;
+    const gl = d.globalDailyLimit != null ? d.globalDailyLimit : 120;
+    coachRenderEnabled(on);
+    document.getElementById("coachDailyLimit").value = d.dailyLimit != null ? d.dailyLimit : 5;
+    document.getElementById("coachGlobalLimit").value = gl;
+    coachMsg(on ? "المحادثة مفعّلة وتظهر للطلاب." : "المحادثة مغلقة حاليًا.", on ? "#2ecc71" : "#8b8d99");
+    return db.ref('coachGlobal').once('value').then(g => coachRenderUsage(g.val(), gl)).catch(() => {});
+  }).catch(error => coachMsg("تعذّر التحميل: " + error.message, "#ff3b30"));
+}
+window.setCoachEnabled = function(on){
+  coachMsg("جارٍ الحفظ...");
+  db.ref(COACH_PATH).update({ enabled: !!on })
+    .then(() => {
+      coachRenderEnabled(!!on);
+      coachMsg(on ? "تم تفعيل المحادثة — ستظهر للطلاب." : "تم إيقاف المحادثة.", on ? "#2ecc71" : "#8b8d99");
+    })
+    .catch(error => coachMsg("فشل الحفظ: " + error.message, "#ff3b30"));
+};
+window.saveCoachLimits = function(){
+  const dl = Number(document.getElementById("coachDailyLimit").value);
+  const gl = Number(document.getElementById("coachGlobalLimit").value);
+  if (!Number.isInteger(dl) || dl < 1 || dl > 50){ coachMsg("عدد رسائل الطالب يجب أن يكون رقمًا صحيحًا من 1 إلى 50.", "#ff3b30"); return; }
+  if (!Number.isInteger(gl) || gl < 10 || gl > 20000){ coachMsg("الحد العام يجب أن يكون رقمًا صحيحًا من 10 إلى 20000.", "#ff3b30"); return; }
+  coachMsg("جارٍ الحفظ...");
+  db.ref(COACH_PATH).update({ dailyLimit: dl, globalDailyLimit: gl })
+    .then(() => { coachMsg("تم حفظ الحدود.", "#2ecc71"); })
+    .catch(error => coachMsg("فشل الحفظ: " + error.message, "#ff3b30"));
+};
+
 /* ================= إدارة المهام (اليومية والأسبوعية) =================
    المخطط في فايربيس:
      missionPlans/daily/{dayIdx}   = { items:{ A:{k,t,s,title?,note?}, B:..., C:... }, bonus, updatedAt }
@@ -2586,7 +2688,3 @@ if ("serviceWorker" in navigator) {
 </script>
 </body>
 </html>
-
-
- 
-  
