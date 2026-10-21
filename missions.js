@@ -135,7 +135,12 @@
 
   /* ----------------------------- الحساب ----------------------------- */
   /* فرق السيرفر يُحتسب فقط إن كان خط الأساس من اليوم نفسه (وإلا ننتظر أول تحديث من السيرفر) */
-  function studySecToday(st, ev){ return (st.day === dayIdx() ? Math.max(0, st.total - st.base) : 0) + ev.localSec; }
+  /* الأفضل: دراسة اليوم كما سجّلها السيرفر (srvToday من dayIndex/daySeconds). وإلا (سجل قديم بلا هذين الحقلين)
+     نرجع لخط الأساس: الفرق بين الرصيد الحالي وأول رصيد ظهر اليوم. */
+  function studySecToday(st, ev){
+    var srv = (st.srvToday != null) ? st.srvToday : Math.max(0, st.total - st.base);
+    return (st.day === dayIdx() ? srv : 0) + ev.localSec;
+  }
 
   /* ----- صياغة العناوين (يجب أن تطابق معاينة admin.html) ----- */
   function cnt(n, one, two, few, many){ return n === 1 ? one : n === 2 ? two : n <= 10 ? (n + " " + few) : (n + " " + many); }
@@ -337,6 +342,8 @@
     if (st.day !== d){ st.day = d; st.base = total; }          /* أول ظهور لليوم: خط الأساس */
     if (total < st.base) st.base = total;                       /* تعديل المشرف خفّض الرصيد */
     st.total = total;
+    /* val.dayIndex/daySeconds يكتبهما الـ Worker: دراسة اليوم الحقيقية حتى لو درس الطالب قبل أول تحديث في اليوم */
+    st.srvToday = (typeof val.dayIndex === "number") ? (val.dayIndex === d ? (Number(val.daySeconds) || 0) : 0) : null;
     var wk = weekOf(d);
     st.wkIdx = (val.weekIndex === wk) ? wk : st.wkIdx;
     st.wkSec = (val.weekIndex === wk) ? (val.weeklySeconds || 0) : (st.wkIdx === wk ? st.wkSec : 0);
