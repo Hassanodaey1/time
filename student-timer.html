@@ -1879,10 +1879,33 @@ function saveActiveSession(state){
 function clearActiveSession(){
   try{ localStorage.removeItem(ACTIVE_SESSION_KEY); }catch(e){}
 }
+/* الجلسة المحفوظة تُقرأ من التخزين المحلي، فقد تكون تالفة أو معدَّلة يدويًا (أرقام سالبة/لا نهائية/ساعة مستقبلية).
+   نرفضها ونمسحها بدل أن تكسر المؤقت أو تُسجَّل جلسة وهمية. */
+function validActiveSession(s){
+  if (!s || typeof s !== "object") return false;
+  if (s.kind !== "timer" && s.kind !== "pomodoro") return false;
+  const num = (v) => typeof v === "number" && isFinite(v);
+  const MAX_MS = 48 * 3600 * 1000;
+  if (!num(s.totalMs) || !num(s.remainingMs) || !num(s.savedAt)) return false;
+  if (s.totalMs <= 0 || s.totalMs > MAX_MS) return false;
+  if (s.remainingMs < -2000 || s.remainingMs > s.totalMs + 1000) return false;   /* تسامح بسيط: قد تُحفظ الجلسة لحظة انتهائها */
+  if (s.savedAt > Date.now() + 60000) return false;
+  if (s.kind === "pomodoro"){
+    if (["work", "break", "longBreak"].indexOf(s.phase) < 0) return false;
+    if (!num(s.cycleCount) || s.cycleCount < 0 || s.cycleCount > 1000) return false;
+    if (!num(s.pomoWorkMinutes) || s.pomoWorkMinutes <= 0 || s.pomoWorkMinutes > 24 * 60) return false;
+    if (!num(s.pomoBreakMinutes) || s.pomoBreakMinutes <= 0 || s.pomoBreakMinutes > 24 * 60) return false;
+  }
+  return true;
+}
 function loadActiveSession(){
   try{
     const raw = localStorage.getItem(ACTIVE_SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (!validActiveSession(s)){ clearActiveSession(); return null; }
+    s.subject = String(s.subject || "عام").slice(0, 60);
+    return s;
   }catch(e){ return null; }
 }
 function showResumeToast(msg){
@@ -1981,6 +2004,7 @@ document.addEventListener("visibilitychange", () => {
 let pomoWorkMinutes = 25;
 let pomoBreakMinutes = 10;
 const POMO_LONG_BREAK_MINUTES = 15;
+const POMO_MISSION_MIN_MS = 15 * 60 * 1000;   /* أصغر خيار جاهز للتركيز: ما دونه (مخصّص) يُسجَّل بالتقرير لكن لا يُحتسب بمهام البومودورو */
 const POMO_CYCLES_BEFORE_LONG_BREAK = 4;
 
 let pomoPhase = "work"; // work | break | longBreak
@@ -2055,6 +2079,9 @@ window.startPomodoro = function(){
     if (mins <= 0){ appAlert("حدد وقتًا أكبر من صفر"); return; }
     pomoWorkMinutes = mins;
   }
+  if (pomoWorkMinutes * 60000 < POMO_MISSION_MIN_MS && window.HOUI){
+    HOUI.toast({ id: "pomo-min", type: "info", text: "جلسات التركيز الأقل من 15 دقيقة تُسجَّل في تقريرك لكن لا تُحتسب في مهام البومودورو.", duration: 7000 });
+  }
   pomoPhase = "work";
   pomoCycleCount = 0;
   requestNotifyPermission();
@@ -2109,7 +2136,7 @@ function advancePomoPhase(){
       logStudySession(currentSubject, elapsedSec, "pomodoro");
     }
     /* جلسة تركيز كاملة فقط (90% من مدتها على الأقل) تُحتسب للمهام، حتى لا يُحتسب التخطي */
-    if (window.HOMissions && pomoTotalMs > 0 && (pomoTotalMs - pomoRemainingMs) / pomoTotalMs >= 0.9) HOMissions.event("pomo");
+    if (window.HOMissions && pomoTotalMs >= POMO_MISSION_MIN_MS && (pomoTotalMs - pomoRemainingMs) / pomoTotalMs >= 0.9) HOMissions.event("pomo");
     pomoCycleCount++;
     pomoPhase = (pomoCycleCount % POMO_CYCLES_BEFORE_LONG_BREAK === 0) ? "longBreak" : "break";
   } else {
