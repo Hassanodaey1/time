@@ -22,6 +22,8 @@
   let pending = 0, flushing = false, wasCounting = false;
   let authHooked = false, capDay = null, capHours = 6;
   let lastLockNoticeTs = 0, noProfileNoticed = false;
+  let nextFlushAt = 0;           // بعد فشل الإيداع ننتظر قليلًا قبل المحاولة التالية (لا نطرق السيرفر كل ثانية)
+  const RETRY_BACKOFF_MS = 15000;
 
   const dayIndex = () => Math.floor((Date.now() + 3 * 3600 * 1000) / 86400000); // يوم بتوقيت بغداد
 
@@ -93,14 +95,17 @@
   function callWorker(path, body){ return window.callWorker(path, body, { keepalive: true }); }
 
   /* ---------- الإيداع ---------- */
-  async function flush(){
+  async function flush(force){
     if (flushing) return;
-    const secs = Math.min(Math.floor(pending), BANK_EVERY);
+    if (!force && Date.now() < nextFlushAt) return;
+    /* نرسل حتى ضعف الدفعة (حد الـ Worker 120 ثانية) حتى لا يضيع المتراكم بعد انقطاع إن أُغلقت الصفحة الآن */
+    const secs = Math.min(Math.floor(pending), BANK_EVERY * 2);
     if (secs < 1) return;
     pending -= secs;
     flushing = true;
     try{
       const data = await callWorker("/bank", { seconds: secs });
+      nextFlushAt = 0;
       if (data.capSeconds > 0) capHours = data.capSeconds / 3600;
       if (data.capReached){
         capDay = dayIndex();
@@ -110,9 +115,10 @@
         notice("🧊 فاتك يوم أمس، بس حماية السلسلة حفظت سلسلتك — استمر!");
       }
     }catch(err){
-      if (!err || !err.status || err.status === 429 || err.status >= 500){
+      if (!err || !err.status || err.status === 429 || err.status === 409 || err.status >= 500){
         /* لا اتصال / لا هوية بعد / السيرفر مشغول مؤقتًا: الثواني لم تُسجَّل، نُرجعها لتُرسل لاحقًا (بسقف صغير) */
         pending = Math.min(pending + secs, BANK_EVERY * 2);
+        nextFlushAt = Date.now() + RETRY_BACKOFF_MS;
       } else if (err.status === 412){
         if (!noProfileNoticed){
           noProfileNoticed = true;
@@ -153,7 +159,7 @@
     } else if (wasCounting){
       wasCounting = false;
       release();
-      flush();
+      flush(true);
     }
     if (pending >= BANK_EVERY) flush();
   }
@@ -167,9 +173,9 @@
 
   /* عند مغادرة الصفحة/إخفائها: نودع ما تجمّع ونتخلّى عن القفل ليأخذه مؤقت آخر ظاهر */
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden"){ wasCounting = false; release(); flush(); }
+    if (document.visibilityState === "hidden"){ wasCounting = false; release(); flush(true); }
   });
-  window.addEventListener("pagehide", () => { release(); flush(); });
+  window.addEventListener("pagehide", () => { release(); flush(true); });
 
-  window.TimeBank = { track, claim, release, flush, notice };
+  window.TimeBank = { track, claim, release, flush: () => flush(true), notice };
 })();
