@@ -1048,20 +1048,46 @@ function getBadge(totalSeconds){
    المتصفح هنا بس "يطلب" بنك وقت الدراسة، والسيرفر هو اللي يقرر ويتحقق ويكتب فعليًا.
    حتى لو فتح طالب Console وحاول يستدعي هذي الدالة بقيم وهمية، السيرفر يتحقق من الوقت
    الحقيقي المنقضي بنفسه (Date.now() على جوجل، مو أي قيمة من جهازه) ويرفض أي تلاعب. */
-async function bankStudyTime(seconds){
-  const p = getProfile();
-  if (!p || seconds <= 0 || !currentUid) return;
+/* طابور الإيداع: أي ثوانٍ لم تُحفظ (انقطاع، سيرفر مشغول، لا هوية بعد) تبقى في الطابور وتُعاد محاولتها
+   تلقائيًا بدل أن تضيع. السيرفر هو الحكم النهائي: لا يقبل أكثر من الزمن الحقيقي ولا من الحد اليومي. */
+const BANK_MAX_REQUEST = 120;     // مطابق لـ MAX_SECONDS_PER_REQUEST في الـ Worker
+const BANK_MAX_PENDING = 240;     // أقصى ثوانٍ تنتظر الإرسال (4 دقائق)
+const BANK_RETRY_MS = 15000;
+let bankPending = 0, bankFlushing = false, bankRetryTimer = null, bankFailNoticed = false;
+
+function bankStudyTime(seconds){
+  seconds = Math.floor(Number(seconds));
+  if (!getProfile() || !(seconds > 0)) return;
 
   if (!firebaseOK){
     showSessionNotice("⚠️ تعذّر حفظ وقت الدراسة، تأكد من الاتصال بالإنترنت.");
     return;
   }
+  bankPending = Math.min(bankPending + seconds, BANK_MAX_PENDING);
+  flushBank();
+}
+
+function scheduleBankRetry(){
+  if (bankRetryTimer) return;
+  bankRetryTimer = setTimeout(() => { bankRetryTimer = null; flushBank(); }, BANK_RETRY_MS);
+}
+
+async function flushBank(){
+  if (bankFlushing) return;
+  const secs = Math.min(Math.floor(bankPending), BANK_MAX_REQUEST);
+  if (secs < 1) return;
+  bankFlushing = true;
+  bankPending -= secs;
+  let again = false;
 
   try{
-    const data = await callWorker("/bank", { seconds });
+    const data = await callWorker("/bank", { seconds: secs }, { keepalive: true });
+    bankFailNoticed = false;
+    again = bankPending >= 1;
 
     if (data.capSeconds > 0) capHoursShown = data.capSeconds / 3600;
     if (data.capReached){
+      bankPending = 0; again = false;      // بلغ الحد اليومي: لا فائدة من إرسال المتبقي
       paused = true;
       dailyCapReached = true;
       document.getElementById("pauseBtn").innerText = "▶️ استئناف";
@@ -1071,13 +1097,38 @@ async function bankStudyTime(seconds){
     }
   }catch(error){
     console.error("bankStudyTime failed:", error);
-    if (error && error.status === 412){
+    const st = error && error.status;
+    if (!st || st === 429 || st === 409 || st >= 500){
+      /* لا اتصال / لا هوية بعد / السيرفر مشغول: الثواني لم تُسجَّل، نعيدها للطابور ونكرر المحاولة */
+      bankPending = Math.min(bankPending + secs, BANK_MAX_PENDING);
+      if (!bankFailNoticed){
+        bankFailNoticed = true;
+        showSessionNotice("⚠️ تعذّر حفظ وقت الدراسة الآن، سنعيد المحاولة تلقائيًا.");
+      }
+      scheduleBankRetry();
+    } else if (st === 412){
+      bankPending = 0;
       showSessionNotice("⚠️ احفظ بياناتك الشخصية أول من الصفحة الرئيسية قبل ما تبدأ الجلسة.");
     } else {
       showSessionNotice("⚠️ تعذّر حفظ وقت الدراسة، تأكد من الاتصال بالإنترنت.");
     }
+  }finally{
+    bankFlushing = false;
   }
+  if (again) flushBank();
 }
+
+/* إغلاق الصفحة وسط الجلسة: نودع ما تبقى (أقل من 60 ثانية) بدل أن يضيع */
+window.addEventListener("pagehide", () => {
+  if (secondsSinceBank > 0){
+    const s = secondsSinceBank;
+    secondsSinceBank = 0;
+    bankedSeconds += s;
+    bankStudyTime(s);
+  } else {
+    flushBank();
+  }
+});
 
 /* ================= لوحة الترتيب ================= */
 function formatTotal(seconds){
