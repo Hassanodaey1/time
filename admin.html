@@ -551,6 +551,18 @@
   <div id="studyChallengeStatusMsg" class="hint"></div>
 
   <hr style="border-color:var(--border, #2a3a4a); margin:20px 0;">
+  <div class="pattern-box" style="padding-bottom:14px;">
+    <p class="pattern-box-title">سقف الدراسة اليومي</p>
+    <div class="field">
+      <label>أقصى ساعات تُحتسب لكل طالب في اليوم (من 0.5 إلى 24)</label>
+      <input type="number" id="dailyCapHours" min="0.5" max="24" step="0.5" inputmode="decimal">
+    </div>
+    <p class="hint" style="margin-top:10px;">يطبّقه السيرفر على كل طالب: لا يُحتسب في الترتيب أي وقت بعد هذا السقف. الافتراضي 6 ساعات إن لم تحدّده. يتجدد عند منتصف الليل بتوقيت بغداد، ويسري على الإيداعات القادمة فورًا.</p>
+  </div>
+  <button type="button" class="primary" onclick="saveDailyCap()">حفظ السقف</button>
+  <div id="dailyCapStatusMsg" class="hint" style="margin-top:12px;"></div>
+
+  <hr style="border-color:var(--border, #2a3a4a); margin:20px 0;">
   <p class="hint" style="margin-bottom:10px;">تصفير رصيد "هذا الأسبوع" لجميع الطلاب (لا يمس رصيدهم الكلي/الإجمالي إطلاقًا).</p>
   <div class="toggle-row">
     <button class="toggle-btn" onclick="resetWeeklyLeaderboard()"><svg class="ico" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.6-5.7"/><path d="M20 12a8 8 0 0 1-13.6 5.7"/><path d="M17.6 3.6v3.2h-3.2"/><path d="M6.4 20.4v-3.2h3.2"/></svg> تصفير</button>
@@ -1258,6 +1270,7 @@ auth.onAuthStateChanged((user) => {
     loadCurrentState();
     loadChallengeState();
     loadStudyChallengeState();
+    loadDailyCapState();
     loadStudentStyleState();
     loadStudyChallengeStyleState();
     loadSharedThemeState();
@@ -1604,6 +1617,38 @@ window.stopChallenge = function(){
         msg.innerText = "فشل الإيقاف: " + error.message;
       });
   });
+};
+
+/* ================= سقف الدراسة اليومي =================
+   studyChallengeSettings/dailyCapHours — يقرؤه الـ Worker (/bank) عند كل إيداع.
+   النطاق المقبول عند الـ Worker من 0.5 إلى 24 ساعة، وأي قيمة خارجه يرجع للافتراضي (6). */
+const DAILY_CAP_DEFAULT_HOURS = 6;
+function dailyCapMsg(text, color){
+  const el = document.getElementById("dailyCapStatusMsg");
+  if (!el) return;
+  el.style.color = color || "#8b8d99";
+  el.textContent = text || "";
+}
+function loadDailyCapState(){
+  const input = document.getElementById("dailyCapHours");
+  if (!input) return;
+  db.ref('studyChallengeSettings/dailyCapHours').once('value').then(snap => {
+    const v = Number(snap.val());
+    const valid = snap.val() != null && v >= 0.5 && v <= 24;
+    input.value = valid ? v : DAILY_CAP_DEFAULT_HOURS;
+    dailyCapMsg(valid ? "السقف الحالي: " + v + " ساعة." : "لم يُحدَّد سقف، فيُطبَّق الافتراضي: " + DAILY_CAP_DEFAULT_HOURS + " ساعات.", valid ? "#2ecc71" : "#8b8d99");
+  }).catch(error => dailyCapMsg("تعذّر التحميل: " + error.message, "#ff3b30"));
+}
+window.saveDailyCap = function(){
+  const v = Number(document.getElementById("dailyCapHours").value);
+  if (!(v >= 0.5 && v <= 24) || Math.round(v * 2) !== v * 2){
+    dailyCapMsg("السقف يجب أن يكون من 0.5 إلى 24 ساعة، بمضاعفات نصف الساعة.", "#ff3b30");
+    return;
+  }
+  dailyCapMsg("جارٍ الحفظ...");
+  db.ref('studyChallengeSettings/dailyCapHours').set(v)
+    .then(() => dailyCapMsg("تم حفظ السقف: " + v + " ساعة. يسري على الإيداعات القادمة.", "#2ecc71"))
+    .catch(error => dailyCapMsg("فشل الحفظ: " + error.message, "#ff3b30"));
 };
 
 function loadStudyChallengeState(){
@@ -2417,14 +2462,6 @@ function mpChecks(){
   const others = near.map(n => mpTotalStars(sc, MP.store[sc][String(n)]));
   const avg = others.length ? Math.round(others.reduce((a, b) => a + b, 0) / others.length) : 0;
   if (avg && total > avg * 1.5) add("warn", "نجوم " + word + " (" + total + ") أعلى بكثير من معدل الفترات القريبة (" + avg + ") — انتبه لاقتصاد النجوم.");
-  else add("info", "مجموع النجوم الممكنة " + (sc === "daily" ? "اليوم" : "هذا الأسبوع") + ": " + total + (avg ? " (المعدل القريب " + avg + ")" : "") + ".");
-
-  const cur = sc === "daily" ? mpToday() : mpWeekOf(mpToday());
-  if (idx === cur) add("warn", (sc === "daily" ? "هذه مهام اليوم الجاري" : "هذا الأسبوع الجاري") + ": أي تعديل يظهر للطلاب فورًا. من استلم نجومه لا يستلمها مرتين.");
-  if (!out.some(c => c.lvl === "err" || c.lvl === "warn")) out.unshift({ lvl: "ok", text: "لا ملاحظات — الخطة متوازنة." });
-  return out;
-}
-
 /* ---------- العرض ---------- */
 function mpRenderStrip(){
   const sc = MP.scope, today = mpToday(), box = document.getElementById("mpStrip");
