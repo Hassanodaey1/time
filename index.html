@@ -1793,7 +1793,6 @@ if (window.HOShop){
   HOShop.onChange(() => { updateMissionsCard(); });
   applyOwnFrames(); applyOwnBg();
 }
-
 /* ================= المهام (المنطق في missions.js) ================= */
 function msBuildCard(m){
   const card = document.createElement("div");
@@ -2006,6 +2005,10 @@ window.confirmLogoutAction = async function(){
   try{
     localStorage.removeItem(PROFILE_KEY);
     localStorage.removeItem(RECOVERY_CODE_KEY);
+    /* أحداث المهام المحلية (بومودورو/مهام منجزة/وقت اليوم) وحساب المهام الحالي تخص الحساب الذي خرج منه،
+       فلا تُنسب لمن يدخل بعده على نفس الجهاز */
+    localStorage.removeItem("ho_ms_ev");
+    localStorage.removeItem("ho_ms_cur");
   }catch(e){}
   location.reload();
 };
