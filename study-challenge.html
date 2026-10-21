@@ -1220,7 +1220,11 @@ function attachLeaderboardListener(){
     leaderboardRef.off('value', leaderboardListener);
   }
   leaderboardRef = db.ref('studyLeaderboard').orderByChild(lbField()).limitToLast(50);
-  leaderboardListener = leaderboardRef.on('value', (snap) => { lastLbSnapshot = snap; renderLeaderboard(snap); }, () => {
+  leaderboardListener = leaderboardRef.on('value', (snap) => {
+    lastLbSnapshot = snap;
+    renderLeaderboard(snap);
+    updateMyRankBanner(boardSecondsOf(myLatestLbVal));
+  }, () => {
     document.getElementById("leaderboardList").innerHTML = '<p class="empty-note">تعذّر تحميل الترتيب.</p>';
   });
 }
@@ -1229,6 +1233,7 @@ window.setLbMode = function(mode){
   if (mode === lbMode) return;
   lbMode = mode;
   document.querySelectorAll("#lbToggle .game-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
+  lastLbSnapshot = null;     /* قائمة الوضع السابق لا تصلح لحساب ترتيب الوضع الجديد */
   attachLeaderboardListener();
   updateMyRankBanner(boardSecondsOf(myLatestLbVal));
 };
@@ -1246,7 +1251,15 @@ window.toggleLbGov = function(){
   if (lastLbSnapshot) renderLeaderboard(lastLbSnapshot);
 };
 
-attachLeaderboardListener();
+/* نفتح الاستماع للقائمة بعد اكتمال الدخول (القواعد تشترط تسجيل الدخول للقراءة). ومهلة احتياط حتى لا تبقى فارغة
+   لو تأخر الدخول لسبب ما. */
+let lbAttached = false;
+function attachLeaderboardWhenReady(){
+  const go = () => { if (lbAttached) return; lbAttached = true; attachLeaderboardListener(); };
+  authReady.then(go);
+  setTimeout(go, 8000);
+}
+attachLeaderboardWhenReady();
 
 /* تحديث احتياطي كل دقيقة، لضمان بقاء اللائحة محدّثة دائمًا حتى لو انقطع الاتصال اللحظي مؤقتًا */
 setInterval(() => {
@@ -1439,21 +1452,68 @@ window.leaveChallenge = async function(cid){
   catch(e){ chToast("تعذّر تنفيذ العملية، حاول مجددًا.", "error"); }
 };
 
-/* ================= ترتيبك الشخصي + السلسلة ================= */
+/* ================= ترتيبك الشخصي + السلسلة =================
+   كان كل تحديث لسجلك (كل دقيقة أثناء الدراسة) يجلب سجلات كل من هم أمامك كاملة بصورهم الشخصية: تكلفة نقل بيانات كبيرة.
+   الآن: 1) نحسب المركز من قائمة أول 50 المحمّلة أصلًا إن كانت تكفي لتحديده (بلا أي تحميل إضافي)،
+         2) وإلا نجلب من هم أمامك بحد أقصى RANK_FETCH_MAX سجل، مرة كل RANK_TTL_MS لكل وضع، ونعرض المخزَّن بين المرتين. */
+const RANK_TTL_MS = 5 * 60 * 1000;
+const RANK_FETCH_MAX = 300;
+const rankCache = {};            /* { total: {rank, plus, at}, week: {...} } */
+let rankInflight = false;
+
+/* ترتيبك من القائمة المحمّلة: يُعرف بدقة إن كانت القائمة كاملة (أقل من 50) أو كنت أعلى من آخر من فيها */
+function rankFromBoard(mySeconds){
+  if (!lastLbSnapshot) return null;
+  let n = 0, ahead = 0, minRaw = Infinity;
+  lastLbSnapshot.forEach(c => {
+    const v = c.val() || {};
+    n++;
+    const raw = Number(v[lbField()]) || 0;
+    if (raw < minRaw) minRaw = raw;
+    if (boardSecondsOf(v) > mySeconds) ahead++;
+  });
+  if (n < 50 || mySeconds > minRaw) return ahead + 1;
+  return null;
+}
+
+function showRankBanner(rank, plus){
+  const banner = document.getElementById("myRankBanner");
+  if (!banner) return;
+  const label = lbMode === "week" ? "ترتيبك هذا الأسبوع" : "ترتيبك الحالي";
+  banner.innerHTML = `<svg class="ico" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5.5" y="14" width="3" height="6" fill="currentColor" stroke="none"/><rect x="10.5" y="9" width="3" height="11" fill="currentColor" stroke="none"/><rect x="15.5" y="12" width="3" height="8" fill="currentColor" stroke="none"/></svg> ${label}: <b>#${rank}${plus ? "+" : ""}</b>`;
+  banner.style.display = "block";
+}
+
 function updateMyRankBanner(mySeconds){
   const banner = document.getElementById("myRankBanner");
   if (!banner) return;
-  db.ref('studyLeaderboard').orderByChild(lbField()).startAt(mySeconds + 1).once('value')
+  /* ننتظر وصول القائمة وسجلك قبل الحساب */
+  if (!lastLbSnapshot || !myLatestLbVal || !Object.keys(myLatestLbVal).length) return;
+
+  const exact = rankFromBoard(mySeconds);
+  if (exact != null){ showRankBanner(exact, false); return; }
+  if (mySeconds <= 0){ banner.style.display = "none"; return; }
+
+  const mode = lbMode;
+  const c = rankCache[mode];
+  if (c) showRankBanner(c.rank, c.plus);
+  if (c && Date.now() - c.at < RANK_TTL_MS) return;
+  if (rankInflight) return;
+  rankInflight = true;
+
+  db.ref('studyLeaderboard').orderByChild(lbField()).startAt(mySeconds + 1).limitToFirst(RANK_FETCH_MAX).once('value')
     .then(snap => {
       const wk = localWeekIndex(serverNow());
       let ahead = 0;
-      snap.forEach(c => { const v = c.val() || {}; if (lbMode !== "week" || v.weekIndex === wk) ahead++; });
-      const rank = ahead + 1;
-      const label = lbMode === "week" ? "ترتيبك هذا الأسبوع" : "ترتيبك الحالي";
-      banner.innerHTML = `<svg class="ico" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5.5" y="14" width="3" height="6" fill="currentColor" stroke="none"/><rect x="10.5" y="9" width="3" height="11" fill="currentColor" stroke="none"/><rect x="15.5" y="12" width="3" height="8" fill="currentColor" stroke="none"/></svg> ${label}: <b>#${rank}</b>`;
-      banner.style.display = "block";
+      snap.forEach(ch => { const v = ch.val() || {}; if (mode !== "week" || v.weekIndex === wk) ahead++; });
+      rankCache[mode] = { rank: ahead + 1, plus: snap.numChildren() >= RANK_FETCH_MAX, at: Date.now() };
+      if (mode === lbMode) showRankBanner(rankCache[mode].rank, rankCache[mode].plus);
     })
-    .catch(() => {});
+    .catch(() => {})
+    .then(() => {
+      rankInflight = false;
+      if (mode !== lbMode) updateMyRankBanner(boardSecondsOf(myLatestLbVal));
+    });
 }
 
 function updateStreakInfo(streak, freezeAvailable){
