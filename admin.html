@@ -1232,17 +1232,41 @@ window.setMode = function(mode, isUserClick){
   if (el) el.addEventListener("keydown", (e) => { if (e.key === "Enter") window.doLogin(); });
 });
 
+/* رسائل تسجيل الدخول بالعربية مع رمز الخطأ الحقيقي، ليسهل تشخيص أي مشكلة (كانت تظهر رسالة فايربيس الإنجليزية الخام) */
+function loginErrorText(error){
+  const code = (error && error.code) || "";
+  const map = {
+    "auth/invalid-credential": "البريد أو كلمة السر غير صحيحة.",
+    "auth/wrong-password": "البريد أو كلمة السر غير صحيحة.",
+    "auth/user-not-found": "البريد أو كلمة السر غير صحيحة.",
+    "auth/invalid-email": "صيغة البريد غير صحيحة.",
+    "auth/missing-password": "اكتب كلمة السر.",
+    "auth/user-disabled": "هذا الحساب معطّل في Firebase.",
+    "auth/too-many-requests": "محاولات كثيرة. انتظر دقائق ثم أعد المحاولة.",
+    "auth/network-request-failed": "تعذّر الوصول إلى خادم تسجيل الدخول. تحقق من الإنترنت.",
+    "auth/operation-not-allowed": "تسجيل الدخول بالبريد وكلمة السر معطّل في Firebase (Authentication ← Sign-in method).",
+    "auth/invalid-api-key": "مفتاح API غير صالح أو مقيَّد. راجع قيوده في Google Cloud.",
+    "auth/api-key-not-valid.-please-pass-a-valid-api-key.": "مفتاح API غير صالح أو مقيَّد. راجع قيوده في Google Cloud."
+  };
+  const base = map[code] || (error && error.message) || "خطأ غير معروف";
+  return "فشل تسجيل الدخول: " + base + (code ? " (" + code + ")" : "");
+}
+
 window.doLogin = function(){
   const email = document.getElementById("loginEmail").value.trim();
   const pass = document.getElementById("loginPass").value;
   const loginStatus = document.getElementById("loginStatus");
-  loginStatus.style.color = "#8b8d99";
-  loginStatus.innerText = "جارٍ تسجيل الدخول...";
+  const show = (text, color) => { loginStatus.style.color = color; loginStatus.innerText = text; };
+  if (!email || !pass){ show("اكتب البريد وكلمة السر أولًا.", "#ff3b30"); return; }
+  show("جارٍ تسجيل الدخول...", "#8b8d99");
+  let finished = false;
+  /* إن لم يصل ردّ خلال 15 ثانية نخبر المستخدم بدل أن تبقى الشاشة صامتة */
+  const slowTimer = setTimeout(() => {
+    if (!finished) show("الرد متأخر: الاتصال بخادم تسجيل الدخول بطيء أو محجوب. تحقق من الإنترنت ثم أعد المحاولة.", "#ff9500");
+  }, 15000);
   auth.signInWithEmailAndPassword(email, pass)
-    .catch((error) => {
-      loginStatus.style.color = "#ff3b30";
-      loginStatus.innerText = "فشل تسجيل الدخول: " + error.message;
-    });
+    .then(() => { finished = true; clearTimeout(slowTimer); })
+    .catch((error) => { finished = true; clearTimeout(slowTimer); show(loginErrorText(error), "#ff3b30"); });
 };
 
 window.doLogout = function(){
@@ -1262,6 +1286,9 @@ auth.onAuthStateChanged((user) => {
     hideAllPanels();
     loginView.classList.remove("hidden");
     tally.classList.remove("live");
+    /* كان الرفض صامتًا: تعود الشاشة لنفس نموذج الدخول بلا أي تفسير */
+    const ls = document.getElementById("loginStatus");
+    if (ls){ ls.style.color = "#ff9500"; ls.innerText = "هذا الحساب ليس حساب بريد/كلمة سر، فلا يُسمح له بدخول اللوحة. سجّل بحساب الأدمن."; }
     return;
   }
   if (user){
@@ -2081,8 +2108,6 @@ function stuDelete(){
   appConfirm("حذف سجل \"" + s.name + "\" نهائياً من الترتيب؟ لا يمكن التراجع.", () => {
     stuBusy(true);
     stuEditMsg("جارٍ الحذف...");
-    db.ref('studyLeaderboard/' + s.id).remove().then(() => {
-      /* نمسح حالة الـ Worker لهذا الطالب أيضاً. فشل المسح لا يوقف الحذف. */
       return db.ref('studyState/' + s.id).remove().catch(() => {});
     }).then(() => {
       studentsCache = studentsCache.filter(x => x.id !== s.id);
@@ -2105,20 +2130,6 @@ document.getElementById("stuEditCloseBtn").addEventListener("click", closeStuden
 const ANN_PATH = 'studyChallengeSettings/announcement';
 function annMsg(text, color){
   const el = document.getElementById("announcementStatusMsg");
-  el.style.color = color || "#8b8d99";
-  el.textContent = text || "";
-}
-function updateAnnCount(){
-  const n = document.getElementById("announcementText").value.length;
-  document.getElementById("announcementCount").textContent = n + " / 280";
-}
-document.getElementById("announcementText").addEventListener("input", updateAnnCount);
-
-function loadAnnouncementState(){
-  annMsg("جارٍ التحميل...");
-  db.ref(ANN_PATH).once('value').then(snap => {
-    const d = snap.val();
-    document.getElementById("announcementText").value = (d && d.text) || "";
     updateAnnCount();
     if (d && d.active && d.text) annMsg("الإعلان ظاهر الآن للطلاب.", "#2ecc71");
     else annMsg("لا يوجد إعلان ظاهر حاليًا.");
@@ -2462,6 +2473,14 @@ function mpChecks(){
   const others = near.map(n => mpTotalStars(sc, MP.store[sc][String(n)]));
   const avg = others.length ? Math.round(others.reduce((a, b) => a + b, 0) / others.length) : 0;
   if (avg && total > avg * 1.5) add("warn", "نجوم " + word + " (" + total + ") أعلى بكثير من معدل الفترات القريبة (" + avg + ") — انتبه لاقتصاد النجوم.");
+  else add("info", "مجموع النجوم الممكنة " + (sc === "daily" ? "اليوم" : "هذا الأسبوع") + ": " + total + (avg ? " (المعدل القريب " + avg + ")" : "") + ".");
+
+  const cur = sc === "daily" ? mpToday() : mpWeekOf(mpToday());
+  if (idx === cur) add("warn", (sc === "daily" ? "هذه مهام اليوم الجاري" : "هذا الأسبوع الجاري") + ": أي تعديل يظهر للطلاب فورًا. من استلم نجومه لا يستلمها مرتين.");
+  if (!out.some(c => c.lvl === "err" || c.lvl === "warn")) out.unshift({ lvl: "ok", text: "لا ملاحظات — الخطة متوازنة." });
+  return out;
+}
+
 /* ---------- العرض ---------- */
 function mpRenderStrip(){
   const sc = MP.scope, today = mpToday(), box = document.getElementById("mpStrip");
