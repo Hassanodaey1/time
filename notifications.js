@@ -214,10 +214,20 @@ document.addEventListener("visibilitychange", () => {
   }catch(e){}
 });
 
-/* تجديد التوكن عند كل فتح للتطبيق (التوكن قد يتغير) */
-async function nfRefreshToken(){
+/* تجديد التوكن عند فتح التطبيق (التوكن قد يتغير). عودة الطالب للصفحة تتكرر كثيرًا على الهاتف، وكل تجديد قراءة وكتابة
+   في القاعدة، فلا نكرره قبل مرور NF_REFRESH_MIN_MS إلا إذا تغيّر الإذن (مثل عودته من إعدادات الجهاز) أو تبدّل الحساب. */
+const NF_REFRESH_MIN_MS = 30 * 60 * 1000;
+let nfLastRefreshAt = 0, nfLastPerm = null;
+async function nfRefreshToken(force){
   try{
-    if (!nfSupported() || Notification.permission !== "granted") return;
+    if (!nfSupported() || Notification.permission !== "granted"){
+      nfLastPerm = nfSupported() ? Notification.permission : null;
+      return;
+    }
+    const permChanged = nfLastPerm !== "granted";
+    if (force !== true && !permChanged && Date.now() - nfLastRefreshAt < NF_REFRESH_MIN_MS) return;
+    nfLastPerm = "granted";
+    nfLastRefreshAt = Date.now();
     const p = await nfLoadPrefs();
     if (p.on && VAPID_PUBLIC_KEY.indexOf("PUT_") !== 0) await nfRegisterToken();
   }catch(e){}
@@ -227,7 +237,7 @@ authReady.then(nfRefreshToken);
 /* تبديل الحساب (Google): نُعيد تحميل تفضيلات الحساب الجديد ونسجّل هذا الجهاز تحته */
 window.nfOnAccountChange = function(){
   nfPrefs = null; nfPrefsUid = null;
-  nfRefreshToken();
+  nfRefreshToken(true);
 };
 
 /* قبل تسجيل الخروج: نفصل هذا الجهاز عن الحساب حتى لا تستمر إشعاراته بالوصول لشخص خرج منه */
