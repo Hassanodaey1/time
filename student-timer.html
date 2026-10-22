@@ -2183,9 +2183,9 @@ function renderPomoTime(){
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  document.getElementById("pHours").innerText = pad(hours);
-  document.getElementById("pMinutes").innerText = pad(minutes);
-  document.getElementById("pSeconds").innerText = pad(seconds);
+  setDigit(document.getElementById("pHours"), pad(hours));
+  setDigit(document.getElementById("pMinutes"), pad(minutes));
+  setDigit(document.getElementById("pSeconds"), pad(seconds));
 }
 
 async function requestPomoWakeLock(){
