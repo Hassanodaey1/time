@@ -827,7 +827,7 @@
     <p class="modal-error" id="profileError">فضلاً عبّئ الاسم والعمر والبلد بشكل صحيح</p>
     <div class="field">
       <label>الاسم</label>
-      <input type="text" id="fName" placeholder="اكتب اسمك">
+      <input type="text" id="fName" maxlength="40" placeholder="اكتب اسمك">
     </div>
     <div class="field">
       <label>العمر</label>
@@ -882,7 +882,7 @@
     </div>
     <div class="field hidden" id="otherGovField">
       <label>المحافظة / المنطقة</label>
-      <input type="text" id="fGovOther" placeholder="اكتب اسم المحافظة أو المنطقة">
+      <input type="text" id="fGovOther" maxlength="40" placeholder="اكتب اسم المحافظة أو المنطقة">
     </div>
     <button class="primary" id="profileSaveBtn" onclick="saveProfile()"><svg class="ico" viewBox="0 0 24 24"><path d="M5 4.5h11l3 3V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z"/><path d="M8 4.5V9h6V4.5"/><rect x="7.5" y="13" width="9" height="6"/></svg> حفظ</button>
   </div>
@@ -1793,6 +1793,7 @@ if (window.HOShop){
   HOShop.onChange(() => { updateMissionsCard(); });
   applyOwnFrames(); applyOwnBg();
 }
+
 /* ================= المهام (المنطق في missions.js) ================= */
 function msBuildCard(m){
   const card = document.createElement("div");
@@ -2424,6 +2425,10 @@ window.saveProfile = async function(){
 
   if (!name || !age || age < 5 || age > 100 || !country || !governorate){
     showProfileError("فضلاً عبّئ الاسم والعمر والبلد بشكل صحيح");
+    return;
+  }
+  if (name.length > 40 || governorate.length > 40){
+    showProfileError("الاسم أو المحافظة أطول من 40 حرفًا، اختصرها من فضلك.");
     return;
   }
 
