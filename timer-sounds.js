@@ -36,7 +36,7 @@
     crystal: { wave: "sine",   parts: [[1, 0.9, 1], [2.76, 0.4, 0.55], [5.4, 0.2, 0.3]], attack: 0.004, tail: 0.35, vib: 0 },
     retro:   { wave: "square", parts: [[1, 0.45, 1]],                              attack: 0.004, tail: 0.06, vib: 0 }
   };
-  var CLASSROOM = /(^|\/)(display|challenge-timer)\.html?$/i.test((window.location && location.pathname) || "");
+  var CLASSROOM = /(^|\/)(display|challenge-timer)(\.html?)?\/?$/i.test((window.location && location.pathname) || "");
   function curPack(opts){
     var id = (opts && opts.pack) || (CLASSROOM ? "bell" : lsGet(KEYS.pack, "bell"));
     return PACKS[id] || PACKS.bell;
