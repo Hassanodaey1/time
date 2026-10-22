@@ -56,9 +56,18 @@ window.calcMemClear = function(){
   calcMemory = 0;
   calcUpdateStatus();
 };
-window.calcMemRecall = function(){
-  calcExpr += calcNumToDisplay(calcMemory);
+/* إدراج قيمة جاهزة (MR / Ans). كانت تُلصق نصًّا كما هي: 5 ثم MR (والذاكرة 3) يصير «53» رقمًا جديدًا،
+   و5 ثم MR (والذاكرة -3) يصير «5-3» أي طرحًا. الآن: ضرب صريح بعد أي قيمة سابقة، وقوسان حول السالب. */
+function calcInsertValue(v){
+  let s = calcNumToDisplay(v);
+  if (calcRound(v) < 0) s = "(" + s + ")";
+  const last = calcExpr.slice(-1);
+  if (/[0-9.)πe%²³!]/.test(last) || calcExpr.endsWith("⁻¹")) calcExpr += "×";
+  calcExpr += s;
   calcRender();
+}
+window.calcMemRecall = function(){
+  calcInsertValue(calcMemory);
 };
 window.calcMemAdd = function(){
   const val = parseFloat(document.getElementById("calcResultLine").innerText.replace(/,/g, ""));
@@ -71,8 +80,7 @@ window.calcMemSub = function(){
   calcUpdateStatus();
 };
 window.calcInsertAns = function(){
-  calcExpr += calcNumToDisplay(calcAns);
-  calcRender();
+  calcInsertValue(calcAns);
 };
 
 const CALC_OPS = ["+", "-", "×", "÷", "^"];
@@ -148,15 +156,46 @@ function calcFactorial(n){
   for (let i = 2; i <= n; i++) r *= i;
   return r;
 }
-function calcNPR(n, r){
+/* nPr و nCr بأعداد صحيحة دقيقة (BigInt) ثم تحويل لأقرب رقم ممكن. الطريقة القديمة بالفاصلة العائمة كانت تعطي نتيجة
+   خاطئة بمقدار 1 أو أكثر حين يتجاوز الناتج نحو 1.7×10¹⁵ (مثل nCr(54,25) و nCr(55,27))، وتفشل أو تتجمّد مع الأعداد الكبيرة. */
+const CALC_HAS_BIGINT = typeof BigInt === "function";
+function calcCheckPerm(n, r){
   if (!Number.isInteger(n) || !Number.isInteger(r) || n < 0 || r < 0 || r > n) throw new Error("domain");
+}
+function calcBigToNumber(big){
+  const v = Number(big);
+  if (!isFinite(v)) throw new Error("overflow");
+  return v;
+}
+/* احتياط للمتصفحات القديمة بلا BigInt: الطريقة القديمة نفسها لكن مع منع الحلقات الطويلة */
+function calcNPRFloat(n, r){
   let res = 1;
   for (let i = 0; i < r; i++) res *= (n - i);
   return res;
 }
+function calcNCRFloat(n, r){
+  const k = Math.min(r, n - r);
+  if (k > 170) throw new Error("overflow");
+  return Math.round(calcNPRFloat(n, k) / calcFactorial(k));
+}
+function calcNPR(n, r){
+  calcCheckPerm(n, r);
+  if (r > 170) throw new Error("overflow");          // nPr ≥ r! و171! أكبر من أكبر عدد ممكن
+  if (!CALC_HAS_BIGINT) return calcBigToNumber(calcNPRFloat(n, r));
+  const N = BigInt(n);
+  let p = 1n;
+  for (let i = 0; i < r; i++) p *= (N - BigInt(i));
+  return calcBigToNumber(p);
+}
 function calcNCR(n, r){
-  if (!Number.isInteger(n) || !Number.isInteger(r) || n < 0 || r < 0 || r > n) throw new Error("domain");
-  return Math.round(calcNPR(n, r) / calcFactorial(r));
+  calcCheckPerm(n, r);
+  if (!CALC_HAS_BIGINT) return calcBigToNumber(calcNCRFloat(n, r));
+  const N = BigInt(n), R = BigInt(r);
+  const K = (R < N - R) ? R : N - R;
+  if (K > 1030n) throw new Error("overflow");        // C(n,k) ≥ C(2k,k) وهو أكبر من 10^308 عند k > 1030
+  let c = 1n;
+  for (let i = 1n; i <= K; i++) c = c * (N - K + i) / i;   // كل ناتج جزئي هو C(n-k+i, i) أي عدد صحيح دائمًا
+  return calcBigToNumber(c);
 }
 
 /* محلّل آمن للتعبيرات — بدون eval(). يدعم كل الدوال والعمليات المذكورة أعلاه مع فحص كامل لنطاقات كل دالة. */
@@ -356,6 +395,22 @@ window.closeBoard = function(){
   document.getElementById("boardOverlay").classList.remove("show");
 };
 
+/* تحجيم صورة (ImageData) إلى مقاس جديد: عند تدوير الجهاز يتغير عرض السبورة */
+function boardRescale(imageData, w, h){
+  const src = document.createElement("canvas");
+  src.width = imageData.width; src.height = imageData.height;
+  src.getContext("2d").putImageData(imageData, 0, 0);
+  const dst = document.createElement("canvas");
+  dst.width = w; dst.height = h;
+  const dctx = dst.getContext("2d");
+  dctx.fillStyle = "#ffffff";
+  dctx.fillRect(0, 0, w, h);
+  dctx.imageSmoothingEnabled = true;
+  try{ dctx.imageSmoothingQuality = "high"; }catch(e){}
+  dctx.drawImage(src, 0, 0, src.width, src.height, 0, 0, w, h);
+  return dctx.getImageData(0, 0, w, h);
+}
+
 function boardSetupCanvas(){
   const canvas = document.getElementById("boardCanvas");
   const wrap = canvas.parentElement;
@@ -370,7 +425,10 @@ function boardSetupCanvas(){
   boardCtx.fillRect(0, 0, w, h);
   boardCtx.lineCap = "round";
   boardCtx.lineJoin = "round";
-  if (prevDrawing){ try{ boardCtx.putImageData(prevDrawing, 0, 0); }catch(e){} }
+  /* الرسم القديم يُحجَّم للمقاس الجديد (كان يُلصق بحجمه الأصلي فيُقصّ أو يبقى في زاوية). وكذلك سجل التراجع،
+     وإلا أعاد «تراجع» صورة بمقاس قديم فوق السبورة. */
+  if (prevDrawing){ try{ boardCtx.putImageData(boardRescale(prevDrawing, w, h), 0, 0); }catch(e){} }
+  boardUndoStack = boardUndoStack.map(img => { try{ return boardRescale(img, w, h); }catch(e){ return null; } }).filter(Boolean);
   boardBindEvents(canvas);
 }
 
