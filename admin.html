@@ -6,7 +6,7 @@
 /* تشخيص صفحة الأدمن: (1) يعرض أي خطأ جافاسكربت على الشاشة، (2) يضمن أن زر «دخول» يعطي ردًّا حتى لو تعطّل سكربت الصفحة،
    (3) زر «إعادة تحميل نظيفة» يمسح الذاكرة المؤقتة وملف الـ Service Worker. يُحمَّل أولًا ليلتقط أخطاء كل ما بعده. */
 (function(){
-  window.ADMIN_BUILD = "2026-10-23-a";
+  window.ADMIN_BUILD = "2026-10-23-c";
   var errs = [];
   function showBanner(){
     try{
@@ -445,7 +445,7 @@
   <input type="password" id="loginPass" placeholder="••••••••">
   <button class="primary" onclick="doLogin()">دخول</button>
   <div id="loginStatus"></div>
-  <p class="hint" style="margin-top:14px;font-size:11px;opacity:.65;">إصدار اللوحة: 2026-10-23-a · <a href="#" onclick="adminHardReload();return false;" style="color:inherit;text-decoration:underline;">إعادة تحميل نظيفة</a></p>
+  <p class="hint" style="margin-top:14px;font-size:11px;opacity:.65;">إصدار اللوحة: 2026-10-23-c · <a href="#" onclick="adminHardReload();return false;" style="color:inherit;text-decoration:underline;">إعادة تحميل نظيفة</a></p>
   <div class="divider"></div>
   <p class="hint">هذه الصفحة محمية بحساب Firebase Authentication. فقط الحساب الذي تنشئه أنت في مشروعك يمكنه تسجيل الدخول والتحكم بالمؤقت.</p>
 </div>
@@ -462,6 +462,7 @@
 <div class="card hidden" id="hubView">
   <p class="eyebrow">لوحة التحكم</p>
   <h1>اختر ما تريد التحكم به</h1>
+  <div id="adminIdentity" style="margin:6px 0 18px;font-size:12px;line-height:1.8;color:#8b8d99;"></div>
 
   <button type="button" class="hub-btn" onclick="showPanel('main')">
     <span class="icon"><svg class="ico" viewBox="0 0 24 24"><path d="M6 3h12"/><path d="M6 21h12"/><path d="M7 3c0 4 3.2 5.2 5 6.3-1.8 1.1-5 2.3-5 6.3"/><path d="M17 3c0 4-3.2 5.2-5 6.3 1.8 1.1 5 2.3 5 6.3"/></svg></span>
@@ -1290,6 +1291,42 @@ window.setMode = function(mode, isUserClick){
   if (el) el.addEventListener("keydown", (e) => { if (e.key === "Enter") window.doLogin(); });
 });
 
+/* هوية الحساب المسجَّل: القواعد تسمح بالكتابة من اللوحة لحساب واحد فقط يُعرَّف بالـ UID. إن لم يطابق UID حسابك
+   ما في القواعد فكل كتابة ستفشل بـ PERMISSION_DENIED. نقارن ببصمة (SHA-256) لـ UID القواعد بدل كتابته في الصفحة العامة. */
+const RULES_ADMIN_UID_SHA256 = "449fda327814a179b34df1ae74f2c0ddc5aa8814c1636b873b694072524a300b";
+async function showAdminIdentity(user){
+  const el = document.getElementById("adminIdentity");
+  if (!el || !user) return;
+  let match = null;
+  try{
+    if (window.crypto && crypto.subtle){
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(user.uid));
+      const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+      match = (hex === RULES_ADMIN_UID_SHA256);
+    }
+  }catch(e){}
+  el.textContent = "";
+  const line = (text, color) => { const d = document.createElement("div"); d.textContent = text; if (color) d.style.color = color; el.appendChild(d); return d; };
+  line("الحساب: " + (user.email || "—"));
+  const uidLine = line("UID: " + user.uid);
+  uidLine.style.direction = "ltr"; uidLine.style.textAlign = "right"; uidLine.style.wordBreak = "break-all";
+  const copy = document.createElement("button");
+  copy.type = "button"; copy.textContent = "نسخ UID";
+  copy.style.cssText = "margin:4px 0;padding:4px 12px;border-radius:8px;border:1px solid #3a3d4a;background:#1b1d26;color:#e6e6ee;font:inherit;cursor:pointer;";
+  copy.onclick = function(){
+    const done = () => { copy.textContent = "تم النسخ ✓"; setTimeout(() => { copy.textContent = "نسخ UID"; }, 1800); };
+    try{
+      if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(user.uid).then(done, done); return; }
+    }catch(e){}
+    const ta = document.createElement("textarea"); ta.value = user.uid; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); }catch(e){} document.body.removeChild(ta); done();
+  };
+  el.appendChild(copy);
+  if (match === true) line("✓ هذا الحساب هو الأدمن المسجَّل في القواعد: الكتابة من اللوحة مسموحة.", "#2ecc71");
+  else if (match === false) line("✗ هذا الحساب ليس الأدمن المسجَّل في القواعد، لذلك ترفض القواعد كل كتابة من اللوحة (PERMISSION_DENIED). انسخ الـ UID أعلاه واستبدل به الـ UID القديم في كل مواضعه بقواعد قاعدة البيانات ثم انشرها.", "#ff3b30");
+  else line("تعذّر التحقق من مطابقة الـ UID في هذا المتصفح. قارن الـ UID أعلاه بما في القواعد يدويًا.", "#ff9500");
+}
+
 /* رسائل تسجيل الدخول بالعربية مع رمز الخطأ الحقيقي، ليسهل تشخيص أي مشكلة (كانت تظهر رسالة فايربيس الإنجليزية الخام) */
 function loginErrorText(error){
   const code = (error && error.code) || "";
@@ -1359,6 +1396,7 @@ auth.onAuthStateChanged((user) => {
     loadStudentStyleState();
     loadStudyChallengeStyleState();
     loadSharedThemeState();
+    showAdminIdentity(user);
     showHub();
   } else {
     hideAllPanels();
