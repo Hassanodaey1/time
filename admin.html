@@ -6,7 +6,7 @@
 /* تشخيص صفحة الأدمن: (1) يعرض أي خطأ جافاسكربت على الشاشة، (2) يضمن أن زر «دخول» يعطي ردًّا حتى لو تعطّل سكربت الصفحة،
    (3) زر «إعادة تحميل نظيفة» يمسح الذاكرة المؤقتة وملف الـ Service Worker. يُحمَّل أولًا ليلتقط أخطاء كل ما بعده. */
 (function(){
-  window.ADMIN_BUILD = "2026-10-23-c";
+  window.ADMIN_BUILD = "2026-10-23-d";
   var errs = [];
   function showBanner(){
     try{
@@ -445,7 +445,7 @@
   <input type="password" id="loginPass" placeholder="••••••••">
   <button class="primary" onclick="doLogin()">دخول</button>
   <div id="loginStatus"></div>
-  <p class="hint" style="margin-top:14px;font-size:11px;opacity:.65;">إصدار اللوحة: 2026-10-23-c · <a href="#" onclick="adminHardReload();return false;" style="color:inherit;text-decoration:underline;">إعادة تحميل نظيفة</a></p>
+  <p class="hint" style="margin-top:14px;font-size:11px;opacity:.65;">إصدار اللوحة: 2026-10-23-d · <a href="#" onclick="adminHardReload();return false;" style="color:inherit;text-decoration:underline;">إعادة تحميل نظيفة</a></p>
   <div class="divider"></div>
   <p class="hint">هذه الصفحة محمية بحساب Firebase Authentication. فقط الحساب الذي تنشئه أنت في مشروعك يمكنه تسجيل الدخول والتحكم بالمؤقت.</p>
 </div>
@@ -1305,7 +1305,11 @@ async function showAdminIdentity(user){
       match = (hex === RULES_ADMIN_UID_SHA256);
     }
   }catch(e){}
+  /* الأمان: لا نعرض البريد ولا الـ UID حين يكون الحساب سليمًا (الأدمن المسجَّل في القواعد). يظهران فقط عند المشكلة،
+     وهو الوقت الوحيد الذي تحتاجهما فيه لإصلاح القواعد. */
   el.textContent = "";
+  if (match === true){ el.style.display = "none"; return; }
+  el.style.display = "";
   const line = (text, color) => { const d = document.createElement("div"); d.textContent = text; if (color) d.style.color = color; el.appendChild(d); return d; };
   line("الحساب: " + (user.email || "—"));
   const uidLine = line("UID: " + user.uid);
@@ -1322,8 +1326,7 @@ async function showAdminIdentity(user){
     try{ document.execCommand("copy"); }catch(e){} document.body.removeChild(ta); done();
   };
   el.appendChild(copy);
-  if (match === true) line("✓ هذا الحساب هو الأدمن المسجَّل في القواعد: الكتابة من اللوحة مسموحة.", "#2ecc71");
-  else if (match === false) line("✗ هذا الحساب ليس الأدمن المسجَّل في القواعد، لذلك ترفض القواعد كل كتابة من اللوحة (PERMISSION_DENIED). انسخ الـ UID أعلاه واستبدل به الـ UID القديم في كل مواضعه بقواعد قاعدة البيانات ثم انشرها.", "#ff3b30");
+  if (match === false) line("✗ هذا الحساب ليس الأدمن المسجَّل في القواعد، لذلك ترفض القواعد كل كتابة من اللوحة (PERMISSION_DENIED). انسخ الـ UID أعلاه واستبدل به الـ UID القديم في كل مواضعه بقواعد قاعدة البيانات ثم انشرها.", "#ff3b30");
   else line("تعذّر التحقق من مطابقة الـ UID في هذا المتصفح. قارن الـ UID أعلاه بما في القواعد يدويًا.", "#ff9500");
 }
 
