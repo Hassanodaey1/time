@@ -752,6 +752,7 @@ let totalMs = 0;
 let paused = false;
 let dailyCapReached = false;
 let timerHandle = null;
+let lastTickAt = 0, tickAccumMs = 0;   /* الوقت الفعلي بين النبضات (performance.now) */
 let midAlerted = false, lastMinuteAlerted = false;
 const baseTitle = document.title;
 
@@ -946,11 +947,31 @@ window.startTimer = function(){
   renderTime();
   requestWakeLock();
   if (timerHandle) clearInterval(timerHandle);
+  lastTickAt = 0; tickAccumMs = 0;
   timerHandle = setInterval(step, 1000);
 };
 
+/* كانت كل نبضة تُحسب ثانية كاملة مهما تأخرت (جهاز بطيء/ازدحام): فيتأخر العدّاد عن الواقع ويضيع من وقت الطالب.
+   الآن نقيس الوقت الفعلي ونُنفّذ "ثانية" لكل 1000ms منقضية، فتتدارك النبضة المتأخرة ما فاتها (حتى 3 ثوانٍ).
+   فجوة أطول من 2.5 ثانية (تجمّد/تعليق) لا تُحتسب إلا بمقدار 2.5 ثانية، كما يفعل time-bank.js. */
+const MAX_TICK_GAP_MS = 2500;
+const TICK_SLACK_MS = 150;   /* نبضة تصل بعد 999.7ms ليست «ناقصة»: بدون هامش تتقطّع الأرقام (ثانية تضيع ثم ثانيتان) */
 function step(){
-  if (paused) return;
+  const t = performance.now();
+  const dt = lastTickAt ? t - lastTickAt : 1000;
+  lastTickAt = t;
+  if (paused){ tickAccumMs = 0; return; }
+  tickAccumMs += Math.max(0, Math.min(dt, MAX_TICK_GAP_MS));
+  let guard = 0;
+  while (tickAccumMs >= 1000 - TICK_SLACK_MS && guard++ < 3){
+    tickAccumMs -= 1000;
+    tickSecond();
+    if (remainingMs <= 0){ tickAccumMs = 0; break; }
+  }
+  if (tickAccumMs > 1000) tickAccumMs = 1000;
+}
+
+function tickSecond(){
   eyeReminderTick();
   remainingMs -= 1000;
   /* قفل الجهاز: لو مؤقت آخر (مؤقت الطالب/تحدي الأستاذ) يحتسب الوقت الآن، لا نحتسب هذه الثانية مرتين */
